@@ -1,0 +1,17 @@
+service: college-api
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  
+functions:
+  api:
+    handler: src/index.handler
+    events:
+      - http:
+          path: /{proxy+}
+          method: ANY
+          cors: true
