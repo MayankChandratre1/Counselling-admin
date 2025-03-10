@@ -1,10 +1,14 @@
 import express from 'express';
 import AdminController from '../controllers/admin.controller.js';
+import authMiddleware from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// Add OTP route before login
+// Public routes
 router.post('/login', AdminController.login);
+
+// Protected routes
+router.use(authMiddleware); // Apply middleware to all routes below
 
 router.get('/all-users', AdminController.getAllUsers);
 router.get('/user/:userId', AdminController.getUser);
@@ -22,6 +26,5 @@ router.post('/delete-lists', AdminController.deleteLists);
 router.get('/list/:listId', AdminController.getList);
 router.post('/edit-list/:listId', AdminController.editList);
 router.delete('/delete-list/:listId', AdminController.deleteList);
-
 
 export default router;

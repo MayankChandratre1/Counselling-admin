@@ -1,4 +1,6 @@
-import { db } from '../config/mongodb.js';
+import { db } from "../../config/firebase.js";
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 class AdminService {
     constructor(){
@@ -10,99 +12,150 @@ class AdminService {
     }
 
     async login(credentials) {
-        const admin = await this.admins.findOne({ email: credentials.email });
-        if (!admin) throw new Error('Admin not found');
-        // Add password verification logic here
-        return { token: 'generate-jwt-token-here' };
+        const adminRef = await this.admins.where('email', '==', credentials.email).get();
+        if (adminRef.empty) throw new Error('Admin not found');
+        
+        const admin = adminRef.docs[0].data();
+        const adminId = adminRef.docs[0].id;
+        
+        const isPasswordValid = await bcrypt.compare(credentials.password, admin.password);
+        if (!isPasswordValid) throw new Error('Invalid password');
+
+        const token = jwt.sign(
+            { 
+                id: adminId,
+                email: admin.email,
+                role: 'admin'
+            }, 
+            process.env.JWT_ADMIN_SECRET 
+           );
+
+        return { 
+            token,
+            admin: {
+                id: adminId,
+                email: admin.email,
+                name: admin.name
+            }
+        };
     }
 
     async getAllUsers() {
-        return await this.users.find({}).toArray();
+        const snapshot = await this.users.get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 
     async updateUser(userId, userData) {
-        const result = await this.users.updateOne(
-            { id: userId },
-            { $set: userData }
-        );
-        if (!result.modifiedCount) throw new Error('User update failed');
-        return { message: 'User updated successfully' };
+        try {
+            await this.users.doc(userId).update(userData);
+            return { message: 'User updated successfully' };
+        } catch (error) {
+            throw new Error('User update failed');
+        }
     }
 
     async deleteUser(userId) {
-        const result = await this.users.deleteOne({ _id: userId });
-        if (!result.deletedCount) throw new Error('User deletion failed');
-        return { message: 'User deleted successfully' };
+        try {
+            await this.users.doc(userId).delete();
+            return { message: 'User deleted successfully' };
+        } catch (error) {
+            throw new Error('User deletion failed');
+        }
     }
 
     async getUser(userId) {
-        const user = await this.users.findOne({ id: userId });
-        if (!user) throw new Error('User not found');
-        return user;
+        const userDoc = await this.users.doc(userId).get();
+        if (!userDoc.exists) throw new Error('User not found');
+        return { id: userDoc.id, ...userDoc.data() };
     }
 
     async searchUser(searchCriteria) {
-        const query = {};
+        let query = this.users;
+        
+
         if (searchCriteria.name) {
-            query.name = { $regex: searchCriteria.name, $options: 'i' };
+            query = query.where('name', '>=', searchCriteria.name)
+                        .where('name', '<=', searchCriteria.name + '\uf8ff');
         }
-        if (searchCriteria.number) {
-            query.number = { $regex: searchCriteria.number, $options: 'i' };
+        if (searchCriteria.phone) {
+            query = query.where('phone', '==', searchCriteria.phone);
         }
-        return await this.users.find(query).toArray();
+        if (searchCriteria.cetSeatNumber) {
+            query = query.where('counsellingData.cetSeatNumber', '>=', searchCriteria.cetSeatNumber);
+        }
+        const snapshot = await query.get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 
     async getFormSteps() {
-        return await this.counsellingForms.find({}).toArray();
+        const snapshot = await this.counsellingForms.get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 
     async editFormSteps(formData) {
-        const result = await this.counsellingForms.updateOne(
-            { id: formData.id },
-            { $set: formData },
-            { upsert: true }
-        );
-        return { message: 'Form steps updated successfully' };
+        try {
+            await this.counsellingForms.doc(formData.id).set(formData, { merge: true });
+            return { message: 'Form steps updated successfully' };
+        } catch (error) {
+            throw new Error('Form steps update failed');
+        }
     }
 
     async getLists() {
-        return await this.lists.find({}).toArray();
+        const snapshot = await this.lists.get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 
     async editLists(listsData) {
-        const result = await this.lists.updateMany(
-            {},
-            { $set: listsData }
-        );
-        return { message: 'Lists updated successfully' };
+        try {
+            const batch = this.db.batch();
+            Object.entries(listsData).forEach(([id, data]) => {
+                const docRef = this.lists.doc(id);
+                batch.set(docRef, data, { merge: true });
+            });
+            await batch.commit();
+            return { message: 'Lists updated successfully' };
+        } catch (error) {
+            throw new Error('Lists update failed');
+        }
     }
 
     async deleteLists(listIds) {
-        const result = await this.lists.deleteMany(
-            { _id: { $in: listIds } }
-        );
-        return { message: 'Lists deleted successfully' };
+        try {
+            const batch = this.db.batch();
+            listIds.forEach(id => {
+                const docRef = this.lists.doc(id);
+                batch.delete(docRef);
+            });
+            await batch.commit();
+            return { message: 'Lists deleted successfully' };
+        } catch (error) {
+            throw new Error('Lists deletion failed');
+        }
     }
 
     async getList(listId) {
-        const list = await this.lists.findOne({ _id: listId });
-        if (!list) throw new Error('List not found');
-        return list;
+        const listDoc = await this.lists.doc(listId).get();
+        if (!listDoc.exists) throw new Error('List not found');
+        return { id: listDoc.id, ...listDoc.data() };
     }
 
     async editList(listId, listData) {
-        const result = await this.lists.updateOne(
-            { _id: listId },
-            { $set: listData }
-        );
-        if (!result.modifiedCount) throw new Error('List update failed');
-        return { message: 'List updated successfully' };
+        try {
+            await this.lists.doc(listId).update(listData);
+            return { message: 'List updated successfully' };
+        } catch (error) {
+            throw new Error('List update failed');
+        }
     }
 
     async deleteList(listId) {
-        const result = await this.lists.deleteOne({ _id: listId });
-        if (!result.deletedCount) throw new Error('List deletion failed');
-        return { message: 'List deleted successfully' };
+        try {
+            await this.lists.doc(listId).delete();
+            return { message: 'List deleted successfully' };
+        } catch (error) {
+            throw new Error('List deletion failed');
+        }
     }
 }
 
