@@ -7,6 +7,10 @@ const router = express.Router();
 // Public routes
 router.post('/login', AdminController.login);
 
+router.post('/request-otp', AdminController.requestOTP);
+router.post('/verify-otp', AdminController.verifyOTP);
+router.post('/change-password', AdminController.changePassword);
+
 // Protected routes
 router.use(authMiddleware); // Apply middleware to all routes below
 
