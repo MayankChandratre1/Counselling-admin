@@ -252,9 +252,16 @@ class AdminController {
 
     async editList(req, res) {
         try {
-            const result = await this.adminService.editList(req.params.listId, req.body);
+            const listId = req.params.listId;
+            const requestData = req.body;
+            
+            console.log('Editing list:', listId);
+            console.log('Request data:', requestData);
+            
+            const result = await this.adminService.editList(listId, requestData);
             res.status(200).json(result);
         } catch (error) {
+            console.error('Controller error editing list:', error);
             res.status(400).json({ error: error.message });
         }
     }
@@ -285,6 +292,94 @@ class AdminController {
             res.status(400).json({ error: error.message });
         }
     }
+
+    async addList(req, res) {
+        try {
+            const list = await this.adminService.addList(req.body);
+            res.status(201).json(list);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async searchColleges(req, res) {
+        try {
+            const colleges = await this.adminService.searchColleges(req.query);
+            res.status(200).json(colleges);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async getUserLists(req, res) {
+        try {
+            const userId = req.params.userId;
+            console.log('Getting lists for user:', userId);
+            
+            const userLists = await this.adminService.getUserLists(userId);
+            res.status(200).json(userLists);
+        } catch (error) {
+            console.error('Controller error getting user lists:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async createUserList(req, res) {
+        try {
+            console.log('Create user list request for user:', req.params.userId);
+            console.log('Request body:', req.body);
+            
+            if (!req.body.colleges || !Array.isArray(req.body.colleges)) {
+                return res.status(400).json({ error: 'Invalid colleges data - must be an array' });
+            }
+            
+            const userList = await this.adminService.createUserList(req.params.userId, req.body);
+            res.status(201).json(userList);
+        } catch (error) {
+            console.error('Controller error creating user list:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async updateUserList(req, res) {
+        try {
+            console.log('Update user list request for user:', req.params.userId);
+            console.log('List ID:', req.params.listId);
+            console.log('Request body:', req.body);
+            
+            if (!req.body.colleges || !Array.isArray(req.body.colleges)) {
+                return res.status(400).json({ error: 'Invalid colleges data - must be an array' });
+            }
+            
+            const userList = await this.adminService.updateUserList(req.params.userId, req.params.listId, req.body);
+            res.status(200).json(userList);
+        } catch (error) {
+            console.error('Controller error updating user list:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async deleteUserList(req, res) {
+        try {
+            const result = await this.adminService.deleteUserList(req.params.userId, req.params.listId);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async assignListToUser(req, res) {
+        try {
+            const { userId } = req.params;
+            const listAssignment = req.body;
+            
+            const result = await this.adminService.assignListToUser(userId, listAssignment);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Error assigning list to user:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
 }
 
 // Create instance of controller
@@ -310,6 +405,12 @@ export default {
     verifyOTP: adminController.verifyOTP.bind(adminController),
     changePassword: adminController.changePassword.bind(adminController),
     sendOTPEmail: adminController.sendOTPEmail.bind(adminController),
-
+    addList: adminController.addList.bind(adminController),
+    searchColleges: adminController.searchColleges.bind(adminController),
+    getUserLists: adminController.getUserLists.bind(adminController),
+    createUserList: adminController.createUserList.bind(adminController),
+    updateUserList: adminController.updateUserList.bind(adminController),
+    deleteUserList: adminController.deleteUserList.bind(adminController),
+    assignListToUser: adminController.assignListToUser.bind(adminController),
 };
 
