@@ -1,0 +1,49 @@
+{
+    "version": 2,
+    "name": "admin-api",
+    "builds": [
+        {
+            "src": "src/index.js",
+            "use": "@vercel/node"
+        }
+    ],
+    "routes": [
+        {
+            "src": "/api/admin/(.*)",
+            "dest": "src/index.js"
+        },
+        {
+            "src": "/(.*)",
+            "dest": "src/index.js"
+        }
+    ],
+    "env": {
+        "NODE_ENV": "production"
+    },
+    "regions": ["bom1"],
+    "headers": [
+        {
+            "source": "/(.*)",
+            "headers": [
+                {
+                    "key": "Access-Control-Allow-Origin",
+                    "value": "*"
+                },
+                {
+                    "key": "Access-Control-Allow-Methods",
+                    "value": "GET,POST,PUT,DELETE,OPTIONS"
+                },
+                {
+                    "key": "Access-Control-Allow-Headers",
+                    "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization"
+                }
+            ]
+        }
+    ],
+    "functions": {
+        "src/index.js": {
+            "memory": 1024,
+            "maxDuration": 10
+        }
+    }
+}
