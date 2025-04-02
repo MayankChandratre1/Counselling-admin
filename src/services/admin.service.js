@@ -1,6 +1,7 @@
 import { db } from "../../config/firebase.js";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import redis from '../config/redisClient.js';
 
 class AdminService {
     constructor(){
@@ -10,6 +11,14 @@ class AdminService {
         this.counsellingForms = db.collection('counsellingForms');
         this.lists = db.collection('lists');
         this.colleges = db.collection('colleges_v2');
+        this.registrationForm = db.collection('registrationForm');
+    }
+
+    async invalidateCache(pattern) {
+        const keys = await redis.keys(pattern);
+        if (keys.length > 0) {
+            await redis.del(keys);
+        }
     }
 
     async login(credentials) {
@@ -49,6 +58,8 @@ class AdminService {
     async updateUser(userId, userData) {
         try {
             await this.users.doc(userId).update(userData);
+            await this.invalidateCache('users:*');
+            await this.invalidateCache(`user:*/user/${userId}`);
             return { message: 'User updated successfully' };
         } catch (error) {
             throw new Error('User update failed');
@@ -58,6 +69,8 @@ class AdminService {
     async deleteUser(userId) {
         try {
             await this.users.doc(userId).delete();
+            await this.invalidateCache('users:*');
+            await this.invalidateCache(`user:*/user/${userId}`);
             return { message: 'User deleted successfully' };
         } catch (error) {
             throw new Error('User deletion failed');
@@ -96,6 +109,7 @@ class AdminService {
     async editFormSteps(formData) {
         try {
             await this.counsellingForms.doc(formData.id).set(formData, { merge: true });
+            await this.invalidateCache('formsteps:*');
             return { message: 'Form steps updated successfully' };
         } catch (error) {
             throw new Error('Form steps update failed');
@@ -115,6 +129,7 @@ class AdminService {
                 batch.set(docRef, data, { merge: true });
             });
             await batch.commit();
+            await this.invalidateCache('lists:*');
             return { message: 'Lists updated successfully' };
         } catch (error) {
             throw new Error('Lists update failed');
@@ -352,6 +367,7 @@ class AdminService {
                 lists: userLists
             });
 
+            await this.invalidateCache(`userlists:*/user/${userId}/lists`);
             return userLists[listIndex];
         } catch (error) {
             console.error('Update user list error:', error);
@@ -432,6 +448,215 @@ class AdminService {
             throw new Error('Failed to delete user list: ' + error.message);
         }
     }
+
+    async getFormConfig() {
+        try {
+            const formDoc = await this.registrationForm.doc('Form1').get();
+            if (!formDoc.exists) {
+                // If form doesn't exist, create default structure
+                const defaultFormConfig = {
+                    steps: [],
+                    updatedAt: new Date().toISOString()
+                };
+                await this.registrationForm.doc('Form1').set(defaultFormConfig);
+                return defaultFormConfig;
+            }
+            const formData = formDoc.data();
+            return {
+                steps: formData.steps || [],
+                updatedAt: formData.updatedAt || new Date().toISOString()
+            };
+        } catch (error) {
+            console.error('Get Form Config error:', error);
+            throw new Error('Failed to get form config: ' + error.message);
+        }
+    }
+
+    async saveFormConfig(steps) {
+        const data = {
+            "steps": [
+              {
+                "title": "Basic Information",
+                "fields": [
+                  {
+                    "id": "fullName",
+                    "type": "text",
+                    "label": "Full Name",
+                    "key": "fullName",
+                    "required": true,
+                    "options": []
+                  },
+                  {
+                    "id": "dob",
+                    "type": "date",
+                    "label": "Date of Birth",
+                    "key": "dob",
+                    "required": true,
+                    "options": []
+                  },
+                  {
+                    "id": "mobile",
+                    "type": "text",
+                    "label": "Mobile Number",
+                    "key": "mobile",
+                    "required": true,
+                    "options": [],
+                    "editable": false
+                  },
+                  {
+                    "id": "email",
+                    "type": "email",
+                    "label": "Email",
+                    "key": "email",
+                    "required": true,
+                    "options": []
+                  },
+                  {
+                    "id": "city",
+                    "type": "text",
+                    "label": "City",
+                    "key": "city",
+                    "required": true,
+                    "options": []
+                  },
+                  {
+                    "id": "state",
+                    "type": "text",
+                    "label": "State",
+                    "key": "state",
+                    "required": true,
+                    "options": []
+                  }
+                ]
+              },
+              {
+                "title": "Academic Information",
+                "fields": [
+                  {
+                    "id": "boardMarks",
+                    "type": "number",
+                    "label": "12th Board Marks",
+                    "key": "boardMarks",
+                    "required": true,
+                    "options": []
+                  },
+                  {
+                    "id": "boardType",
+                    "type": "select",
+                    "label": "Board Type",
+                    "key": "boardType",
+                    "required": true,
+                    "options": ["State Board", "CBSC", "ICSE"]
+                  },
+                  {
+                    "id": "jeeMarks",
+                    "type": "number",
+                    "label": "JEE Marks",
+                    "key": "jeeMarks",
+                    "required": false,
+                    "options": []
+                  },
+                  {
+                    "id": "cetMarks",
+                    "type": "number",
+                    "label": "CET Marks",
+                    "key": "cetMarks",
+                    "required": false,
+                    "options": []
+                  },
+                  {
+                    "id": "preferredField",
+                    "type": "select",
+                    "label": "Preferred Field",
+                    "key": "preferredField",
+                    "required": true,
+                    "options": ["Computer Science", "Other"]
+                  },
+                  {
+                    "id": "cetSeatNumber",
+                    "type": "text",
+                    "label": "CET Seat Number",
+                    "key": "cetSeatNumber",
+                    "required": false,
+                    "options": []
+                  },
+                  {
+                    "id": "jeeSeatNumber",
+                    "type": "text",
+                    "label": "JEE Seat Number",
+                    "key": "jeeSeatNumber",
+                    "required": false,
+                    "options": []
+                  }
+                ]
+              },
+              {
+                "title": "Preferences and Goals",
+                "fields": [
+                  {
+                    "id": "preferredLocations",
+                    "type": "text",
+                    "label": "Preferred Locations",
+                    "key": "preferredLocations",
+                    "required": false,
+                    "options": []
+                  },
+                  {
+                    "id": "budget",
+                    "type": "select",
+                    "label": "Budget",
+                    "key": "budget",
+                    "required": true,
+                    "options": ["Under 1L", "1L - 2L", "Other"]
+                  },
+                  {
+                    "id": "password",
+                    "type": "password",
+                    "label": "Password",
+                    "key": "password",
+                    "required": true,
+                    "options": []
+                  },
+                  {
+                    "id": "confirmPassword",
+                    "type": "password",
+                    "label": "Confirm Password",
+                    "key": "confirmPassword",
+                    "required": true,
+                    "options": []
+                  },
+                  {
+                    "id": "termsAccepted",
+                    "type": "checkbox",
+                    "label": "I agree to the Terms and Conditions",
+                    "key": "termsAccepted",
+                    "required": true,
+                    "options": []
+                  }
+                ]
+              }
+            ]
+          }
+        try {
+            const timestamp = new Date().toISOString();
+            await this.registrationForm.doc('Form1').set({
+                steps: data.steps,
+                updatedAt: timestamp
+            }, { merge: true });
+            
+            await this.invalidateCache('formconfig:*');
+            
+            return { 
+                message: 'Form configuration saved successfully',
+                steps: steps,
+                updatedAt: timestamp
+            };
+        } catch (error) {
+            console.error('Save Form Config error:', error);
+            throw new Error('Failed to save form config: ' + error.message);
+        }
+    }
+
 }
 
 export default AdminService;

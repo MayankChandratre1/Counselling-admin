@@ -380,6 +380,26 @@ class AdminController {
             res.status(400).json({ error: error.message });
         }
     }
+    async getFormConfig(req, res) {
+        try {
+            const steps = await this.adminService.getFormConfig();
+            res.status(200).json(steps);
+        } catch (error) {
+            console.error('Error assigning list to user:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+    async saveFormConfig(req, res) {
+        try {
+            const { steps } = req.body;
+            
+            const result = await this.adminService.saveFormConfig(steps);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Error assigning list to user:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
 }
 
 // Create instance of controller
@@ -412,5 +432,7 @@ export default {
     updateUserList: adminController.updateUserList.bind(adminController),
     deleteUserList: adminController.deleteUserList.bind(adminController),
     assignListToUser: adminController.assignListToUser.bind(adminController),
+    getFormConfig: adminController.getFormConfig.bind(adminController),
+    saveFormConfig: adminController.saveFormConfig.bind(adminController)
 };
 

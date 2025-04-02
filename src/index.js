@@ -9,7 +9,7 @@ app.use(cors());
 
 // Add a simple logging middleware for debugging routes
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
+  console.log(`${req.method} ${req.url} ${new Date().toISOString()}`);
   next();
 });
 
@@ -22,7 +22,7 @@ app.use(errorHandler);
 app.use((req, res) => {
   res.status(404).json({ 
     message: `Cannot ${req.method} ${req.url}`,
-    hint: "If you're looking for user lists, try restarting the server to load updated routes."
+    hint: "Try restarting the server to load updated routes."
   });
 });
 
