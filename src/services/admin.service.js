@@ -10,7 +10,7 @@ class AdminService {
         this.admins = db.collection('admins');
         this.counsellingForms = db.collection('counsellingForms');
         this.lists = db.collection('lists');
-        this.colleges = db.collection('colleges_v2');
+        this.colleges = db.collection('colleges_v3');
         this.registrationForm = db.collection('registrationForm');
     }
 
@@ -51,7 +51,16 @@ class AdminService {
     }
 
     async getAllUsers() {
-        const snapshot = await this.users.get();
+        const snapshot = await this.users
+        .get();
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+
+    async getAllUsersOfForm(formId) {
+        const snapshot = await this.users
+        .where('stepsData', '!=', null)
+        .where('stepsData.id', '==', formId)
+        .get();
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 
@@ -654,6 +663,38 @@ class AdminService {
         } catch (error) {
             console.error('Save Form Config error:', error);
             throw new Error('Failed to save form config: ' + error.message);
+        }
+    }
+
+    async addAdmin(adminData) {
+        try {
+            // Check if admin with email already exists
+            const existingAdmin = await this.admins.where('email', '==', adminData.email).get();
+            if (!existingAdmin.empty) {
+                throw new Error('Admin with this email already exists');
+            }
+
+            // Add timestamp
+            const timestamp = new Date().toISOString();
+            const data = {
+                ...adminData,
+                createdAt: timestamp,
+                updatedAt: timestamp,
+                role: 'admin'  // Ensure role is set
+            };
+
+            // Add to admins collection
+            const docRef = await this.admins.add(data);
+            return {
+                message: 'Admin added successfully',
+                admin: {
+                    id: docRef.id,
+                    ...data
+                }
+            };
+        } catch (error) {
+            console.error('Add admin error:', error);
+            throw new Error(`Failed to add admin: ${error.message}`);
         }
     }
 

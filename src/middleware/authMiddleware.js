@@ -8,7 +8,13 @@ const authMiddleware = async (req, res, next) => {
         }
 
         const decoded = jwt.verify(token, process.env.JWT_ADMIN_SECRET);
-        req.admin = decoded;
+        
+        // Ensure role is present in decoded token
+        if (!decoded.role) {
+            return res.status(401).json({ message: 'Invalid token: no role specified' });
+        }
+
+        req.admin = decoded; // Contains id, email, and role
         next();
     } catch (error) {
         if (error.name === 'TokenExpiredError') {

@@ -4,7 +4,8 @@ import adminRouter from './routes/admin.route.js';
 import errorHandler from './middleware/errorHandler.js';
 
 const app = express();
-app.use(json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
 
 // Add a simple logging middleware for debugging routes

@@ -178,6 +178,26 @@ class AdminController {
         }
     }
 
+    async addUser(req, res) {
+        try {
+            // Validate request body
+            if (!req.body.phone) {
+                return res.status(400).json({ error: 'Email and password are required' });
+            }
+            // Check if phone number is unique
+            const existingUser = await this.adminService.getUserByPhone(req.body.phone);
+
+            if (existingUser) {
+                return res.status(400).json({ error: 'Phone number already exists' });
+            }
+            // Add user
+            const user = await this.adminService.addUser(req.body);
+            res.status(201).json(user);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    }
+
     async updateUser(req, res) {
         try {
             const result = await this.adminService.updateUser(req.params.userId, req.body);
@@ -400,6 +420,39 @@ class AdminController {
             res.status(400).json({ error: error.message });
         }
     }
+
+    async addAdmin(req, res) {
+        try {
+            const adminData = req.body;
+            const result = await this.adminService.addAdmin(adminData);
+            res.status(201).json(result);
+        } catch (error) {
+            console.error('Add admin error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async getAllUsersOfForm(req, res) {
+        try {
+            const formId = req.params.formId;
+            const users = await this.adminService.getAllUsersOfForm(formId);
+            res.status(200).json(users);
+        } catch (error) {
+            console.error('Get all users of form error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async addUser(req, res) {
+        try {
+            const userData = req.body;
+            const result = await this.adminService.addUser(userData);
+            res.status(201).json(result);
+        } catch (error) {
+            console.error('Add user error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
 }
 
 // Create instance of controller
@@ -433,6 +486,9 @@ export default {
     deleteUserList: adminController.deleteUserList.bind(adminController),
     assignListToUser: adminController.assignListToUser.bind(adminController),
     getFormConfig: adminController.getFormConfig.bind(adminController),
-    saveFormConfig: adminController.saveFormConfig.bind(adminController)
+    saveFormConfig: adminController.saveFormConfig.bind(adminController),
+    addAdmin: adminController.addAdmin.bind(adminController),
+    getAllUsersOfForm: adminController.getAllUsersOfForm.bind(adminController),
+    addUser: adminController.addUser.bind(adminController),
 };
 
