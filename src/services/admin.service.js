@@ -837,6 +837,10 @@ class AdminService {
             const adminDoc = await this.admins.doc(adminId).get();
             if (!adminDoc.exists) throw new Error('Admin not found');
 
+            if(adminData.role == 'super-admin' && adminData.password) {
+                throw new Error('Super-admin password cannot be changed');
+            }
+
             // If password is being updated, hash it
             if (adminData.password) {
                 adminData.password = await bcrypt.hash(adminData.password, 12);
