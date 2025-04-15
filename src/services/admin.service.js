@@ -2,16 +2,20 @@ import { db } from "../../config/firebase.js";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import redis from '../config/redisClient.js';
-
+import pkg from "firebase-admin";
+const { firestore } = pkg;
 class AdminService {
     constructor(){
         this.db = db;
         this.users = db.collection('users');
         this.admins = db.collection('admins');
+        this.admin_activities = db.collection('admin_activities');
+        this.permissions = db.collection('permissions');
         this.counsellingForms = db.collection('counsellingForms');
         this.lists = db.collection('lists');
         this.colleges = db.collection('colleges_v3');
         this.registrationForm = db.collection('registrationForm');
+        this.notes = db.collection('notes');
     }
 
     async invalidateCache(pattern) {
@@ -30,12 +34,16 @@ class AdminService {
         
         const isPasswordValid = await bcrypt.compare(credentials.password, admin.password);
         if (!isPasswordValid) throw new Error('Invalid password');
-
+        //get permissions
+        const permissionsDoc = await this.permissions.doc(admin.role).get();
+        if (!permissionsDoc.exists) {
+            throw new Error('Permissions for this role do not exist');
+        }
         const token = jwt.sign(
             { 
                 id: adminId,
                 email: admin.email,
-                role: 'admin'
+                role: admin.role
             }, 
             process.env.JWT_ADMIN_SECRET 
            );
@@ -45,7 +53,9 @@ class AdminService {
             admin: {
                 id: adminId,
                 email: admin.email,
-                name: admin.name
+                name: admin.name,
+                role: admin.role,
+                permissions: permissionsDoc.data() || {pages:[]}
             }
         };
     }
@@ -69,7 +79,7 @@ class AdminService {
             await this.users.doc(userId).update(userData);
             await this.invalidateCache('users:*');
             await this.invalidateCache(`user:*/user/${userId}`);
-            return { message: 'User updated successfully' };
+            return { message: `User ${userId} updated successfully` };
         } catch (error) {
             throw new Error('User update failed');
         }
@@ -80,7 +90,7 @@ class AdminService {
             await this.users.doc(userId).delete();
             await this.invalidateCache('users:*');
             await this.invalidateCache(`user:*/user/${userId}`);
-            return { message: 'User deleted successfully' };
+            return { message: `User ${userId} deleted successfully` };
         } catch (error) {
             throw new Error('User deletion failed');
         }
@@ -115,9 +125,13 @@ class AdminService {
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 
-    async editFormSteps(formData) {
+    async editFormSteps(formData, admin) {
         try {
-            await this.counsellingForms.doc(formData.id).set(formData, { merge: true });
+            await this.counsellingForms.doc(formData.id).set({
+                ...formData,
+                lastUpdatedBy: admin.email,
+                updatedAt: new Date().toISOString()
+            }, { merge: true });
             await this.invalidateCache('formsteps:*');
             return { message: 'Form steps updated successfully' };
         } catch (error) {
@@ -130,13 +144,20 @@ class AdminService {
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     }
 
-    async editLists(listsData) {
+    async editLists(listsData, admin) {
         try {
             const batch = this.db.batch();
+            const timestamp = new Date().toISOString();
+            
             Object.entries(listsData).forEach(([id, data]) => {
                 const docRef = this.lists.doc(id);
-                batch.set(docRef, data, { merge: true });
+                batch.set(docRef, {
+                    ...data,
+                    lastUpdatedBy: admin.email,
+                    updatedAt: timestamp
+                }, { merge: true });
             });
+            
             await batch.commit();
             await this.invalidateCache('lists:*');
             return { message: 'Lists updated successfully' };
@@ -165,45 +186,14 @@ class AdminService {
         return { id: listDoc.id, ...listDoc.data() };
     }
 
-    async editList(listId, requestData) {
+    async editList(listId, requestData, admin) {
         try {
             const timestamp = new Date().toISOString();
-            
-            // If assigning to user
-            if (requestData.userId && requestData.listData) {
-                const userDoc = await this.users.doc(requestData.userId).get();
-                if (!userDoc.exists) {
-                    throw new Error('User not found');
-                }
-
-                const userData = userDoc.data();
-                const userLists = userData.lists || [];
-
-                // Create a unique ID for the user's copy of the list
-                const userListId = `${listId}_${userData.id}_${timestamp}`;
-
-                // Create a copy of the list for this user
-                const userList = {
-                    id: userListId,
-                    originalListId: listId,
-                    title: requestData.listData.title,
-                    colleges: requestData.listData.colleges,
-                    createdAt: timestamp,
-                    updatedAt: timestamp,
-                    customized: false
-                };
-
-                // Add to user's lists array
-                await this.users.doc(requestData.userId).update({
-                    lists: [...userLists, userList]
-                });
-
-                return userList;
-            }
             
             // Regular list update
             await this.lists.doc(listId).update({
                 ...requestData,
+                lastUpdatedBy: admin.email,
                 updatedAt: timestamp
             });
             
@@ -223,14 +213,16 @@ class AdminService {
         }
     }
 
-    async addList(listData) {
+    async addList(listData, admin) {
         try {
             const timestamp = new Date().toISOString();
             const data = {
                 ...listData,
                 colleges: listData.colleges || [],
                 createdAt: timestamp,
-                updatedAt: timestamp
+                updatedAt: timestamp,
+                lastUpdatedBy: admin.email,
+                createdBy: admin.email
             };
             
             const docRef = await this.lists.add(data);
@@ -323,7 +315,9 @@ class AdminService {
         }
     }
 
-    async updateUserList(userId, listId, listData) {
+    
+
+    async updateUserList(userId, listId, listData, admin) {
         try {
             console.log(`Updating user list. UserID: ${userId}, ListID: ${listId}`);
             
@@ -357,7 +351,6 @@ class AdminService {
             const timestamp = new Date().toISOString();
             const originalList = userLists[listIndex];
             
-            console.log('Original list:', originalList);
             
             userLists[listIndex] = {
                 ...originalList,
@@ -366,6 +359,7 @@ class AdminService {
                 listId: originalList.listId || originalList.id || listId, // Ensure listId is preserved
                 originalListId: originalList.originalListId || originalList.listId || originalList.id || listId,
                 updatedAt: timestamp,
+                lastUpdatedBy: admin.email,
                 isCustomized: true,
                 customized: true
             };
@@ -415,7 +409,7 @@ class AdminService {
                 lists: [...userLists, newAssignment]
             });
 
-            return { message: 'List assigned successfully', assignedList: newAssignment };
+            return { message: `List assigned to user ${userData.id} (${userData.phone}) successfully` };
         } catch (error) {
             throw new Error(`Failed to assign list: ${error.message}`);
         }
@@ -674,13 +668,30 @@ class AdminService {
                 throw new Error('Admin with this email already exists');
             }
 
+            if(!adminData.role) {
+                adminData.role = 'admin'; // Default role
+            }
+            if(!adminData.password) {
+                adminData.password = 'admin123'; // Default password
+            }
+
+            // Hash the password
+            adminData.password = await bcrypt.hash(adminData.password, 12);
+
+            //fetch permissions
+            const permissionsDoc = await this.permissions.doc(adminData.role).get();
+            if (!permissionsDoc.exists) {
+                throw new Error('Permissions for this role do not exist');
+            }
+            const permissionsData = permissionsDoc.data();
+            adminData.permissions = permissionsData || {pages:[]};
+
             // Add timestamp
             const timestamp = new Date().toISOString();
             const data = {
                 ...adminData,
                 createdAt: timestamp,
                 updatedAt: timestamp,
-                role: 'admin'  // Ensure role is set
             };
 
             // Add to admins collection
@@ -695,6 +706,201 @@ class AdminService {
         } catch (error) {
             console.error('Add admin error:', error);
             throw new Error(`Failed to add admin: ${error.message}`);
+        }
+    }
+
+    async getCutoff(query) {
+        try {
+            const collegeIds = query.collegeIds || [];
+            const chunkSize = 30; // Firestore IN query limit
+            const results = [];
+
+            // Split collegeIds into chunks of 30
+            for (let i = 0; i < collegeIds.length; i += chunkSize) {
+                const chunk = collegeIds.slice(i, i + chunkSize);
+                const snapshot = await this.colleges
+                    .where('id', 'in', chunk)
+                    .get();
+                
+                const chunkData = snapshot.docs.map(doc => ({ 
+                    id: doc.id, 
+                    ...doc.data() 
+                }));
+                results.push(...chunkData);
+            }
+
+            // Format the data to match original collegeIds order
+            const formattedData = collegeIds.map(collegeId => {
+                const college = results.find(college => college.id === collegeId);
+                return {
+                    id: collegeId,
+                    branches: college ? college.branches : [] // Return empty array if college not found
+                };
+            });
+            
+            return formattedData;
+        } catch (error) {
+            console.error('Get cutoff error:', error);
+            throw new Error('Failed to get cutoff data: ' + error.message);
+        }
+    }
+
+    async addNote(note, userId, admin) {
+        try {
+            const noteKey = `note-${admin.email}`;
+
+            if (note === '') {
+                // First check if document exists
+                const noteDoc = await this.notes.doc(userId).get();
+                if (noteDoc.exists) {
+                    
+                    const noteData = noteDoc.data();
+        
+                    // Remove the field entirely
+                    delete noteData[`${noteKey}`];
+                    
+                    // Set the entire document with the updated data
+                    await this.notes.doc(userId).set(noteData);
+                }
+                return {
+                    message: 'Note deleted successfully',
+                    adminEmail: admin.email
+                };
+            }
+
+            // Add or update note
+            await this.notes.doc(userId).set({
+                [`${noteKey}`]: {
+                    note: note,
+                    createdAt: new Date().toISOString()
+                },
+            }, { merge: true });
+
+            await this.invalidateCache(`notes:*/get-notes/${userId}`);
+
+            return {
+                message: 'Note added successfully',
+                adminEmail: admin.email
+            };
+        } catch (error) {
+            console.error('save note error:', error);
+            throw new Error('Failed to save note: ' + error.message);
+        }
+    }
+
+    async getNotes(userId) {
+        try {
+            const noteDoc = await this.notes.doc(userId).get();
+            if (!noteDoc.exists) {
+                return { message: 'No notes found' };
+            }
+            return {
+                id: noteDoc.id,
+                notes: noteDoc.data()
+            };
+        } catch (error) {
+            console.error('save note error:', error);
+            throw new Error('Failed to save note: ' + error.message);
+        }
+    }
+
+    async getAllAdmins() {
+        const snapshot = await this.admins.get();
+        return snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data(),
+            password: undefined // Remove password from response
+        }));
+    }
+
+    async getAdmin(adminId) {
+        const adminDoc = await this.admins.doc(adminId).get();
+        if (!adminDoc.exists) throw new Error('Admin not found');
+        const adminData = adminDoc.data();
+        delete adminData.password; // Remove password from response
+        return { id: adminDoc.id, ...adminData };
+    }
+    async getActivityLogs(adminId) {
+        
+        const activityDoc = await this.admin_activities.doc(adminId).collection('logs').where('method', '!=','GET').orderBy('timestamp','desc').limit(1000).get();
+        
+        if (activityDoc.empty) throw new Error('No activity logs found for this admin');
+        const activities = activityDoc.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        return { activities, message: `Fetching activity logs for admin ID: ${adminId}`};
+    }
+
+    async updateAdmin(adminId, adminData) {
+        try {
+            const adminDoc = await this.admins.doc(adminId).get();
+            if (!adminDoc.exists) throw new Error('Admin not found');
+
+            // If password is being updated, hash it
+            if (adminData.password) {
+                adminData.password = await bcrypt.hash(adminData.password, 12);
+            }
+
+            const timestamp = new Date().toISOString();
+            await this.admins.doc(adminId).update({
+                ...adminData,
+                updatedAt: timestamp
+            });
+
+            return { 
+                message: 'Admin updated successfully',
+                admin: {
+                    id: adminId,
+                    ...adminData,
+                    password: undefined
+                }
+            };
+        } catch (error) {
+            throw new Error(`Failed to update admin: ${error.message}`);
+        }
+    }
+
+    async deleteAdmin(adminId) {
+        try {
+            const adminDoc = await this.admins.doc(adminId).get();
+            if (!adminDoc.exists) throw new Error('Admin not found');
+
+            // Prevent deleting super-admin
+            const adminData = adminDoc.data();
+            if (adminData.role === 'super-admin') {
+                throw new Error('Cannot delete super-admin');
+            }
+
+            await this.admins.doc(adminId).delete();
+            return { message: 'Admin deleted successfully' };
+        } catch (error) {
+            throw new Error(`Failed to delete admin: ${error.message}`);
+        }
+    }
+
+    async getPermissions() {
+        try {
+            const snapshot = await this.permissions.get();
+            return snapshot.docs.map(doc => ({
+                role: doc.id,
+                ...doc.data()
+            }));
+        } catch (error) {
+            throw new Error('Failed to get permissions');
+        }
+    }
+
+    async addOrUpdatePermissions(role, permissions) {
+        try {
+            await this.permissions.doc(role).set(permissions, { merge: true });
+            return {
+                message: 'Permissions updated successfully',
+                role,
+                permissions
+            };
+        } catch (error) {
+            throw new Error(`Failed to update permissions: ${error.message}`);
         }
     }
 

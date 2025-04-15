@@ -227,7 +227,7 @@ class AdminController {
 
     async editFormSteps(req, res) {
         try {
-            const result = await this.adminService.editFormSteps(req.body);
+            const result = await this.adminService.editFormSteps(req.body, req.admin);
             res.status(200).json(result);
         } catch (error) {
             res.status(400).json({ error: error.message });
@@ -245,7 +245,7 @@ class AdminController {
 
     async editLists(req, res) {
         try {
-            const result = await this.adminService.editLists(req.body);
+            const result = await this.adminService.editLists(req.body, req.admin);
             res.status(200).json(result);
         } catch (error) {
             res.status(400).json({ error: error.message });
@@ -274,14 +274,9 @@ class AdminController {
         try {
             const listId = req.params.listId;
             const requestData = req.body;
-            
-            console.log('Editing list:', listId);
-            console.log('Request data:', requestData);
-            
-            const result = await this.adminService.editList(listId, requestData);
+            const result = await this.adminService.editList(listId, requestData, req.admin);
             res.status(200).json(result);
         } catch (error) {
-            console.error('Controller error editing list:', error);
             res.status(400).json({ error: error.message });
         }
     }
@@ -315,7 +310,7 @@ class AdminController {
 
     async addList(req, res) {
         try {
-            const list = await this.adminService.addList(req.body);
+            const list = await this.adminService.addList(req.body, req.admin);
             res.status(201).json(list);
         } catch (error) {
             res.status(400).json({ error: error.message });
@@ -371,7 +366,7 @@ class AdminController {
                 return res.status(400).json({ error: 'Invalid colleges data - must be an array' });
             }
             
-            const userList = await this.adminService.updateUserList(req.params.userId, req.params.listId, req.body);
+            const userList = await this.adminService.updateUserList(req.params.userId, req.params.listId, req.body, req.admin);
             res.status(200).json(userList);
         } catch (error) {
             console.error('Controller error updating user list:', error);
@@ -443,13 +438,108 @@ class AdminController {
         }
     }
 
-    async addUser(req, res) {
+    async getCutoff(req, res) {
         try {
-            const userData = req.body;
-            const result = await this.adminService.addUser(userData);
+            const query = req.body;
+            console.log("#########",query);
+            const result = await this.adminService.getCutoff(query);
             res.status(201).json(result);
         } catch (error) {
             console.error('Add user error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+    async addNote(req, res) {
+        try {
+            const {note} = req.body;
+            const {userId} = req.params;
+            console.log("#########",note,userId);
+            const admin = req.admin
+            const result = await this.adminService.addNote(note,userId,admin);
+            res.status(201).json(result);
+        } catch (error) {
+            console.error('Add note error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+    async getNotes(req, res) {
+        try {
+            const {userId} = req.params;
+            const admin = req.admin
+            const result = await this.adminService.getNotes(userId,admin);
+            res.status(201).json(result);
+        } catch (error) {
+            console.error('get notes error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async getAllAdmins(req, res) {
+        try {
+            const admins = await this.adminService.getAllAdmins();
+            res.status(200).json(admins);
+        } catch (error) {
+            console.error('Get all admins error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async getAdmin(req, res) {
+        try {
+            const admin = await this.adminService.getAdmin(req.params.adminId);
+            res.status(200).json(admin);
+        } catch (error) {
+            console.error('Get admin error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async updateAdmin(req, res) {
+        try {
+            const result = await this.adminService.updateAdmin(req.params.adminId, req.body);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Update admin error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async deleteAdmin(req, res) {
+        try {
+            const result = await this.adminService.deleteAdmin(req.params.adminId);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Delete admin error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async getPermissions(req, res) {
+        try {
+            const permissions = await this.adminService.getPermissions();
+            res.status(200).json(permissions);
+        } catch (error) {
+            console.error('Get permissions error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async addOrUpdatePermissions(req, res) {
+        try {
+            const result = await this.adminService.addOrUpdatePermissions(req.params.role, req.body);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Update permissions error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+    async getActivityLogs(req, res) {
+        try {
+            const { adminId } = req.params;
+            const logs = await this.adminService.getActivityLogs(adminId);
+            res.status(200).json(logs);
+        } catch (error) {
+            console.error('Get activity logs error:', error);
             res.status(400).json({ error: error.message });
         }
     }
@@ -490,5 +580,15 @@ export default {
     addAdmin: adminController.addAdmin.bind(adminController),
     getAllUsersOfForm: adminController.getAllUsersOfForm.bind(adminController),
     addUser: adminController.addUser.bind(adminController),
+    getCutoff: adminController.getCutoff.bind(adminController),
+    addNote: adminController.addNote.bind(adminController),
+    getNotes: adminController.getNotes.bind(adminController),
+    getAllAdmins: adminController.getAllAdmins.bind(adminController),
+    getAdmin: adminController.getAdmin.bind(adminController),
+    updateAdmin: adminController.updateAdmin.bind(adminController),
+    deleteAdmin: adminController.deleteAdmin.bind(adminController),
+    getPermissions: adminController.getPermissions.bind(adminController),
+    addOrUpdatePermissions: adminController.addOrUpdatePermissions.bind(adminController),
+    getActivityLogs: adminController.getActivityLogs.bind(adminController),
 };
 
