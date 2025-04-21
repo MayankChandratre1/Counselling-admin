@@ -206,6 +206,14 @@ class AdminController {
             res.status(400).json({ error: error.message });
         }
     }
+    async updateUserStepData(req, res) {
+        try {
+            const result = await this.adminService.updateUserStepData(req.params.userId, req.body);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    }
 
     async deleteUser(req, res) {
         try {
@@ -553,6 +561,7 @@ export default {
     login: adminController.login.bind(adminController),
     getAllUsers: adminController.getAllUsers.bind(adminController),
     updateUser: adminController.updateUser.bind(adminController),
+    updateUserStepData: adminController.updateUserStepData.bind(adminController),
     deleteUser: adminController.deleteUser.bind(adminController),
     getFormSteps: adminController.getFormSteps.bind(adminController),
     editFormSteps: adminController.editFormSteps.bind(adminController),

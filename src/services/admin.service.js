@@ -84,6 +84,23 @@ class AdminService {
             throw new Error('User update failed');
         }
     }
+    async updateUserStepData(userId, stepsData) {
+        try {
+            const userRef =  this.users.doc(userId);
+            const userDoc = await userRef.get();
+            if (!userDoc.exists) throw new Error('User not found');
+            const updatedStepsData = stepsData || [];
+            const updatedData = {
+                stepsData: updatedStepsData,
+            }
+            await userRef.update(updatedData);
+            await this.invalidateCache('users:*');
+            await this.invalidateCache(`user:*/user/${userId}`);
+            return { message: `User ${userId} stepdata updated successfully` };
+        } catch (error) {
+            throw new Error('User update failed');
+        }
+    }
 
     async deleteUser(userId) {
         try {

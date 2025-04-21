@@ -72,6 +72,7 @@ router.get('/get-notes/:userId', cacheMiddleware('notes',300), AdminController.g
 
 router.get('/activity/:adminId', AdminController.getActivityLogs);
 
+router.put('/update-user-step-data/:userId', AdminController.updateUserStepData);
 // Remove unused routes
 // router.post('/user/:userId/lists', AdminController.createUserList);
 // router.delete('/user/:userId/lists/:listId', AdminController.deleteUserList);
