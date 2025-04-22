@@ -11,6 +11,8 @@ const authorize = (allowedRoles) => {
             }
 
             if (!allowedRoles.includes(userRole)) {
+                console.log('User role:', userRole, 'Allowed roles:', allowedRoles);
+                
                 return res.status(403).json({ 
                     message: 'You do not have permission to perform this action' 
                 });
