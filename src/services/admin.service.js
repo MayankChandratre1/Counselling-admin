@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import redis from '../config/redisClient.js';
 import pkg from "firebase-admin";
 const { firestore } = pkg;
+import path from 'path';
 class AdminService {
     constructor(){
         this.db = db;
@@ -13,9 +14,13 @@ class AdminService {
         this.permissions = db.collection('permissions');
         this.counsellingForms = db.collection('counsellingForms');
         this.lists = db.collection('lists');
-        this.colleges = db.collection('colleges_v3');
+        this.colleges = db.collection('colleges_v4');
         this.registrationForm = db.collection('registrationForm');
         this.notes = db.collection('notes');
+        this.landingPage = db.collection('landingPage');
+        this.dynamicScreens = db.collection('dynamicScreens');
+        this.payments = db.collection('paymentLogs');
+        this.COLLEGES_FILE_PATH = path.join(process.cwd(), 'src/data/College_New_Data_2.json');
     }
 
     async invalidateCache(pattern) {
@@ -728,27 +733,26 @@ class AdminService {
 
     async getCutoff(query) {
         try {
-            const collegeIds = query.collegeIds || [];
-            const chunkSize = 30; // Firestore IN query limit
-            const results = [];
-
-            // Split collegeIds into chunks of 30
-            for (let i = 0; i < collegeIds.length; i += chunkSize) {
-                const chunk = collegeIds.slice(i, i + chunkSize);
-                const snapshot = await this.colleges
-                    .where('id', 'in', chunk)
-                    .get();
-                
-                const chunkData = snapshot.docs.map(doc => ({ 
-                    id: doc.id, 
-                    ...doc.data() 
-                }));
-                results.push(...chunkData);
+            // Import fs module for file operations
+            const fs = await import('fs/promises');
+            const path = await import('path');
+            
+            let collegeIds = query.collegeIds || [];
+            if(collegeIds.length > 0) {
+                collegeIds = collegeIds.map(id => id.toString().split('_')[0]);
             }
-
-            // Format the data to match original collegeIds order
+            
+            // Read college data from file instead of Firestore
+            const fileData = await fs.readFile(this.COLLEGES_FILE_PATH, 'utf8');
+            const allColleges = JSON.parse(fileData);
+            
+            // Filter colleges by requested IDs
             const formattedData = collegeIds.map(collegeId => {
-                const college = results.find(college => college.id === collegeId);
+                // Find the college in the JSON data
+                const college = allColleges.find(c => 
+                    c.id === collegeId || c.id.toString() === collegeId
+                );
+                
                 return {
                     id: collegeId,
                     branches: college ? college.branches : [] // Return empty array if college not found
@@ -925,6 +929,188 @@ class AdminService {
         }
     }
 
+    async editLandingPage(landingPageData) {
+        try {
+            const timestamp = new Date().toISOString();
+            await this.landingPage.doc('landingPage').set({
+                ...landingPageData,
+                updatedAt: timestamp
+            }, { merge: true });
+            
+            await this.invalidateCache('landingpage:*');
+            
+            return { 
+                message: 'Landing page updated successfully',
+                landingPageData,
+                updatedAt: timestamp
+            };
+        } catch (error) {
+            console.error('Edit Landing Page error:', error);
+            throw new Error('Failed to edit landing page: ' + error.message);
+        }
+    }
+
+    async getLandingPage(){
+        try {
+            const landingPageDoc = await this.landingPage.doc('landingPage').get();
+            if (!landingPageDoc.exists) {
+                throw new Error('Landing page not found');
+            }
+            return landingPageDoc.data();
+        } catch (error) {
+            console.error('Get Landing Page error:', error);
+            throw new Error('Failed to get landing page: ' + error.message);
+        }
+    }
+
+    async getUserPayment(phone){
+        try {
+            const paymentDoc = await this.payments.where('data.contact', '==', `+91${phone}`).get();
+            if (!paymentDoc.exists) {
+                throw new Error('Payment details not found for this user');
+            }
+            return paymentDoc.data();
+        } catch (error) {
+            console.error('Get User Payments error:', error);
+            throw new Error('Failed to get user payments: ' + error.message);
+        }
+    }
+
+    async updateHomePage(homePageData) {
+        try {
+            const timestamp = new Date().toISOString();
+            await this.landingPage.doc('homepage').set({
+                ...homePageData,
+                updatedAt: timestamp
+            }, { merge: true });
+            
+            await this.invalidateCache('homepage:*');
+            
+            return { 
+                message: 'Home page updated successfully',
+                homePageData,
+                updatedAt: timestamp
+            };
+        } catch (error) {
+            console.error('Update Home Page error:', error);
+            throw new Error('Failed to update home page: ' + error.message);
+        }
+    }
+
+    async getHomePage() {
+        try {
+            const homePageDoc = await this.landingPage.doc('homepage').get();
+            if (!homePageDoc.exists) {
+                throw new Error('Home page not found');
+            }
+            return homePageDoc.data();
+        } catch (error) {
+            console.error('Get Home Page error:', error);
+            throw new Error('Failed to get home page: ' + error.message);
+        }
+    }
+
+    async updatePremiumPlans(premiumPlansData) {
+        try {
+            const timestamp = new Date().toISOString();
+            await this.landingPage.doc('premiumPlans').set({
+                ...premiumPlansData,
+                updatedAt: timestamp
+            }, { merge: true });
+            
+            await this.invalidateCache('premiumplans:*');
+            
+            return { 
+                message: 'Premium plans updated successfully',
+                premiumPlansData,
+                updatedAt: timestamp
+            };
+        } catch (error) {
+            console.error('Update Premium Plans error:', error);
+            throw new Error('Failed to update premium plans: ' + error.message);
+        }
+    }
+
+    async getPremiumPlans() {
+        try {
+            const premiumPlansDoc = await this.landingPage.doc('premiumPlans').get();
+            if (!premiumPlansDoc.exists) {
+                return {}; // Return empty object if premium plans not found
+            }
+            return premiumPlansDoc.data();
+        } catch (error) {
+            console.error('Get Premium Plans error:', error);
+            throw new Error('Failed to get premium plans: ' + error.message);
+        }
+    }
+
+    async updateContactData(contactData) {
+        try {
+            const timestamp = new Date().toISOString();
+            await this.landingPage.doc('contact').set({
+                ...contactData,
+                updatedAt: timestamp
+            }, { merge: true });
+            
+            await this.invalidateCache('contact:*');
+            
+            return { 
+                message: 'Contact data updated successfully',
+                contactData,
+                updatedAt: timestamp
+            };
+        } catch (error) {
+            console.error('Update Contact Data error:', error);
+            throw new Error('Failed to update contact data: ' + error.message);
+        }
+    }
+
+    async getContactData() {
+        try {
+            const contactDataDoc = await this.landingPage.doc('contact').get();
+            if (!contactDataDoc.exists) {
+                return {}; // Return empty object if contact data not found
+            }
+            return contactDataDoc.data();
+        } catch (error) {
+            console.error('Get Contact Data error:', error);
+            throw new Error('Failed to get contact data: ' + error.message);
+        }
+    }
+
+    async updateDynamicPages(dynamicPagesData) {
+        try {
+            const timestamp = new Date().toISOString();
+            await this.dynamicScreens.doc('screens').set({
+                ...dynamicPagesData,
+                updatedAt: timestamp
+            }, { merge: true });
+            
+            await this.invalidateCache('dynamic:*');
+            
+            return { 
+                message: 'Dynamic pages updated successfully',
+                dynamicPagesData,
+                updatedAt: timestamp
+            };
+        } catch (error) {
+            console.error('Update Dynamic Pages error:', error);
+            throw new Error('Failed to update dynamic pages: ' + error.message);
+        }
+    }
+
+    async getDynamicPages() {
+        try {
+            const dynamicPagesDoc = await this.dynamicScreens.doc('screens').get();
+            if (!dynamicPagesDoc.exists) {
+                return {}; // Return empty object if dynamic pages not found
+            }
+            return dynamicPagesDoc.data();
+        } catch (error) {
+            console.error('Get Dynamic Pages error:', error);
+            throw new Error('Failed to get dynamic pages: ' + error.message);
+        }
+    }
 }
 
 export default AdminService;

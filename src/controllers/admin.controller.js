@@ -551,6 +551,120 @@ class AdminController {
             res.status(400).json({ error: error.message });
         }
     }
+
+    async editLandingPage(req, res) {
+        try {
+            const { data } = req.body;
+            const result = await this.adminService.editLandingPage(data);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Edit landing page error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+    async getLandingPage(req, res) {
+        try {
+            const landingPage = await this.adminService.getLandingPage();
+            res.status(200).json(landingPage);
+        } catch (error) {
+            console.error('Get landing page error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+    async getUserPayment(req, res) {
+        try {
+            const { phone } = req.params;
+            const payment = await this.adminService.getUserPayment(phone);
+            res.status(200).json(payment);
+        } catch (error) {
+            console.error('Get user payment error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async updateHomePage(req, res) {
+        try {
+            const { data } = req.body;
+            const result = await this.adminService.updateHomePage(data);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Update home page error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async getHomePage(req, res) {
+        try {
+            const homePage = await this.adminService.getHomePage();
+            res.status(200).json(homePage);
+        } catch (error) {
+            console.error('Get home page error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async updatePremiumPlans(req, res) {
+        try {
+            const  data = req.body;
+            const result = await this.adminService.updatePremiumPlans(data);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Update premium plans error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async getPremiumPlans(req, res) {
+        try {
+            const premiumPlans = await this.adminService.getPremiumPlans();
+            res.status(200).json(premiumPlans);
+        } catch (error) {
+            console.error('Get premium plans error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async updateContactData(req, res) {
+        try {
+            const  data = req.body;
+            const result = await this.adminService.updateContactData(data);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Update contact data error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async getContactData(req, res) {
+        try {
+            const contactData = await this.adminService.getContactData();
+            res.status(200).json(contactData);
+        } catch (error) {
+            console.error('Get contact data error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async updateDynamicPages(req, res) {
+        try {
+            const  data = req.body;
+            const result = await this.adminService.updateDynamicPages(data);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Update dynamic pages error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async getDynamicPages(req, res) {
+        try {
+            const dynamicPages = await this.adminService.getDynamicPages();
+            res.status(200).json(dynamicPages);
+        } catch (error) {
+            console.error('Get dynamic pages error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
 }
 
 // Create instance of controller
@@ -599,5 +713,16 @@ export default {
     getPermissions: adminController.getPermissions.bind(adminController),
     addOrUpdatePermissions: adminController.addOrUpdatePermissions.bind(adminController),
     getActivityLogs: adminController.getActivityLogs.bind(adminController),
+    editLandingPage: adminController.editLandingPage.bind(adminController),
+    getLandingPage: adminController.getLandingPage.bind(adminController),
+    getUserPayment: adminController.getUserPayment.bind(adminController),
+    updateHomePage: adminController.updateHomePage.bind(adminController),
+    getHomePage: adminController.getHomePage.bind(adminController),
+    updatePremiumPlans: adminController.updatePremiumPlans.bind(adminController),
+    getPremiumPlans: adminController.getPremiumPlans.bind(adminController),
+    updateContactData: adminController.updateContactData.bind(adminController),
+    getContactData: adminController.getContactData.bind(adminController),
+    updateDynamicPages: adminController.updateDynamicPages.bind(adminController),
+    getDynamicPages: adminController.getDynamicPages.bind(adminController),
 };
 

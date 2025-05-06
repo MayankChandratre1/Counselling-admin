@@ -65,7 +65,7 @@ router.get('/form-config', cacheMiddleware('formconfig', 3600), AdminController.
 router.post('/form-config', AdminController.saveFormConfig);
 
 //Cutoff specific routes
-router.post('/getcutoff',  cacheMiddleware('cutoffs', 300), AdminController.getCutoff);
+router.post('/getcutoff',   AdminController.getCutoff);
 router.post('/add-note/:userId', AdminController.addNote);
 router.get('/get-notes/:userId', cacheMiddleware('notes',300), AdminController.getNotes);
 
@@ -73,6 +73,24 @@ router.get('/get-notes/:userId', cacheMiddleware('notes',300), AdminController.g
 router.get('/activity/:adminId', AdminController.getActivityLogs);
 
 router.put('/update-user-step-data/:userId', AdminController.updateUserStepData);
+
+
+router.put('/edit-landing-page', authorize(['admin', 'super-admin']), AdminController.editLandingPage);
+router.get('/get-landing-page',  AdminController.getLandingPage);
+
+router.get('/payments/:phone', cacheMiddleware('payments', 300), AdminController.getUserPayment);
+
+router.post('/update-home-page', authorize(['admin', 'super-admin']), AdminController.updateHomePage);
+router.get('/get-home-page', cacheMiddleware('homepage', 300), AdminController.getHomePage);
+
+router.post('/update-premium-plans', authorize(['admin', 'super-admin']), AdminController.updatePremiumPlans);
+router.get('/get-premium-plans', cacheMiddleware('premiumplans', 300), AdminController.getPremiumPlans);
+
+router.post('/update-contact-data', authorize(['admin', 'super-admin']), AdminController.updateContactData);
+router.get('/get-contact-data', cacheMiddleware('contact', 300), AdminController.getContactData);
+
+router.post('/update-dynamic-pages', authorize(['admin', 'super-admin']), AdminController.updateDynamicPages);
+router.get('/get-dynamic-pages', cacheMiddleware('dynamic', 300), AdminController.getDynamicPages);
 // Remove unused routes
 // router.post('/user/:userId/lists', AdminController.createUserList);
 // router.delete('/user/:userId/lists/:listId', AdminController.deleteUserList);
