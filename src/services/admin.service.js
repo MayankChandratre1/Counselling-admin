@@ -498,7 +498,7 @@ class AdminService {
     }
 
     async saveFormConfig(steps) {
-        const data = {
+        const fallback = {
             "steps": [
               {
                 "title": "Basic Information",
@@ -665,7 +665,7 @@ class AdminService {
         try {
             const timestamp = new Date().toISOString();
             await this.registrationForm.doc('Form1').set({
-                steps: data.steps,
+                steps: steps ?? fallback.steps,
                 updatedAt: timestamp
             }, { merge: true });
             
