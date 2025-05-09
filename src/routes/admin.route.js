@@ -78,7 +78,11 @@ router.put('/update-user-step-data/:userId', AdminController.updateUserStepData)
 router.put('/edit-landing-page', authorize(['admin', 'super-admin']), AdminController.editLandingPage);
 router.get('/get-landing-page',  AdminController.getLandingPage);
 
-router.get('/payments/:phone', cacheMiddleware('payments', 300), AdminController.getUserPayment);
+
+router.get('/payments',cacheMiddleware('payments', 300),  AdminController.getPayments);
+router.get('/payments/order-id/:id', cacheMiddleware('payments_by_orderid', 300), AdminController.getPaymentsByOrderId);
+router.get('/payments/payment-id/:id', cacheMiddleware('payments_by_paymentid', 300), AdminController.getPaymentsByPaymentId);
+router.get('/payments/phone/:phone', AdminController.getUserPayment);
 
 router.post('/update-home-page', authorize(['admin', 'super-admin']), AdminController.updateHomePage);
 router.get('/get-home-page', cacheMiddleware('homepage', 300), AdminController.getHomePage);

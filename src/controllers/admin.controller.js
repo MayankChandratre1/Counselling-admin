@@ -665,6 +665,38 @@ class AdminController {
             res.status(400).json({ error: error.message });
         }
     }
+
+    async getPayments(req, res) {
+        try {
+            const {lastdoc, limit, page} = req.query;
+            console.log("#########",lastdoc, limit, page);
+            const payments = await this.adminService.getPayments(lastdoc, limit, page);
+            res.status(200).json(payments);
+        } catch (error) {
+            console.error('Get payments error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+    async getPaymentsByOrderId(req, res) {
+        try {
+            const { id } = req.params;
+            const payment = await this.adminService.getPaymentsByOrderId(id);
+            res.status(200).json(payment);
+        } catch (error) {
+            console.error('Get payments by order ID error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+    async getPaymentsByPaymentId(req, res) {
+        try {
+            const { id } = req.params;
+            const payment = await this.adminService.getPaymentsByPaymentId(id);
+            res.status(200).json(payment);
+        } catch (error) {
+            console.error('Get payments by payment ID error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
 }
 
 // Create instance of controller
@@ -724,5 +756,8 @@ export default {
     getContactData: adminController.getContactData.bind(adminController),
     updateDynamicPages: adminController.updateDynamicPages.bind(adminController),
     getDynamicPages: adminController.getDynamicPages.bind(adminController),
+    getPayments: adminController.getPayments.bind(adminController),
+    getPaymentsByOrderId: adminController.getPaymentsByOrderId.bind(adminController),
+    getPaymentsByPaymentId: adminController.getPaymentsByPaymentId.bind(adminController),
 };
 

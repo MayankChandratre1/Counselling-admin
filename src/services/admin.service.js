@@ -963,18 +963,7 @@ class AdminService {
         }
     }
 
-    async getUserPayment(phone){
-        try {
-            const paymentDoc = await this.payments.where('data.contact', '==', `+91${phone}`).get();
-            if (!paymentDoc.exists) {
-                throw new Error('Payment details not found for this user');
-            }
-            return paymentDoc.data();
-        } catch (error) {
-            console.error('Get User Payments error:', error);
-            throw new Error('Failed to get user payments: ' + error.message);
-        }
-    }
+
 
     async updateHomePage(homePageData) {
         try {
@@ -1109,6 +1098,79 @@ class AdminService {
         } catch (error) {
             console.error('Get Dynamic Pages error:', error);
             throw new Error('Failed to get dynamic pages: ' + error.message);
+        }
+    }
+
+        async getUserPayment(phone){
+        try {
+            console.log(`+${phone}`);
+            
+            const paymentDoc = await this.payments.where('data.contact', '==', `${phone}`).get();
+            if (paymentDoc.empty) {
+                return []
+            }
+            const payments = paymentDoc.docs.map(doc => ({id: doc.id,...doc.data()}));
+            return payments;
+        } catch (error) {
+            console.error('Get User Payments error:', error);
+            throw new Error('Failed to get user payments: ' + error.message);
+        }
+    }
+
+    async getPaymentsByOrderId(orderId) {
+        try {
+            const paymentDoc = await this.payments.where('data.id', '==', orderId).get();
+            if (paymentDoc.empty) {
+                throw new Error('Payment details not found for this order ID');
+            }
+            return paymentDoc.docs.map(doc => doc.data());
+        } catch (error) {
+            console.error('Get Payments by Order ID error:', error);
+            throw new Error('Failed to get payments by order ID: ' + error.message);
+        }
+    }
+
+    async getPaymentsByPaymentId(paymentId) {
+        try {
+            const paymentDoc = await this.payments.where('data.id', '==', paymentId).get();
+            if (paymentDoc.empty) {
+                throw new Error('Payment details not found for this payment ID');
+            }
+            return paymentDoc.docs.map(doc => doc.data());
+        } catch (error) {
+            console.error('Get Payments by Payment ID error:', error);
+            throw new Error('Failed to get payments by payment ID: ' + error.message);
+        }
+    }
+
+    async getPayments(lastdoc, limit, page) {
+        try {
+            console.log(`Fetching payments with limit: ${limit}, page: ${page} ${lastdoc}`);
+            
+            let query = this.payments.orderBy('timestamp', 'desc').limit(parseInt(limit, 10));
+            // First get a reference to the document
+            if (lastdoc) {
+                const docRef = this.payments.doc(lastdoc);
+                const snapshot = await docRef.get();
+                
+                if (!snapshot.exists) {
+                    throw new Error(`Document with ID ${lastdoc} not found`);
+                }
+                
+                console.log(`Starting after document: ${snapshot.id}`);
+                query = this.payments.orderBy('timestamp', 'desc').startAfter(snapshot).limit(parseInt(limit, 10));
+            }
+            const paymentDoc = await query.get();
+            if (paymentDoc.empty) {
+                throw new Error('No payment details found');
+            }
+            return paymentDoc.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+        } catch (error) {
+            console.error('Get Payments error:', error);
+            throw new Error('Failed to get payments: ' + error.message);
         }
     }
 }
