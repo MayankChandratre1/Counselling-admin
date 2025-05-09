@@ -5,6 +5,9 @@ import redis from '../config/redisClient.js';
 import pkg from "firebase-admin";
 const { firestore } = pkg;
 import path from 'path';
+import { sendOneSignalNotification } from '../util/sendPushNotification.js';
+import fs from 'fs';
+
 class AdminService {
     constructor(){
         this.db = db;
@@ -21,6 +24,7 @@ class AdminService {
         this.dynamicScreens = db.collection('dynamicScreens');
         this.payments = db.collection('paymentLogs');
         this.COLLEGES_FILE_PATH = path.join(process.cwd(), 'src/data/College_New_Data_2.json');
+        this.notificationsMap = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'src/data/Notifications.json'), 'utf8'));
     }
 
     async invalidateCache(pattern) {
@@ -84,6 +88,9 @@ class AdminService {
             await this.users.doc(userId).update(userData);
             await this.invalidateCache('users:*');
             await this.invalidateCache(`user:*/user/${userId}`);
+            
+            
+            
             return { message: `User ${userId} updated successfully` };
         } catch (error) {
             throw new Error('User update failed');
@@ -101,6 +108,9 @@ class AdminService {
             await userRef.update(updatedData);
             await this.invalidateCache('users:*');
             await this.invalidateCache(`user:*/user/${userId}`);
+            
+            
+            
             return { message: `User ${userId} stepdata updated successfully` };
         } catch (error) {
             throw new Error('User update failed');
@@ -393,6 +403,9 @@ class AdminService {
             });
 
             await this.invalidateCache(`userlists:*/user/${userId}/lists`);
+            
+            
+            
             return userLists[listIndex];
         } catch (error) {
             console.error('Update user list error:', error);
@@ -430,6 +443,12 @@ class AdminService {
             await this.users.doc(userId).update({
                 lists: [...userLists, newAssignment]
             });
+            
+            // Send notification to user
+            await this.sendNotification(userId, 'LIST_ASSIGNED', {
+                listId: listAssignment.originalListId,
+                listName: listAssignment.name || 'New List'
+            });
 
             return { message: `List assigned to user ${userData.id} (${userData.phone}) successfully` };
         } catch (error) {
@@ -463,6 +482,8 @@ class AdminService {
             await this.users.doc(userId).update({
                 lists: userLists
             });
+            
+          
 
             return { 
                 message: 'List removed successfully',
@@ -798,9 +819,11 @@ class AdminService {
             }, { merge: true });
 
             await this.invalidateCache(`notes:*/get-notes/${userId}`);
+            
+        
 
             return {
-                message: 'Note added successfully',
+                message: note === '' ? 'Note deleted successfully' : 'Note added successfully',
                 adminEmail: admin.email
             };
         } catch (error) {
@@ -974,6 +997,12 @@ class AdminService {
             }, { merge: true });
             
             await this.invalidateCache('homepage:*');
+                
+                // Send notification to each user
+                this.sendNotification(null, 'HOME_UPDATE', {
+                    message: 'The home page has been updated. Check it out!'
+                }, true);
+           
             
             return { 
                 message: 'Home page updated successfully',
@@ -1171,6 +1200,88 @@ class AdminService {
         } catch (error) {
             console.error('Get Payments error:', error);
             throw new Error('Failed to get payments: ' + error.message);
+        }
+    }
+
+    async sendNotification(userId, notificationId, customData = {}, toAll = false) {
+        try {
+            // Get user to retrieve OneSignal playerId
+            if (toAll) {
+                const allUsers = await this.users.get();
+                allUsers.forEach(async (userDoc) => {
+                    const userData = userDoc.data();
+                    const oneSignalId = userData.oneSignalId;
+                    
+                    // Skip if no OneSignal ID is associated with the user
+                    if (!oneSignalId) {
+                        console.log(`No OneSignal ID found for user ${userDoc.id}, skipping notification`);
+                        return null;
+                    }
+                    
+                    // Get notification template from the map
+                    const notificationTemplate = this.notificationsMap[notificationId];
+                    if (!notificationTemplate) {
+                        throw new Error(`Notification template with ID "${notificationId}" not found`);
+                    }
+                    
+                    // Merge default additional data with custom data
+                    const additionalData = {
+                        ...notificationTemplate.additionalData,
+                        ...customData,
+                        userId: userDoc.id
+                    };
+                    
+                    // Send notification using the utility
+                    return await sendOneSignalNotification(
+                        oneSignalId,
+                        notificationTemplate.title,
+                        notificationTemplate.message,
+                        additionalData
+                    );
+                });
+                return null;
+            }
+
+
+            const userDoc = await this.users.doc(userId).get();
+            if (!userDoc.exists) {
+                throw new Error('User not found');
+            }
+            
+            const userData = userDoc.data();
+            const oneSignalId = userData.oneSignalId;
+            
+            // Skip if no OneSignal ID is associated with the user
+            if (!oneSignalId) {
+                console.log(`No OneSignal ID found for user ${userId}, skipping notification`);
+                return null;
+            }
+            
+            // Get notification template from the map
+            const notificationTemplate = this.notificationsMap[notificationId];
+            if (!notificationTemplate) {
+                throw new Error(`Notification template with ID "${notificationId}" not found`);
+            }
+            
+            // Merge default additional data with custom data
+            const additionalData = {
+                ...notificationTemplate.additionalData,
+                ...customData,
+                userId: userId
+            };
+            
+            // Send notification using the utility
+            return await sendOneSignalNotification(
+                oneSignalId,
+                notificationTemplate.title,
+                notificationTemplate.message,
+                additionalData
+            );
+        } catch (error) {
+            console.error('Send notification error:', error);
+            // We don't want notification errors to break the main functionality
+            // So we log the error but don't throw it
+            return null;
         }
     }
 }

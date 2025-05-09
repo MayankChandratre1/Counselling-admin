@@ -256,6 +256,8 @@ class CollegeService {
         // Check if any keyword contains the search term
         return keywords.map(keyword => keyword.toLowerCase()).includes(searchTermLower) 
     }
+
+    
 }
 
 export default CollegeService;

@@ -1,0 +1,72 @@
+{
+  "USER_UPDATE": {
+    "title": "Profile Updated",
+    "message": "Your profile information has been updated by an administrator.",
+    "additionalData": {
+      "actionType": "PROFILE_UPDATE"
+    }
+  },
+  "USER_STEP_DATA_UPDATE": {
+    "title": "Form Data Updated",
+    "message": "Your counselling form data has been updated by an administrator.",
+    "additionalData": {
+      "actionType": "FORM_DATA_UPDATE"
+    }
+  },
+  "LIST_ASSIGNED": {
+    "title": "New College List Available",
+    "message": "A new college list has been assigned to you. Check it out!",
+    "additionalData": {
+      "actionType": "LIST_ASSIGNED"
+    }
+  },
+  "LIST_UPDATED": {
+    "title": "College List Updated",
+    "message": "One of your college lists has been updated by an administrator.",
+    "additionalData": {
+      "actionType": "LIST_UPDATED"
+    }
+  },
+  "LIST_REMOVED": {
+    "title": "College List Removed",
+    "message": "A college list has been removed from your account by an administrator.",
+    "additionalData": {
+      "actionType": "LIST_REMOVED"
+    }
+  },
+  "NOTE_ADDED": {
+    "title": "New Note Added",
+    "message": "An administrator has added a new note to your profile.",
+    "additionalData": {
+      "actionType": "NOTE_ADDED"
+    }
+  },
+  "PAYMENT_CONFIRMED": {
+    "title": "Payment Confirmed",
+    "message": "Your payment has been confirmed. Thank you!",
+    "additionalData": {
+      "actionType": "PAYMENT_CONFIRMED"
+    }
+  },
+  "COUNSELING_SESSION_SCHEDULED": {
+    "title": "Counseling Session Scheduled",
+    "message": "Your counseling session has been scheduled. Check your calendar for details.",
+    "additionalData": {
+      "actionType": "SESSION_SCHEDULED"
+    }
+  },
+  "APPLICATION_STATUS_UPDATE": {
+    "title": "Application Status Update",
+    "message": "There's an update to your college application status. Check it out!",
+    "additionalData": {
+      "actionType": "STATUS_UPDATE"
+    }
+  },
+  "HOME_UPDATE": {
+    "title": "You may have a new update",
+    "message": "Check now for news and events.",
+    "additionalData": {
+      "actionType": "HOME_UPDATE"
+    }
+  }
+}
