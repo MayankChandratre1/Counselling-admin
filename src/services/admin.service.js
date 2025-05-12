@@ -34,6 +34,12 @@ class AdminService {
         }
     }
 
+    async getUserByPhone(phone) {
+        const snapshot = await this.users.where('phone', '==', phone).get();
+        if (snapshot.empty) return null;
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    }
+
     async login(credentials) {
         const adminRef = await this.admins.where('email', '==', credentials.email).get();
         if (adminRef.empty) throw new Error('Admin not found');
@@ -94,6 +100,35 @@ class AdminService {
             return { message: `User ${userId} updated successfully` };
         } catch (error) {
             throw new Error('User update failed');
+        }
+    }
+    async addUser(userData) {
+        try {
+
+            let data = {
+                ...userData,
+                createdAt: firestore.Timestamp.fromDate(new Date()),
+            }
+            if(userData.isPremium){
+                data = {
+                    ...data,
+                    premiumPlan:{
+                        ...data.premiumPlan,
+                        purchaseDate: firestore.Timestamp.fromDate(new Date(data.premiumPlan.purchaseDate)),
+                        expiryDate: firestore.Timestamp.fromDate(new Date(data.premiumPlan.expiryDate))
+                    }
+                }
+            }
+            await this.users.add(userData);
+            await this.invalidateCache('users:*');
+            
+            
+            
+            return { message: `User added successfully` };
+        } catch (error) {
+            console.log(error);
+            
+            throw new Error('User add failed');
         }
     }
     async updateUserStepData(userId, stepsData) {

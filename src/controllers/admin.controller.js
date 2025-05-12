@@ -194,6 +194,8 @@ class AdminController {
             const user = await this.adminService.addUser(req.body);
             res.status(201).json(user);
         } catch (error) {
+            console.log('Add user error:', error);
+            
             res.status(400).json({ error: error.message });
         }
     }
