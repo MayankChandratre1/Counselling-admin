@@ -12,6 +12,7 @@ router.post('/login', AdminController.login);
 router.post('/request-otp', AdminController.requestOTP);
 router.post('/verify-otp', AdminController.verifyOTP);
 router.post('/change-password', AdminController.changePassword);
+router.get('/get-analytics', AdminController.getAnalytics);
 
 // Apply authentication middleware to all routes below this line
 router.use(authMiddleware);
@@ -95,6 +96,8 @@ router.get('/get-contact-data', cacheMiddleware('contact', 300), AdminController
 
 router.post('/update-dynamic-pages', authorize(['admin', 'super-admin']), AdminController.updateDynamicPages);
 router.get('/get-dynamic-pages', cacheMiddleware('dynamic', 300), AdminController.getDynamicPages);
+
+
 // Remove unused routes
 // router.post('/user/:userId/lists', AdminController.createUserList);
 // router.delete('/user/:userId/lists/:listId', AdminController.deleteUserList);

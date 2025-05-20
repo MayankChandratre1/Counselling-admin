@@ -699,6 +699,16 @@ class AdminController {
             res.status(400).json({ error: error.message });
         }
     }
+
+    async getAnalytics(req, res) {
+        try {
+            const analytics = await this.adminService.getAnalytics();
+            res.status(200).json(analytics);
+        } catch (error) {
+            console.error('Get analytics error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
 }
 
 // Create instance of controller
@@ -761,5 +771,6 @@ export default {
     getPayments: adminController.getPayments.bind(adminController),
     getPaymentsByOrderId: adminController.getPaymentsByOrderId.bind(adminController),
     getPaymentsByPaymentId: adminController.getPaymentsByPaymentId.bind(adminController),
+    getAnalytics: adminController.getAnalytics.bind(adminController),
 };
 
