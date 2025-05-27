@@ -75,11 +75,57 @@ class AdminService {
         };
     }
 
-    async getAllUsers() {
-        const snapshot = await this.users
-        .get();
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    }
+   
+    async getAllUsers(page = 1, limit = 10, lastDoc = undefined) {
+            try {
+                // Convert parameters to integers
+                const pageNum = parseInt(page, 10);
+                const limitNum = parseInt(limit, 10);
+                
+                // Create base query with ordering to ensure consistent pagination
+                let query = this.users.orderBy('createdAt', 'desc');
+                
+                // If lastDoc is provided, use cursor-based pagination
+                if (lastDoc) {
+                    // Get a reference to the last document
+                    const lastDocRef = await this.users.doc(lastDoc).get();
+                    
+                    if (!lastDocRef.exists) {
+                        console.warn(`Last document with ID ${lastDoc} not found, ignoring cursor`);
+                    } else {
+                        // Start after the last document (cursor-based pagination)
+                        query = query.startAfter(lastDocRef);
+                    }
+                }
+                
+                // Get the total count for information purposes
+                const totalCountSnapshot = await this.users.count().get();
+                const totalUsers = totalCountSnapshot.data().count;
+                
+                // Get one extra document to determine if there are more pages
+                const snapshot = await query.limit(limitNum + 1).get();
+                
+                // Determine if there are more pages
+                const hasMore = snapshot.docs.length > limitNum;
+                
+                // Remove the extra document from the results if it exists
+                const users = snapshot.docs
+                    .slice(0, limitNum)
+                    .map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                return {
+                    users,
+                    hasMore,
+                    totalUsers,
+                    currentPage: pageNum,
+                    pageSize: limitNum,
+                    lastDoc: users.length > 0 ? users[users.length - 1].id : null
+                };
+            } catch (error) {
+                console.error('Error fetching users with pagination:', error);
+                throw new Error(`Failed to fetch users: ${error.message}`);
+            }
+    }   
 
 
     async getAllUsersOfForm(formId) {
@@ -504,7 +550,8 @@ class AdminService {
                 listId: listAssignment.originalListId,
                 listName: listAssignment.name || 'New List'
             });
-
+            this.invalidateCache('user')
+            this.invalidateCache('user_lists')
             return { message: `List assigned to user ${userData.id} (${userData.phone}) successfully` };
         } catch (error) {
             throw new Error(`Failed to assign list: ${error.message}`);
