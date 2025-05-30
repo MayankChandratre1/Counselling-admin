@@ -2,6 +2,7 @@ import express, { json } from 'express';
 import cors from "cors"
 import adminRouter from './routes/admin.route.js';
 import collegeRouter from './routes/college.routes.js';
+import razRouter from './routes/raz.routes.js';
 import errorHandler from './middleware/errorHandler.js';
 
 const app = express();
@@ -17,6 +18,7 @@ app.use((req, res, next) => {
 
 app.use('/api/admin', adminRouter);
 app.use('/api/colleges', collegeRouter); // Assuming collegeRouter is defined and imported
+app.use('/api/razorpay', razRouter); // Assuming collegeRouter is defined and imported
 
 // Add error handler middleware
 app.use(errorHandler);

@@ -672,8 +672,7 @@ class AdminController {
     async getPayments(req, res) {
         try {
             const {lastdoc, limit, page} = req.query;
-            console.log("#########",lastdoc, limit, page);
-            const payments = await this.adminService.getPayments(lastdoc, limit, page);
+            const payments = await this.adminService.getPayments(lastdoc, limit, page, req.query);
             res.status(200).json(payments);
         } catch (error) {
             console.error('Get payments error:', error);
@@ -707,6 +706,30 @@ class AdminController {
             res.status(200).json(analytics);
         } catch (error) {
             console.error('Get analytics error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async getAll(req, res) {
+        try {
+            const result = await this.adminService.getAll();
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Get all error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async getUserByPhone(req, res) {
+        try {
+            const { phone } = req.params;
+            const user = await this.adminService.getUserByPhone(phone);
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            res.status(200).json(user[0]);
+        } catch (error) {
+            console.error('Get user by phone error:', error);
             res.status(400).json({ error: error.message });
         }
     }
@@ -773,5 +796,7 @@ export default {
     getPaymentsByOrderId: adminController.getPaymentsByOrderId.bind(adminController),
     getPaymentsByPaymentId: adminController.getPaymentsByPaymentId.bind(adminController),
     getAnalytics: adminController.getAnalytics.bind(adminController),
+    getAll: adminController.getAll.bind(adminController),
+    getUserByPhone: adminController.getUserByPhone.bind(adminController)
 };
 

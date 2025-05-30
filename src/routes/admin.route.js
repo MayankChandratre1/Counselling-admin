@@ -34,6 +34,7 @@ router.post('/permissions/:role', authorize(['super-admin']), AdminController.ad
 router.get('/all-users', AdminController.getAllUsers);
 router.get('/users/form/:formId',  cacheMiddleware('usersofform', 300), AdminController.getAllUsersOfForm);
 router.get('/user/:userId', cacheMiddleware('user', 300), AdminController.getUser);
+router.get('/user/phone/:phone',  AdminController.getUserByPhone);
 router.get('/formsteps', cacheMiddleware('formsteps', 3600), AdminController.getFormSteps);
 router.get('/lists', cacheMiddleware('lists', 300), AdminController.getLists);
 router.get('/list/:listId', cacheMiddleware('list', 300), AdminController.getList);
@@ -80,7 +81,8 @@ router.put('/edit-landing-page', authorize(['admin', 'super-admin']), AdminContr
 router.get('/get-landing-page',  AdminController.getLandingPage);
 
 
-router.get('/payments',cacheMiddleware('payments', 300),  AdminController.getPayments);
+router.get('/payments',  AdminController.getPayments);
+// router.get('/payments',cacheMiddleware('payments', 300),  AdminController.getPayments);
 router.get('/payments/order-id/:id', cacheMiddleware('payments_by_orderid', 300), AdminController.getPaymentsByOrderId);
 router.get('/payments/payment-id/:id', cacheMiddleware('payments_by_paymentid', 300), AdminController.getPaymentsByPaymentId);
 router.get('/payments/phone/:phone', AdminController.getUserPayment);
@@ -96,6 +98,8 @@ router.get('/get-contact-data', cacheMiddleware('contact', 300), AdminController
 
 router.post('/update-dynamic-pages', authorize(['admin', 'super-admin']), AdminController.updateDynamicPages);
 router.get('/get-dynamic-pages', cacheMiddleware('dynamic', 300), AdminController.getDynamicPages);
+
+router.get('/getAll', authorize(['admin', 'super-admin']), AdminController.getAll);
 
 
 // Remove unused routes

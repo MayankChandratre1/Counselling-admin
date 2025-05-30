@@ -34,6 +34,46 @@ class AdminService {
         }
     }
 
+     async getAll(page = 1, limit = 10, lastDoc = undefined) {
+            try {
+               
+                
+                // Create base query with ordering to ensure consistent pagination
+                let query = this.users.orderBy('createdAt', 'desc');
+                
+                // If lastDoc is provided, use cursor-based pagination
+               
+                
+                // Get the total count for information purposes
+                const totalCountSnapshot = await this.users.count().get();
+                const totalUsers = totalCountSnapshot.data().count;
+                
+                // Get one extra document to determine if there are more pages
+                const snapshot = await query.get();
+                
+                // Determine if there are more pages
+                const hasMore = snapshot.docs.length > limit;
+                
+                // Remove the extra document from the results if it exists
+                const users = snapshot.docs
+                    .map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                fs.writeFileSync(
+                    path.join(process.cwd(), 'src/data/users.json'),
+                    JSON.stringify(users, null, 2)
+                );
+                
+                return {
+                    users,
+                    hasMore,
+                    totalUsers,
+                };
+            } catch (error) {
+                console.error('Error fetching users with pagination:', error);
+                throw new Error(`Failed to fetch users: ${error.message}`);
+            }
+    }   
+
     async getUserByPhone(phone) {
         const snapshot = await this.users.where('phone', '==', phone).get();
         if (snapshot.empty) return null;
@@ -1274,36 +1314,147 @@ class AdminService {
         }
     }
 
-    async getPayments(lastdoc, limit, page) {
-        try {
-            console.log(`Fetching payments with limit: ${limit}, page: ${page} ${lastdoc}`);
+   async getPayments(lastdoc, limit, page, filters = null) {
+    try {
+        console.log(`Fetching payments with limit: ${limit}, page: ${page} ${lastdoc}`);
+        console.log('Applied filters:', filters);
+        
+        // Start with base query
+        let query = this.payments.orderBy('timestamp', 'desc');
+        
+        // Apply filters if provided
+        if (filters) {
+            // Date range filtering
+            if (filters.fromDate) {
+                const fromDate = new Date(filters.fromDate);
+                fromDate.setHours(0, 0, 0, 0); // Start of day
+                const fromTimestamp = firestore.Timestamp.fromDate(fromDate);
+                query = query.where('timestamp', '>=', fromTimestamp);
+            }
             
-            let query = this.payments.orderBy('timestamp', 'desc').limit(parseInt(limit, 10));
-            // First get a reference to the document
-            if (lastdoc) {
-                const docRef = this.payments.doc(lastdoc);
-                const snapshot = await docRef.get();
-                
-                if (!snapshot.exists) {
-                    throw new Error(`Document with ID ${lastdoc} not found`);
+            if (filters.toDate) {
+                const toDate = new Date(filters.toDate);
+                toDate.setHours(23, 59, 59, 999); // End of day
+                const toTimestamp = firestore.Timestamp.fromDate(toDate);
+                query = query.where('timestamp', '<=', toTimestamp);
+            }
+            
+            // Plan filtering - filter by customerPlan in notes
+            if (filters.plan && filters.plan !== 'all') {
+                query = query.where('data.notes.customerPlan', '==', filters.plan);
+            }
+            
+            // Event type filtering
+            if (filters.type) {
+                if (filters.type === 'order') {
+                    // Filter for order events
+                    query = query.where('eventType', 'in', ['order.paid', 'order.created']);
+                } else if (filters.type === 'payment') {
+                    // Filter for payment events
+                    query = query.where('eventType', 'in', ['payment.captured', 'payment.failed', 'payment.authorized']);
                 }
-                
-                console.log(`Starting after document: ${snapshot.id}`);
-                query = this.payments.orderBy('timestamp', 'desc').startAfter(snapshot).limit(parseInt(limit, 10));
             }
-            const paymentDoc = await query.get();
-            if (paymentDoc.empty) {
-                throw new Error('No payment details found');
+            
+            // Status filtering for orders
+            if (filters.status && filters.type === 'order') {
+                if (filters.status === 'paid') {
+                    query = query.where('eventType', '==', 'order.paid');
+                } else {
+                    // For other order statuses, filter by data.status
+                    query = query.where('data.status', '==', filters.status);
+                }
             }
-            return paymentDoc.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-        } catch (error) {
-            console.error('Get Payments error:', error);
-            throw new Error('Failed to get payments: ' + error.message);
+            
+            // Status filtering for payments (when type is not 'order')
+            if (filters.status && filters.type !== 'order') {
+                if (filters.status === 'captured') {
+                    query = query.where('eventType', '==', 'payment.captured');
+                } else if (filters.status === 'failed') {
+                    query = query.where('eventType', '==', 'payment.failed');
+                } else if (filters.status === 'authorized') {
+                    query = query.where('eventType', '==', 'payment.authorized');
+                } else {
+                    // Generic status filtering
+                    query = query.where('data.status', '==', filters.status);
+                }
+            }
         }
+        
+        // Apply pagination
+        if (lastdoc) {
+            const docRef = this.payments.doc(lastdoc);
+            const snapshot = await docRef.get();
+            
+            if (!snapshot.exists) {
+                throw new Error(`Document with ID ${lastdoc} not found`);
+            }
+            
+            console.log(`Starting after document: ${snapshot.id}`);
+            query = query.startAfter(snapshot);
+        }
+        
+        // Apply limit
+        query = query.limit(parseInt(limit, 10));
+        
+        const paymentDoc = await query.get();
+        
+        if (paymentDoc.empty) {
+            console.log('No payment details found with applied filters');
+            return [];
+        }
+        
+        let results = paymentDoc.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        
+        // Additional client-side filtering for complex conditions that Firestore can't handle
+        if (filters) {
+            // Filter by payment method if specified
+            if (filters.method) {
+                results = results.filter(payment => 
+                    payment.data && payment.data.method === filters.method
+                );
+            }
+            
+            // Filter by phone number if specified
+            if (filters.phone) {
+                const phoneFilter = filters.phone.startsWith('+') ? filters.phone : `+91${filters.phone}`;
+                results = results.filter(payment => 
+                    payment.data && payment.data.contact === phoneFilter
+                );
+            }
+            
+            // Filter by email if specified
+            if (filters.email) {
+                results = results.filter(payment => 
+                    payment.data && payment.data.email && 
+                    payment.data.email.toLowerCase().includes(filters.email.toLowerCase())
+                );
+            }
+            
+            // Filter by amount range if specified
+            if (filters.minAmount) {
+                results = results.filter(payment => 
+                    payment.data && payment.data.amount >= (parseFloat(filters.minAmount) * 100)
+                );
+            }
+            
+            if (filters.maxAmount) {
+                results = results.filter(payment => 
+                    payment.data && payment.data.amount <= (parseFloat(filters.maxAmount) * 100)
+                );
+            }
+        }
+        
+        console.log(`Filtered results count: ${results.length}`);
+        return results;
+        
+    } catch (error) {
+        console.error('Get Payments error:', error);
+        throw new Error('Failed to get payments: ' + error.message);
     }
+}
 
     
     async getAnalytics() {
