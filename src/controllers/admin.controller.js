@@ -172,7 +172,7 @@ class AdminController {
     async getAllUsers(req, res) {
         try {
             const { page, limit, lastDoc } = req.query;
-            const users = await this.adminService.getAllUsers(page, limit, lastDoc);
+            const users = await this.adminService.getAllUsers(page, limit, lastDoc, req.query);
             res.status(200).json(users);
         } catch (error) {
             res.status(400).json({ error: error.message });

@@ -1,25 +1,39 @@
 import redis from '../config/redisClient.js';
 
+import crypto from 'crypto';
+
 const cacheMiddleware = (keyPrefix, expireTime = 3600) => {
     return async (req, res, next) => {
         try {
-            const key = `${keyPrefix}:${req.originalUrl}`;
+            // Create a hash of the full URL with sorted query params
+            const sortedQuery = Object.keys(req.query)
+                .sort()
+                .reduce((result, key) => {
+                    result[key] = req.query[key];
+                    return result;
+                }, {});
+            
+            const fullUrl = `${req.path}:${JSON.stringify(sortedQuery)}`;
+            const hash = crypto.createHash('md5').update(fullUrl).digest('hex');
+            const key = `${keyPrefix}:${hash}`;
+            
+            console.log('URL:', req.originalUrl);
+            console.log('Cache key:', key);
+            
             const cachedData = await redis.get(key);
-            console.log('cachedData found for:', req.originalUrl);
+            console.log('Cache result:', cachedData ? 'HIT' : 'MISS');
             
             if (cachedData) {
                 return res.json(JSON.parse(cachedData));
             }
 
-            // Store original send function
             const originalSend = res.json;
 
-            // Override res.json method
             res.json = function(data) {
-                // Store in Redis before sending response
-                redis.setex(key, expireTime, JSON.stringify(data));
+                console.log('Caching for URL:', req.originalUrl);
+                redis.setex(key, expireTime, JSON.stringify(data))
+                    .catch(err => console.error('Redis error:', err));
                 
-                // Call original method
                 return originalSend.call(this, data);
             };
 

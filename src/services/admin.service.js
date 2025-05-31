@@ -116,56 +116,181 @@ class AdminService {
     }
 
    
-    async getAllUsers(page = 1, limit = 10, lastDoc = undefined) {
-            try {
-                // Convert parameters to integers
-                const pageNum = parseInt(page, 10);
-                const limitNum = parseInt(limit, 10);
-                
-                // Create base query with ordering to ensure consistent pagination
-                let query = this.users.orderBy('createdAt', 'desc');
-                
-                // If lastDoc is provided, use cursor-based pagination
-                if (lastDoc) {
-                    // Get a reference to the last document
-                    const lastDocRef = await this.users.doc(lastDoc).get();
-                    
-                    if (!lastDocRef.exists) {
-                        console.warn(`Last document with ID ${lastDoc} not found, ignoring cursor`);
-                    } else {
-                        // Start after the last document (cursor-based pagination)
-                        query = query.startAfter(lastDocRef);
-                    }
-                }
-                
-                // Get the total count for information purposes
-                const totalCountSnapshot = await this.users.count().get();
-                const totalUsers = totalCountSnapshot.data().count;
-                
-                // Get one extra document to determine if there are more pages
-                const snapshot = await query.limit(limitNum + 1).get();
-                
-                // Determine if there are more pages
-                const hasMore = snapshot.docs.length > limitNum;
-                
-                // Remove the extra document from the results if it exists
-                const users = snapshot.docs
-                    .slice(0, limitNum)
-                    .map(doc => ({ id: doc.id, ...doc.data() }));
-                
-                return {
-                    users,
-                    hasMore,
-                    totalUsers,
-                    currentPage: pageNum,
-                    pageSize: limitNum,
-                    lastDoc: users.length > 0 ? users[users.length - 1].id : null
-                };
-            } catch (error) {
-                console.error('Error fetching users with pagination:', error);
-                throw new Error(`Failed to fetch users: ${error.message}`);
+    async getAllUsers(page = 1, limit = 10, lastDoc = undefined, filters = null) {
+    try {
+        // Convert parameters to integers
+        const pageNum = parseInt(page, 10);
+        const limitNum = parseInt(limit, 10);
+        
+        // Start with base query for counting
+        let countQuery = this.users;
+        let dataQuery = this.users.orderBy('createdAt', 'desc');
+        
+        // Apply filters if provided
+        if (filters) {
+            console.log('Applied filters:', filters);
+            
+            // Premium plan filtering
+            if (filters.plan && filters.plan !== 'all') {
+                countQuery = countQuery.where('premiumPlan.planTitle', '==', filters.plan);
+                dataQuery = dataQuery.where('premiumPlan.planTitle', '==', filters.plan);
             }
-    }   
+            
+            // Premium status filtering
+            if (filters.isPremium !== undefined) {
+                const isPremiumFilter = filters.isPremium === 'true' || filters.isPremium === true;
+                countQuery = countQuery.where('isPremium', '==', isPremiumFilter);
+                dataQuery = dataQuery.where('isPremium', '==', isPremiumFilter);
+            }
+            
+            // Date range filtering (user creation date)
+            if (filters.fromDate) {
+                const fromDate = new Date(filters.fromDate);
+                fromDate.setHours(0, 0, 0, 0); // Start of day
+                const fromTimestamp = firestore.Timestamp.fromDate(fromDate);
+                countQuery = countQuery.where('createdAt', '>=', fromTimestamp);
+                dataQuery = dataQuery.where('createdAt', '>=', fromTimestamp);
+            }
+            
+            if (filters.toDate) {
+                const toDate = new Date(filters.toDate);
+                toDate.setHours(23, 59, 59, 999); // End of day
+                const toTimestamp = firestore.Timestamp.fromDate(toDate);
+                countQuery = countQuery.where('createdAt', '<=', toTimestamp);
+                dataQuery = dataQuery.where('createdAt', '<=', toTimestamp);
+            }
+            
+            // Phone number filtering
+            if (filters.phone) {
+                const phoneFilter = filters.phone.startsWith('+') ? filters.phone : `+91${filters.phone}`;
+                countQuery = countQuery.where('phone', '==', phoneFilter);
+                dataQuery = dataQuery.where('phone', '==', phoneFilter);
+            }
+            
+            // Name filtering (partial match using >= and <= with unicode suffix)
+            if (filters.name) {
+                countQuery = countQuery.where('name', '>=', filters.name)
+                                      .where('name', '<=', filters.name + '\uf8ff');
+                dataQuery = dataQuery.where('name', '>=', filters.name)
+                                    .where('name', '<=', filters.name + '\uf8ff');
+            }
+            
+            // Email filtering
+            if (filters.email) {
+                countQuery = countQuery.where('email', '>=', filters.email.toLowerCase())
+                                      .where('email', '<=', filters.email.toLowerCase() + '\uf8ff');
+                dataQuery = dataQuery.where('email', '>=', filters.email.toLowerCase())
+                                    .where('email', '<=', filters.email.toLowerCase() + '\uf8ff');
+            }
+        }
+        
+        // Get total count of matching documents
+        const totalCountSnapshot = await this.users.count().get();
+        const totalUsers = totalCountSnapshot.data().count;
+        
+        // Get count of filtered documents
+        let filteredCountSnapshot;
+        try {
+            filteredCountSnapshot = await countQuery.count().get();
+        } catch (error) {
+            // If count query fails due to composite index requirements, we'll calculate it later
+            console.warn('Count query failed, will calculate from results:', error.message);
+            filteredCountSnapshot = null;
+        }
+        
+        // If lastDoc is provided, use cursor-based pagination
+        if (lastDoc) {
+            // Get a reference to the last document
+            const lastDocRef = await this.users.doc(lastDoc).get();
+            
+            if (!lastDocRef.exists) {
+                console.warn(`Last document with ID ${lastDoc} not found, ignoring cursor`);
+            } else {
+                // Start after the last document (cursor-based pagination)
+                dataQuery = dataQuery.startAfter(lastDocRef);
+            }
+        }
+        
+        // Get one extra document to determine if there are more pages
+        const snapshot = await dataQuery.limit(limitNum + 1).get();
+        
+        // Determine if there are more pages
+        const hasMore = snapshot.docs.length > limitNum;
+        
+        // Remove the extra document from the results if it exists
+        let users = snapshot.docs
+            .slice(0, limitNum)
+            .map(doc => ({ id: doc.id, ...doc.data() }));
+        
+        // Additional client-side filtering for complex conditions that Firestore can't handle
+        if (filters) {
+            // List assignment filtering (client-side since it's array-based)
+            if (filters.listAssigned !== undefined) {
+                const hasListsFilter = filters.listAssigned === 'true' || filters.listAssigned === true;
+                if (hasListsFilter) {
+                    users = users.filter(user => user.lists && user.lists.length > 0);
+                } else {
+                    users = users.filter(user => !user.lists || user.lists.length === 0);
+                }
+            }
+            
+            // Form completion filtering (client-side)
+            if (filters.formCompleted !== undefined) {
+                const formCompletedFilter = filters.formCompleted === 'true' || filters.formCompleted === true;
+                if (formCompletedFilter) {
+                    users = users.filter(user => user.stepsData && user.stepsData.length > 0);
+                } else {
+                    users = users.filter(user => !user.stepsData || user.stepsData.length === 0);
+                }
+            }
+            
+            // City filtering (client-side for partial matches)
+            if (filters.city) {
+                users = users.filter(user => 
+                    user.city && user.city.toLowerCase().includes(filters.city.toLowerCase())
+                );
+            }
+            
+            // State filtering (client-side for partial matches)
+            if (filters.state) {
+                users = users.filter(user => 
+                    user.state && user.state.toLowerCase().includes(filters.state.toLowerCase())
+                );
+            }
+            
+            // Payment status filtering (client-side)
+            if (filters.paymentPending !== undefined) {
+                const paymentPendingFilter = filters.paymentPending === 'true' || filters.paymentPending === true;
+                users = users.filter(user => 
+                    user.isPremium && 
+                    user.premiumPlan && 
+                    !!user.premiumPlan.isPaymentPending === paymentPendingFilter
+                );
+            }
+        }
+        
+        // Calculate filtered count if we couldn't get it from Firestore
+        const filteredCount = filteredCountSnapshot ? 
+            filteredCountSnapshot.data().count : 
+            users.length; // This is approximate for the current page
+        
+        console.log(`Total users: ${totalUsers}, Filtered count: ${filteredCount}, Page results: ${users.length}`);
+        
+        return {
+            users,
+            hasMore,
+            totalUsers,
+            filteredCount,
+            currentPage: pageNum,
+            pageSize: limitNum,
+            lastDoc: users.length > 0 ? users[users.length - 1].id : null,
+            appliedFilters: filters || {}
+        };
+    } catch (error) {
+        console.error('Error fetching users with pagination:', error);
+        throw new Error(`Failed to fetch users: ${error.message}`);
+    }
+}
 
 
     async getAllUsersOfForm(formId) {
@@ -1660,18 +1785,27 @@ class AdminService {
         }
     }
 
-    async findUserByOrderId(orderId) {
-        try{
-           const query = this.users
-          .where('currentOrderId', '==', orderId)
-        const usersSnapshot = await query.get();
-        return usersSnapshot;
-        }catch (error) {
-            console.error('Find user by order ID error:', error);
-            throw new Error('Failed to find user by order ID: ' + error.message);
+    async findUserWithOrder(orderId) {
+    try {
+        // First, try to find by orderIds array
+        let query = this.users.where('orderIds', 'array-contains', orderId);
+        let usersSnapshot = await query.get();
+        
+        if (!usersSnapshot.empty) {
+            return usersSnapshot;
         }
         
+        // If not found, try currentOrderId
+        query = this.userCollection.where('currentOrderId', '==', orderId);
+        usersSnapshot = await query.get();
+        
+        return usersSnapshot;
+        
+    } catch (error) {
+        console.error('Find user with order error:', error);
+        throw new Error('Failed to find user with order: ' + error.message);
     }
+}
 
     async updateUserWithOrderId(orderId, planData, orderData) {
         try {
