@@ -1530,7 +1530,7 @@ class AdminService {
                 phone: user.phone,
                 email: user.email,
                 planTitle: user.premiumPlan?.planTitle || 'N/A',
-                purchasedDate: user.premiumPlan?.purchasedDate || 'N/A'
+                purchasedDate: user.premiumPlan?.purchasedDate?.toDate() || 'N/A'
             }))
             }
             
@@ -1657,6 +1657,58 @@ class AdminService {
             // We don't want notification errors to break the main functionality
             // So we log the error but don't throw it
             return null;
+        }
+    }
+
+    async findUserByOrderId(orderId) {
+        try{
+           const query = this.users
+          .where('currentOrderId', '==', orderId)
+        const usersSnapshot = await query.get();
+        return usersSnapshot;
+        }catch (error) {
+            console.error('Find user by order ID error:', error);
+            throw new Error('Failed to find user by order ID: ' + error.message);
+        }
+        
+    }
+
+    async updateUserWithOrderId(orderId, planData, orderData) {
+        try {
+            const userSnapshot = await this.findUserByOrderId(orderId);
+            if (userSnapshot.empty) {
+                throw new Error('No user found with the provided order ID');
+            }
+            
+            const userDoc = userSnapshot.docs[0];
+            const userId = userDoc.id;
+            const userData = userDoc.data();
+            const orders = userData.orders || [];
+            const existingOrder = orders.find(order => order.id === orderId);
+            const updatedOrders = orders.map(order =>
+                order.id === orderId ? { ...order, ...orderData, paymentStatus: orderData.status == "paid" ? "completed":"pending" } : order
+            );
+            // Update user's premium plan and order details
+            await this.users.doc(userId).update({
+                isPremium: true,
+                premiumPlan: {
+                    ...planData,
+                    purchasedDate: new Date(),
+                    isPaymentPending: false
+                },
+                currentOrderId: orderId,
+                orders: updatedOrders
+            });
+            
+            return { 
+                message: 'User updated with order ID successfully',
+                userId,
+                planData,
+                orderData
+            };
+        } catch (error) {
+            console.error('Update user with order ID error:', error);
+            throw new Error('Failed to update user with order ID: ' + error.message);
         }
     }
 
