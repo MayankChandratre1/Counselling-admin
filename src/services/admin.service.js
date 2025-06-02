@@ -23,6 +23,7 @@ class AdminService {
         this.landingPage = db.collection('landingPage');
         this.dynamicScreens = db.collection('dynamicScreens');
         this.payments = db.collection('paymentLogs');
+        this.appointments = db.collection('appointments');
         this.COLLEGES_FILE_PATH = path.join(process.cwd(), 'src/data/College_New_Data_2.json');
         this.notificationsMap = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'src/data/Notifications.json'), 'utf8'));
     }
@@ -1843,6 +1844,75 @@ class AdminService {
         } catch (error) {
             console.error('Update user with order ID error:', error);
             throw new Error('Failed to update user with order ID: ' + error.message);
+        }
+    }
+
+    async getAppointments(filters = null) {
+        try {
+            let query = this.appointments.orderBy("createdAt", "desc");
+            // Apply filters if provided
+            if (filters) {
+                // Date range filtering
+                if (filters.fromDate) {
+                    const fromDate = new Date(filters.fromDate);
+                    fromDate.setHours(0, 0, 0, 0); // Start of day
+                    const fromTimestamp = firestore.Timestamp.fromDate(fromDate);
+                    query = query.where('createdAt', '>=', fromTimestamp);
+                }
+                
+                if (filters.toDate) {
+                    const toDate = new Date(filters.toDate);
+                    toDate.setHours(23, 59, 59, 999); // End of day
+                    const toTimestamp = firestore.Timestamp.fromDate(toDate);
+                    query = query.where('createdAt', '<=', toTimestamp);
+                }
+                
+                // Filter by status if provided
+                if (filters.status) {
+                    query = query.where('status', '==', filters.status);
+                }
+
+                if(filters.phone){
+                    query = query.where('phone', '==', filters.phone);
+                }
+            }
+            const snapshot = await query.get();
+            if (snapshot.empty) {
+                return [];
+            }
+            
+            const appointments = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            
+            return appointments;
+        } catch (error) {
+            console.error('Get appointments error:', error);
+            throw new Error('Failed to get appointments: ' + error.message);
+        }
+    }
+
+    async editAppointment(appointmentId, appointmentData) {
+        try {
+            const appointmentDoc = await this.appointments.doc(appointmentId).get();
+            if (!appointmentDoc.exists) throw new Error('Appointment not found');
+
+            const timestamp = new Date().toISOString();
+            await this.appointments.doc(appointmentId).update({
+                ...appointmentData,
+                updatedAt: timestamp
+            });
+
+            return { 
+                message: 'Appointment updated successfully',
+                appointment: {
+                    id: appointmentId,
+                    ...appointmentData
+                }
+            };
+        } catch (error) {
+            throw new Error(`Failed to update appointment: ${error.message}`);
         }
     }
 

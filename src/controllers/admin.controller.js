@@ -733,6 +733,33 @@ class AdminController {
             res.status(400).json({ error: error.message });
         }
     }
+
+    async getAppointments(req, res) {
+        try {
+            const filters = req.query;
+            console.log('Get appointments filters:', filters);
+            
+            const appointments = await this.adminService.getAppointments(filters);
+            res.status(200).json(appointments);
+        } catch (error) {
+            console.error('Get appointments error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async editAppointment(req, res) {
+        try {
+            const { id } = req.params;
+            const appointmentData = req.body;
+            const result = await this.adminService.editAppointment(id, appointmentData);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Edit appointment error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    
 }
 
 // Create instance of controller
@@ -797,6 +824,8 @@ export default {
     getPaymentsByPaymentId: adminController.getPaymentsByPaymentId.bind(adminController),
     getAnalytics: adminController.getAnalytics.bind(adminController),
     getAll: adminController.getAll.bind(adminController),
-    getUserByPhone: adminController.getUserByPhone.bind(adminController)
+    getUserByPhone: adminController.getUserByPhone.bind(adminController),
+    getAppointments: adminController.getAppointments.bind(adminController),
+    editAppointment: adminController.editAppointment.bind(adminController)
 };
 
