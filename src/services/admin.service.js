@@ -1786,7 +1786,7 @@ class AdminService {
         }
     }
 
-    async findUserWithOrder(orderId) {
+    async findUserWithOrderId(orderId) {
     try {
         // First, try to find by orderIds array
         let query = this.users.where('orderIds', 'array-contains', orderId);
