@@ -1797,7 +1797,7 @@ class AdminService {
         }
         
         // If not found, try currentOrderId
-        query = this.userCollection.where('currentOrderId', '==', orderId);
+        query = this.users.where('currentOrderId', '==', orderId);
         usersSnapshot = await query.get();
         
         return usersSnapshot;
