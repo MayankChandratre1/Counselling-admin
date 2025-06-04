@@ -1812,7 +1812,8 @@ class AdminService {
         try {
             const userSnapshot = await this.findUserByOrderId(orderId);
             if (userSnapshot.empty) {
-                throw new Error('No user found with the provided order ID');
+                console.log('No user found with the provided order ID');
+                return {sucess: false, message: 'No user found with the provided order ID'};
             }
             
             const userDoc = userSnapshot.docs[0];
@@ -1821,19 +1822,20 @@ class AdminService {
             const orders = userData.orders || [];
             const existingOrder = orders.find(order => order.id === orderId);
             const updatedOrders = orders.map(order =>
-                order.id === orderId ? { ...order, ...orderData, paymentStatus: orderData.status == "paid" ? "completed":"pending" } : order
+                order.id === orderId ? { ...order, ...orderData, paymentStatus: orderData.status == "paid" ? "completed":orderData.status } : order
             );
             // Update user's premium plan and order details
-            await this.users.doc(userId).update({
-                isPremium: true,
-                premiumPlan: {
-                    ...planData,
-                    purchasedDate: new Date(),
-                    isPaymentPending: false
-                },
-                currentOrderId: orderId,
-                orders: updatedOrders
-            });
+            if(orderData.status === "paid")
+                await this.users.doc(userId).update({
+                    isPremium: true,
+                    premiumPlan: {
+                        ...planData,
+                        purchasedDate: new Date(),
+                        isPaymentPending: false
+                    },
+                    currentOrderId: orderId,
+                    orders: updatedOrders
+                });
             
             return { 
                 message: 'User updated with order ID successfully',

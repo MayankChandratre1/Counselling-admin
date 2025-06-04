@@ -12,7 +12,7 @@ app.use(cors());
 
 // Add a simple logging middleware for debugging routes
 app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url} ${new Date().toISOString()}`);
+  console.log(`${req.method} ${req.url} ${new Date().toLocaleString()}`);
   next();
 });
 

@@ -35,7 +35,10 @@ class RazorpayService {
             }
 
             if (user.orders && Array.isArray(user.orders)) {
-                const hasCompletedOrders = user.orders.some(order => 
+                let hasCompletedOrders = user.isPremium; 
+
+                if(!hasCompletedOrders)
+                hasCompletedOrders = user.orders.some(order => 
                     order.paymentStatus === 'completed'
                 );
                 
@@ -62,7 +65,7 @@ class RazorpayService {
     }
 
     // Handle order paid logic
-    async handleOrderPaid(order) {
+    async handleOrderPaid(order ) {
         try {
             console.log('Processing paid order:', order.id);
             
@@ -94,6 +97,7 @@ class RazorpayService {
                 isPremium: planDetails.isPremium || true,
                 price: planDetails.price || '0',
                 expiry: planDetails.expiry || 60,
+                expiryDate: planDetails.expiryDate || new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000),
                 form: planDetails.form || 'Unknown',
                 planTitle: notes.planTitle || notes.customerPlan
             };
@@ -111,6 +115,61 @@ class RazorpayService {
                 attempts: order.attempts
             };
              console.log('User update payload for order:', order.id, {planData, orderData});
+
+            // Update user with order data
+            const updateResult = await this.adminService.updateUserWithOrderId(
+                order.id, 
+                planData, 
+                orderData
+            );
+
+            console.log('User update result for order:', order.id, updateResult);
+
+            return {
+                success: true,
+                orderId: order.id,
+                userPhone: userPhone,
+                planData: planData,
+                orderData: orderData,
+                updateResult: updateResult
+            };
+
+        } catch (error) {
+            console.error('Error handling paid order:', order.id, error);
+            return {
+                success: false,
+                error: error.message,
+                orderId: order.id
+            };
+        }
+    }
+
+    async handleOrderCancelled(order ) {
+        try {
+            console.log('Processing paid order:', order.id);
+            
+            const { notes } = order;
+            const userPhone = notes?.userPhone;
+            
+            if (!userPhone) {
+                console.error('No user phone found in order notes:', order.id);
+                return { success: false, error: 'No user phone found' };
+            }
+
+
+            // Prepare order data
+            const orderData = {
+                orderId: order.id,
+                amount: order.amount,
+                currency: order.currency,
+                status: order.status,
+                receipt: order.receipt,
+                created_at: order.created_at,
+                amount_paid: order.amount_paid,
+                amount_due: order.amount_due,
+                attempts: order.attempts
+            };
+             console.log('User update payload for order:', order.id, {orderData});
 
             // Update user with order data
             const updateResult = await this.adminService.updateUserWithOrderId(
@@ -177,6 +236,10 @@ class RazorpayService {
                         // Handle paid orders
                         if (order.status === 'paid') {
                             const paidResult = await this.handleOrderPaid(order);
+                            paidOrderResults.push(paidResult);
+                        }
+                        if (order.status === 'cancelled') {
+                            const paidResult = await this.handleOrderCancelled(order);
                             paidOrderResults.push(paidResult);
                         }
 
