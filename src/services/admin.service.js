@@ -718,7 +718,7 @@ class AdminService {
                 listId: listAssignment.originalListId,
                 listName: listAssignment.name || 'New List'
             });
-            this.invalidateCache('user')
+            this.invalidateCache('user:*')
             this.invalidateCache('user_lists')
             return { message: `List assigned to user ${userData.id} (${userData.phone}) successfully` };
         } catch (error) {
