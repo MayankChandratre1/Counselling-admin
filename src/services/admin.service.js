@@ -1583,126 +1583,7 @@ class AdminService {
 }
 
     
-    async getAnalytics() {
-        try {
-            // Get all users
-            const userSnapshot = await this.users.get();
-            const users = userSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            
-            // Get today's date in YYYY-MM-DD format
-            const today = new Date().toISOString().split('T')[0];
-            
-            // Calculate metrics
-            const totalInstalls = users.length;
-            const enrolledUsers = {
-                total: users.filter(user => user.isPremium).length,
-                users: users.filter(user => user.isPremium).map(user => ({
-                    id: user.id,
-                    name: user.name,
-                    phone: user.phone,
-                    email: user.email,
-                    planTitle: user.premiumPlan?.planTitle || 'N/A',
-                    purchasedDate: user.premiumPlan?.purchasedDate || 'N/A'
-                }))
-            }
-            
-            const todayEnrolled = {
-                total: users.filter(user => {
-                if (!user.premiumPlan?.purchasedDate) return false;
-                
-                // Handle different date formats
-                let purchaseDate;
-                if (user.premiumPlan.purchasedDate._seconds) {
-                    // Firestore Timestamp
-                    purchaseDate = new Date(user.premiumPlan.purchasedDate._seconds * 1000);
-                } else if (user.premiumPlan.purchasedDate.toDate) {
-                    // Firestore Timestamp object with toDate method
-                    purchaseDate = user.premiumPlan.purchasedDate.toDate();
-                } else if (user.premiumPlan.purchasedDate instanceof Date) {
-                    // JavaScript Date object
-                    purchaseDate = user.premiumPlan.purchasedDate;
-                } else {
-                    // String or timestamp
-                    purchaseDate = new Date(user.premiumPlan.purchasedDate);
-                }
-                
-                const purchaseDateStr = purchaseDate.toISOString().split('T')[0];
-                return purchaseDateStr === today;
-            }).length,
-            users: users.filter(user => {
-                if (!user.premiumPlan?.purchasedDate) return false;
-                
-                // Handle different date formats
-                let purchaseDate;
-                if (user.premiumPlan.purchasedDate._seconds) {
-                    // Firestore Timestamp
-                    purchaseDate = new Date(user.premiumPlan.purchasedDate._seconds * 1000);
-                } else if (user.premiumPlan.purchasedDate.toDate) {
-                    // Firestore Timestamp object with toDate method
-                    purchaseDate = user.premiumPlan.purchasedDate.toDate();
-                } else if (user.premiumPlan.purchasedDate instanceof Date) {
-                    // JavaScript Date object
-                    purchaseDate = user.premiumPlan.purchasedDate;
-                } else {
-                    // String or timestamp
-                    purchaseDate = new Date(user.premiumPlan.purchasedDate);
-                }
-                
-                const purchaseDateStr = purchaseDate.toISOString().split('T')[0];
-                return purchaseDateStr === today;
-            }).map(user => ({
-                id: user.id,
-                name: user.name,
-                phone: user.phone,
-                email: user.email,
-                planTitle: user.premiumPlan?.planTitle || 'N/A',
-                purchasedDate: user.premiumPlan?.purchasedDate?.toDate() || 'N/A'
-            }))
-            }
-            
-            const paymentPendingUsers = {
-                total: users.filter(user => user.isPremium && user.premiumPlan.isPaymentPending).length,
-                users: users.filter(user => user.isPremium && user.premiumPlan.isPaymentPending).map(user => ({
-                    id: user.id,
-                    name: user.name,
-                    phone: user.phone,
-                    email: user.email,
-                    amountRemaining: user.premiumPlan.amountRemaining || 'N/A',
-                }))
-            }
-            
-            // Get premium plan distribution
-            const premiumPlanDistribution = {};
-            users.filter(user => user.isPremium && user.premiumPlan?.planTitle)
-                .forEach(user => {
-                    const planTitle = user.premiumPlan.planTitle;
-                    premiumPlanDistribution[planTitle] = (premiumPlanDistribution[planTitle] || 0) + 1;
-                });
-            
-            //User with and without lists
-            const usersWithLists = users.filter(user => user.lists && user.lists.length > 0).length;
-            const usersWithoutLists = totalInstalls - usersWithLists;
-                
-            
-          
-            
-            return {
-                totalUsers: totalInstalls,
-                metrics: {
-                    installs: totalInstalls,
-                    enrolled: enrolledUsers,
-                    todayEnrolled: todayEnrolled,
-                    paymentPending: paymentPendingUsers
-                },
-                premiumPlanDistribution,
-                usersWithLists,
-                usersWithoutLists
-            };
-        } catch (error) {
-            console.error('Get analytics error:', error);
-            throw new Error('Failed to get analytics data: ' + error.message);
-        }
-    }
+   
 
     async sendNotification(userId, notificationId, customData = {}, toAll = false) {
         try {
@@ -1915,6 +1796,204 @@ class AdminService {
             };
         } catch (error) {
             throw new Error(`Failed to update appointment: ${error.message}`);
+        }
+    }
+
+    async getTracking() {
+        try {
+            // Get all users
+            const userSnapshot = await this.users.get();
+            const users = userSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Get today's date in YYYY-MM-DD format
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Calculate metrics
+            const totalInstalls = users.length;
+           
+          
+            
+            //User with and without lists
+            // const usersWithListsOnline = users.filter(user => user.isPremium && user.batch == 'online' && user.lists && user.lists.length > 0).length;
+            // const usersWithoutListsOnline = onlineBatch - usersWithListsOnline;
+            // const usersWithListsOffline = users.filter(user => user.isPremium && user.batch == 'offline' && user.lists && user.lists.length > 0).length;
+            // const usersWithoutListsOffline = offlineBatch - usersWithListsOffline;
+
+
+             
+                
+            
+          
+            
+            return {
+                totalUsers: totalInstalls,
+               
+            };
+        } catch (error) {
+            console.error('Get tracking error:', error);
+            throw new Error('Failed to get tracking data: ' + error.message);
+        }
+}
+
+ async getAnalytics() {
+        try {
+            // Get all users
+            const userSnapshot = await this.users.get();
+            const users = userSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Get today's date in YYYY-MM-DD format
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Calculate metrics
+            const totalInstalls = users.length;
+            const enrolledUsers = {
+                total: users.filter(user => user.isPremium).length,
+                users: users.filter(user => user.isPremium).map(user => ({
+                    id: user.id,
+                    name: user.name,
+                    phone: user.phone,
+                    email: user.email,
+                    planTitle: user.premiumPlan?.planTitle || 'N/A',
+                    purchasedDate: user.premiumPlan?.purchasedDate || 'N/A'
+                }))
+            }
+
+            const onlineBatch = users.filter(user => user.isPremium && user.batch == 'online').length;
+            const offlineBatch = users.filter(user => user.isPremium && user.batch == 'offline').length;
+            
+            const todayEnrolled = {
+                total: users.filter(user => {
+                if (!user.premiumPlan?.purchasedDate) return false;
+                
+                // Handle different date formats
+                let purchaseDate;
+                if (user.premiumPlan.purchasedDate._seconds) {
+                    // Firestore Timestamp
+                    purchaseDate = new Date(user.premiumPlan.purchasedDate._seconds * 1000);
+                } else if (user.premiumPlan.purchasedDate.toDate) {
+                    // Firestore Timestamp object with toDate method
+                    purchaseDate = user.premiumPlan.purchasedDate.toDate();
+                } else if (user.premiumPlan.purchasedDate instanceof Date) {
+                    // JavaScript Date object
+                    purchaseDate = user.premiumPlan.purchasedDate;
+                } else {
+                    // String or timestamp
+                    purchaseDate = new Date(user.premiumPlan.purchasedDate);
+                }
+                
+                const purchaseDateStr = purchaseDate.toISOString().split('T')[0];
+                return purchaseDateStr === today;
+            }).length,
+            users: users.filter(user => {
+                if (!user.premiumPlan?.purchasedDate) return false;
+                
+                // Handle different date formats
+                let purchaseDate;
+                if (user.premiumPlan.purchasedDate._seconds) {
+                    // Firestore Timestamp
+                    purchaseDate = new Date(user.premiumPlan.purchasedDate._seconds * 1000);
+                } else if (user.premiumPlan.purchasedDate.toDate) {
+                    // Firestore Timestamp object with toDate method
+                    purchaseDate = user.premiumPlan.purchasedDate.toDate();
+                } else if (user.premiumPlan.purchasedDate instanceof Date) {
+                    // JavaScript Date object
+                    purchaseDate = user.premiumPlan.purchasedDate;
+                } else {
+                    // String or timestamp
+                    purchaseDate = new Date(user.premiumPlan.purchasedDate);
+                }
+                
+                const purchaseDateStr = purchaseDate.toISOString().split('T')[0];
+                return purchaseDateStr === today;
+            }).map(user => ({
+                id: user.id,
+                name: user.name,
+                phone: user.phone,
+                email: user.email,
+                planTitle: user.premiumPlan?.planTitle || 'N/A',
+                purchasedDate: user.premiumPlan?.purchasedDate?.toDate() || 'N/A'
+            }))
+            }
+            
+            const paymentPendingUsers = {
+                total: users.filter(user => user.isPremium && user.premiumPlan.isPaymentPending).length,
+                users: users.filter(user => user.isPremium && user.premiumPlan.isPaymentPending).map(user => ({
+                    id: user.id,
+                    name: user.name,
+                    phone: user.phone,
+                    email: user.email,
+                    amountRemaining: user.premiumPlan.amountRemaining || 'N/A',
+                }))
+            }
+            
+            // Get premium plan distribution
+            const premiumPlanDistribution = {};
+            users.filter(user => user.isPremium && user.premiumPlan?.planTitle)
+                .forEach(user => {
+                    const planTitle = user.premiumPlan.planTitle;
+                    premiumPlanDistribution[planTitle] = (premiumPlanDistribution[planTitle] || 0) + 1;
+                });
+            
+            //User with and without lists
+            const usersWithLists = users.filter(user => user.lists && user.lists.length > 0).length;
+            const usersWithoutLists = totalInstalls - usersWithLists;
+
+
+                        const usersWithListsOnline = {
+                total: users.filter(user => user.isPremium && user.batch == 'online' && user.lists && user.lists.length > 0).length,
+                users: users.filter(user => user.isPremium && user.batch == 'online' && user.lists && user.lists.length > 0).map(user => ({
+                    id: user.id,
+                    lists: user.lists.map(list => list.title)
+                })),
+            } 
+            const usersWithoutListsOnline ={
+                total:  onlineBatch - usersWithListsOnline.total,
+                users: users.filter(user => user.isPremium && user.batch == 'online' && (!user.lists || user.lists.length <= 0)).map(user => ({
+                    id: user.id,
+                    lists: []
+                })),
+            } 
+            const usersWithListsOffline = {
+                total: users.filter(user => user.isPremium && user.batch == 'offline' && user.lists && user.lists.length > 0).length,
+                users: users.filter(user => user.isPremium && user.batch == 'offline' && user.lists && user.lists.length > 0).map(user => ({
+                    id: user.id,
+                    lists: user.lists.map(list => list.title)
+                })),
+            } 
+            const usersWithoutListsOffline ={
+                total:  offlineBatch - usersWithListsOffline.total,
+                users: users.filter(user => user.isPremium && user.batch == 'offline' && (!user.lists || user.lists.length <= 0)).map(user => ({
+                    id: user.id,
+                    lists: []
+                })),
+            } 
+                
+            
+          
+            
+            return {
+                totalUsers: totalInstalls,
+                metrics: {
+                    installs: totalInstalls,
+                    enrolled: enrolledUsers,
+                    todayEnrolled: todayEnrolled,
+                    paymentPending: paymentPendingUsers
+                },
+                premiumPlanDistribution,
+                usersWithLists,
+                usersWithoutLists,
+                listData:{
+                      onlineBatch,
+                offlineBatch,
+                usersWithListsOnline,
+                usersWithoutListsOnline,
+                usersWithListsOffline,
+                usersWithoutListsOffline
+                }
+            };
+        } catch (error) {
+            console.error('Get analytics error:', error);
+            throw new Error('Failed to get analytics data: ' + error.message);
         }
     }
 

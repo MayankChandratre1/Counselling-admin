@@ -759,6 +759,16 @@ class AdminController {
         }
     }
 
+    async getTracking(req, res) {
+        try {
+            const trackingData = await this.adminService.getTracking();
+            res.status(200).json(trackingData);
+        } catch (error) {
+            console.error('Get tracking error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
     
 }
 
@@ -826,6 +836,7 @@ export default {
     getAll: adminController.getAll.bind(adminController),
     getUserByPhone: adminController.getUserByPhone.bind(adminController),
     getAppointments: adminController.getAppointments.bind(adminController),
-    editAppointment: adminController.editAppointment.bind(adminController)
+    editAppointment: adminController.editAppointment.bind(adminController),
+    getTracking: adminController.getTracking.bind(adminController)
 };
 

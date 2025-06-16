@@ -15,6 +15,7 @@ router.post('/change-password', AdminController.changePassword);
 router.get('/get-analytics', AdminController.getAnalytics);
 router.get('/get-appointments', AdminController.getAppointments);
 router.put('/edit-appointment/:id', AdminController.editAppointment);
+router.get('/gettracking', AdminController.getTracking);
 
 // Apply authentication middleware to all routes below this line
 router.use(authMiddleware);
@@ -25,6 +26,7 @@ router.use(logActivity);
 // Super-admin only routes
 router.post('/add-admin', authorize(['super-admin']), AdminController.addAdmin);
 router.get('/all-admins', authorize(['super-admin']), AdminController.getAllAdmins);
+
 router.get('/admin/:adminId', authorize(['super-admin']), AdminController.getAdmin);
 router.put('/update-admin/:adminId', authorize(['super-admin']), AdminController.updateAdmin);
 router.delete('/delete-admin/:adminId', authorize(['super-admin']), AdminController.deleteAdmin);
