@@ -130,6 +130,8 @@ class AdminService {
         // Apply filters if provided
         if (filters) {
             console.log('Applied filters:', filters);
+
+            
             
             // Premium plan filtering
             if (filters.plan && filters.plan !== 'all') {
@@ -323,7 +325,7 @@ class AdminService {
 
             await this.users.doc(userId).update(data);
             await this.invalidateCache('users:*');
-            await this.invalidateCache(`user:*/user/${userId}`);
+            await this.invalidateCache(`user:*`);
             
             
             
@@ -1939,7 +1941,7 @@ class AdminService {
             const usersWithoutLists = totalInstalls - usersWithLists;
 
 
-                        const usersWithListsOnline = {
+            const usersWithListsOnline = {
                 total: users.filter(user => user.isPremium && user.batch == 'online' && user.lists && user.lists.length > 0).length,
                 users: users.filter(user => user.isPremium && user.batch == 'online' && user.lists && user.lists.length > 0).map(user => ({
                     id: user.id,
@@ -1967,6 +1969,37 @@ class AdminService {
                     lists: []
                 })),
             } 
+
+
+            //User with list sorted by premium plans
+            const userListDistributionWithLists = {};
+            const userListDistributionWithoutLists = {};
+            users.filter(user => user.isPremium)
+            .map(user => {
+                const planTitle = user.premiumPlan?.planTitle || 'N/A';
+                if (!userListDistributionWithLists[planTitle]) {
+                    userListDistributionWithLists[planTitle] = [];
+                }
+                if(!userListDistributionWithoutLists[planTitle]) {
+                    userListDistributionWithoutLists[planTitle] = [];
+                }
+                if(user.lists && user.lists.length > 0)
+                    userListDistributionWithLists[planTitle].push({
+                        id: user.id,
+                        name: user.name,
+                        phone: user.phone,
+                        email: user.email,
+                        lists: user.lists.map(list => list.title)
+                    });
+                else 
+                    userListDistributionWithoutLists[planTitle].push({
+                        id: user.id,
+                        name: user.name,
+                        phone: user.phone,
+                        email: user.email,
+                        lists: []
+                    });
+            })
                 
             
           
@@ -1983,12 +2016,8 @@ class AdminService {
                 usersWithLists,
                 usersWithoutLists,
                 listData:{
-                      onlineBatch,
-                offlineBatch,
-                usersWithListsOnline,
-                usersWithoutListsOnline,
-                usersWithListsOffline,
-                usersWithoutListsOffline
+                userListDistributionWithLists,
+                userListDistributionWithoutLists
                 }
             };
         } catch (error) {
