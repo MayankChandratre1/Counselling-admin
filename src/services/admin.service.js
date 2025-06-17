@@ -466,6 +466,27 @@ class AdminService {
             throw new Error('Lists update failed');
         }
     }
+    async appendList(listsId,colleges,admin) {
+        try {
+            const batch = this.db.batch();
+            const timestamp = new Date().toISOString();
+            
+            
+                const docRef = this.lists.doc(listsId);
+                batch.set(docRef, {
+                    colleges,
+                    lastUpdatedBy: admin.email,
+                    updatedAt: timestamp
+                }, { merge: true });
+            
+            
+            await batch.commit();
+            await this.invalidateCache('lists:*');
+            return { message: 'Lists apepended successfully' };
+        } catch (error) {
+            throw new Error('Lists append failed');
+        }
+    }
 
     async deleteLists(listIds) {
         try {

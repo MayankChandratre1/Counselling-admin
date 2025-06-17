@@ -58,6 +58,7 @@ router.post('/edit-formsteps', authorize(['admin', 'super-admin']), AdminControl
 router.post('/edit-lists', authorize(['admin', 'super-admin']), AdminController.editLists);
 router.post('/delete-lists', authorize(['admin', 'super-admin']), AdminController.deleteLists);
 router.post('/edit-list/:listId', authorize(['admin', 'super-admin']), AdminController.editList);
+router.post('/append-list/:listId', authorize(['admin', 'super-admin']), AdminController.appendList);
 router.delete('/delete-list/:listId', authorize(['admin', 'super-admin']), AdminController.deleteList);
 router.post('/add-list', authorize(['admin', 'super-admin']), AdminController.addList);
 

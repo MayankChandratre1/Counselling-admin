@@ -769,6 +769,23 @@ class AdminController {
         }
     }
 
+    async appendList(req, res) {
+        try {
+            const { listId } = req.params;
+            const { colleges } = req.body;
+            
+            if (!colleges || !Array.isArray(colleges)) {
+                return res.status(400).json({ error: 'Colleges must be an array' });
+            }
+            
+            const result = await this.adminService.appendList(listId, colleges, req.admin);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Append list error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
     
 }
 
@@ -837,6 +854,7 @@ export default {
     getUserByPhone: adminController.getUserByPhone.bind(adminController),
     getAppointments: adminController.getAppointments.bind(adminController),
     editAppointment: adminController.editAppointment.bind(adminController),
-    getTracking: adminController.getTracking.bind(adminController)
+    getTracking: adminController.getTracking.bind(adminController),
+    appendList: adminController.appendList.bind(adminController)
 };
 
