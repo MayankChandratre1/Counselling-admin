@@ -348,7 +348,7 @@ class AdminService {
                     ...data,
                     premiumPlan:{
                         ...data.premiumPlan,
-                        purchasedDate: firestore.Timestamp.fromDate(new Date(data.premiumPlan.purchaseDate)),
+                        purchasedDate: firestore.Timestamp.fromDate(new Date(data.premiumPlan.purchasedDate)),
                         expiryDate: firestore.Timestamp.fromDate(new Date(data.premiumPlan.expiryDate))
                     }
                 }
@@ -711,7 +711,7 @@ class AdminService {
             }
 
             const userData = userDoc.data();
-            const userLists = userData.lists || [];
+            const userLists = userData.createdList || [];
 
             // Check if list is already assigned
             const isListAssigned = userLists.some(list => 
@@ -731,13 +731,71 @@ class AdminService {
             };
 
             await this.users.doc(userId).update({
-                lists: [...userLists, newAssignment]
+                createdList: [...userLists, newAssignment]
+            });
+            
+            // Send notification to user
+            // await this.sendNotification(userId, 'LIST_ASSIGNED', {
+            //     listId: listAssignment.originalListId,
+            //     listName: listAssignment.name || 'New List'
+            // });
+            this.invalidateCache('user:*')
+            this.invalidateCache('user_lists')
+            return { message: `List assigned to user ${userData.id} (${userData.phone}) successfully` };
+        } catch (error) {
+            throw new Error(`Failed to assign list: ${error.message}`);
+        }
+    }
+
+    async releaseListToUser(userId, listId) {
+        try {
+            const userDoc = await this.users.doc(userId).get();
+            if (!userDoc.exists) {
+                throw new Error('User not found');
+            }
+
+            const userData = userDoc.data();
+            const userCreatedLists = userData.createdList || [];
+            const userAssignedLists = userData.lists || [];
+
+            // Check if list is already assigned
+            
+
+            const createdListAssignment = userCreatedLists.find(list => {
+                return list.id === listId || list.listId === listId || list.originalListId === listId;
+            })
+
+
+
+            const isListAssigned = userAssignedLists.some(list => 
+                createdListAssignment && (list.originalListId === createdListAssignment.originalListId || 
+                list.listId === createdListAssignment.originalListId
+            ));
+            
+            if (isListAssigned) {
+                throw new Error('List is already assigned to this user');
+            }
+
+            // Add new list to user's lists array
+            // Keep the full list data structure as provided
+            const newAssignment = {
+                ...createdListAssignment,
+                listId: createdListAssignment.originalListId // Maintain backward compatibility
+            };
+
+            const newCreatedList = userCreatedLists.filter(list => {
+                return !(list.id === listId || list.listId === listId || list.originalListId === listId);
+            })
+
+            await this.users.doc(userId).update({
+                lists: [...userAssignedLists, newAssignment],
+                createdList: newCreatedList
             });
             
             // Send notification to user
             await this.sendNotification(userId, 'LIST_ASSIGNED', {
-                listId: listAssignment.originalListId,
-                listName: listAssignment.name || 'New List'
+                listId: createdListAssignment.originalListId,
+                listName: createdListAssignment.name || 'New List'
             });
             this.invalidateCache('user:*')
             this.invalidateCache('user_lists')

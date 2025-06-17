@@ -64,6 +64,7 @@ router.post('/add-list', authorize(['admin', 'super-admin']), AdminController.ad
 
 // User-specific list routes
 router.post('/user/:userId/assign-list', AdminController.assignListToUser);
+router.post('/user/:userId/release-list', AdminController.releaseListToUser);
 router.put('/user/:userId/list/:listId', AdminController.updateUserList);
 router.delete('/user/:userId/list/:listId', AdminController.deleteUserList);
 
