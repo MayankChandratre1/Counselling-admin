@@ -2027,13 +2027,7 @@ class AdminService {
                     lists: user.lists.map(list => list.title)
                 })),
             } 
-            const usersWithoutListsOnline ={
-                total:  onlineBatch - usersWithListsOnline.total,
-                users: users.filter(user => user.isPremium && user.batch == 'online' && (!user.lists || user.lists.length <= 0)).map(user => ({
-                    id: user.id,
-                    lists: []
-                })),
-            } 
+           
             const usersWithListsOffline = {
                 total: users.filter(user => user.isPremium && user.batch == 'offline' && user.lists && user.lists.length > 0).length,
                 users: users.filter(user => user.isPremium && user.batch == 'offline' && user.lists && user.lists.length > 0).map(user => ({
@@ -2041,18 +2035,14 @@ class AdminService {
                     lists: user.lists.map(list => list.title)
                 })),
             } 
-            const usersWithoutListsOffline ={
-                total:  offlineBatch - usersWithListsOffline.total,
-                users: users.filter(user => user.isPremium && user.batch == 'offline' && (!user.lists || user.lists.length <= 0)).map(user => ({
-                    id: user.id,
-                    lists: []
-                })),
-            } 
+            
 
 
             //User with list sorted by premium plans
             const userListDistributionWithLists = {};
             const userListDistributionWithoutLists = {};
+            const userListDistributionWithCreatedLists = {};
+            const userListDistributionWithoutCreatedLists = {};
             users.filter(user => user.isPremium)
             .map(user => {
                 const planTitle = user.premiumPlan?.planTitle || 'N/A';
@@ -2061,6 +2051,12 @@ class AdminService {
                 }
                 if(!userListDistributionWithoutLists[planTitle]) {
                     userListDistributionWithoutLists[planTitle] = [];
+                }
+                if (!userListDistributionWithCreatedLists[planTitle]) {
+                    userListDistributionWithCreatedLists[planTitle] = [];
+                }
+                if(!userListDistributionWithoutCreatedLists[planTitle]) {
+                    userListDistributionWithoutCreatedLists[planTitle] = [];
                 }
                 if(user.lists && user.lists.length > 0)
                     userListDistributionWithLists[planTitle].push({
@@ -2072,6 +2068,22 @@ class AdminService {
                     });
                 else 
                     userListDistributionWithoutLists[planTitle].push({
+                        id: user.id,
+                        name: user.name,
+                        phone: user.phone,
+                        email: user.email,
+                        lists: []
+                    });
+                if(user.createdList && user.createdList.length > 0)
+                    userListDistributionWithCreatedLists[planTitle].push({
+                        id: user.id,
+                        name: user.name,
+                        phone: user.phone,
+                        email: user.email,
+                        lists: user.createdList.map(list => list.title)
+                    });
+                else 
+                    userListDistributionWithoutCreatedLists[planTitle].push({
                         id: user.id,
                         name: user.name,
                         phone: user.phone,
@@ -2096,7 +2108,9 @@ class AdminService {
                 usersWithoutLists,
                 listData:{
                 userListDistributionWithLists,
-                userListDistributionWithoutLists
+                userListDistributionWithoutLists,
+                userListDistributionWithCreatedLists,
+                userListDistributionWithoutCreatedLists,
                 }
             };
         } catch (error) {
