@@ -1750,13 +1750,11 @@ class AdminService {
 
 
      async sendNotificationToUsers(userIds,title, message, toAll = false, filters = null) {
-        
         try {
             // Get user to retrieve OneSignal playerId
             if (toAll) {
                 const allUsers = await this.users.get();
                 console.log(`Sending notification to: `, allUsers.docs.length, " users");
-                
                 allUsers.forEach(async (userDoc) => {
                     const userData = userDoc.data();
                     const oneSignalId = userData.oneSignalId;
@@ -1786,6 +1784,68 @@ class AdminService {
                 });
                 return {success: true, message: `Notification sent to all users`};
             }
+
+            if(filters){
+                let userOneSignalIds = [];
+                let query = this.users.orderBy("createdAt", "desc");
+                if(filters.isPremium){
+                    query = query.where('isPremium', '==', true);
+                }
+                if(filters.isFree){
+                    query = query.where('isPremium', '==', false);
+                }
+
+
+                if(filters.plan && filters.plan !== 'all' && filters.plan.length > 0) {
+                    query = query.where('premiumPlan.planTitle', '==', filters.plan);
+                }
+
+                if(filters.listAssigned){
+                    query = query.where('lists', '!=', null);
+                }
+
+                if(filters.listsNotAssigned){
+                    query = query.where('lists', '==', null);
+                }
+
+                userOneSignalIds = await query.get().then(snapshot => {
+                    if (snapshot.empty) {
+                        console.log('No users found with the applied filters');
+                        return [];
+                    }
+                    
+                    return snapshot.docs.map(doc => {
+                        const userData = doc.data();
+                        const oneSignalId = userData.oneSignalId;
+                        
+                        // Skip if no OneSignal ID is associated with the user
+                        if (!oneSignalId) {
+                            console.log(`No OneSignal ID found for user ${doc.id}, skipping notification`);
+                            return null;
+                        }
+                        
+                        return oneSignalId
+                    }).filter(user => user !== null);
+                })
+
+                console.log(`Sending notification to: `, userOneSignalIds.length, " users");
+                userOneSignalIds.forEach(async (oneSignalId) => {
+                    // Merge default additional data with custom data
+                    const additionalData = {
+                        userId: userIds
+                    };
+                    
+                    // Send notification using the utility
+                    return sendOneSignalNotification(
+                        oneSignalId,
+                        title,
+                        message, 
+                        additionalData
+                    );
+                });
+
+                return {success: true, message: `Notification sent to filtered users`};
+            }   
 
 
             // userIds.forEach(async (userId) => {
