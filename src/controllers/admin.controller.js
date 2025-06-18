@@ -801,6 +801,17 @@ class AdminController {
         }
     }
 
+    async sendNotificationToUsers(req, res) {
+        try {
+            const { userIds, title, message, toAll, filters } = req.body;
+            const result = await this.adminService.sendNotificationToUsers(userIds, title, message, toAll, filters);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Send notification error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
     
 }
 
@@ -871,6 +882,7 @@ export default {
     getAppointments: adminController.getAppointments.bind(adminController),
     editAppointment: adminController.editAppointment.bind(adminController),
     getTracking: adminController.getTracking.bind(adminController),
-    appendList: adminController.appendList.bind(adminController)
+    appendList: adminController.appendList.bind(adminController),
+    sendNotificationToUsers: adminController.sendNotificationToUsers.bind(adminController)
 };
 

@@ -289,11 +289,11 @@ class AdminService {
             lastDoc: users.length > 0 ? users[users.length - 1].id : null,
             appliedFilters: filters || {}
         };
-    } catch (error) {
-        console.error('Error fetching users with pagination:', error);
-        throw new Error(`Failed to fetch users: ${error.message}`);
-    }
-}
+            } catch (error) {
+                console.error('Error fetching users with pagination:', error);
+                throw new Error(`Failed to fetch users: ${error.message}`);
+            }
+        }
 
 
     async getAllUsersOfForm(formId) {
@@ -1742,6 +1742,84 @@ class AdminService {
             );
         } catch (error) {
             console.error('Send notification error:', error);
+            // We don't want notification errors to break the main functionality
+            // So we log the error but don't throw it
+            return null;
+        }
+    }
+
+
+     async sendNotificationToUsers(userIds,title, message, toAll = false, filters = null) {
+        
+        try {
+            // Get user to retrieve OneSignal playerId
+            if (toAll) {
+                const allUsers = await this.users.get();
+                console.log(`Sending notification to: `, allUsers.docs.length, " users");
+                
+                allUsers.forEach(async (userDoc) => {
+                    const userData = userDoc.data();
+                    const oneSignalId = userData.oneSignalId;
+                    console.log(oneSignalId);
+                    
+                    
+                    // Skip if no OneSignal ID is associated with the user
+                    if (!oneSignalId) {
+                        // console.log(`No OneSignal ID found for user ${userDoc.id}, skipping notification`);
+                        return null;
+                    }
+                    
+                    
+                    
+                    // Merge default additional data with custom data
+                    const additionalData = {
+                        userId: userDoc.id
+                    };
+                    
+                    // Send notification using the utility
+                    return await sendOneSignalNotification(
+                        oneSignalId,
+                        title,
+                        message,
+                        additionalData
+                    );
+                });
+                return {success: true, message: `Notification sent to all users`};
+            }
+
+
+            // userIds.forEach(async (userId) => {
+            //     const userDoc = await this.users.doc(userId).get();
+            //     if (!userDoc.exists) {
+            //         return null;
+            //     }
+            
+            //     const userData = userDoc.data();
+            //     const oneSignalId = userData.oneSignalId;
+            
+            //     // Skip if no OneSignal ID is associated with the user
+            //     if (!oneSignalId) {
+            //         console.log(`No OneSignal ID found for user ${userId}, skipping notification`);
+            //         return null;
+            //     }
+                
+                
+            
+            //     // Merge default additional data with custom data
+            //     const additionalData = {
+            //         userId: userId
+            //     };
+            
+            //     // Send notification using the utility
+            //     return await sendOneSignalNotification(
+            //         oneSignalId,
+            //         title,
+            //         message,
+            //         additionalData
+            //     );
+            //     })
+        } catch (error) {
+            console.error('Send group notification error:', error);
             // We don't want notification errors to break the main functionality
             // So we log the error but don't throw it
             return null;

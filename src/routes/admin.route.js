@@ -17,6 +17,7 @@ router.get('/get-appointments', AdminController.getAppointments);
 router.put('/edit-appointment/:id', AdminController.editAppointment);
 router.get('/gettracking', AdminController.getTracking);
 router.get('/user/:userId', cacheMiddleware('user', 300), AdminController.getUser);
+router.post('/send-notification', AdminController.sendNotificationToUsers);
 
 // Apply authentication middleware to all routes below this line
 router.use(authMiddleware);
