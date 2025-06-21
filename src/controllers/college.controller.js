@@ -45,10 +45,28 @@ class CollegeController {
                 city: req.query.city,
                 status: req.query.status,
                 page: parseInt(req.query.page) || 1,
-                limit: parseInt(req.query.limit) || 5
+                limit: parseInt(req.query.limit) || 5,
+                cities: req.query.cities,
             };
+
+            console.log('Searching colleges with filters:', req.query);
+            
             
             const result = await this.collegeService.searchColleges(filters);
+            
+            res.json(result);
+        } catch (error) {
+            console.error('Controller error searching colleges:', error);
+            res.status(500).json({ success: false, message: 'Error searching colleges', error: error.message });
+        }
+    }
+
+    
+    async searchFilteredColleges(req, res) {
+        try {
+            const {filters} = req.body;
+            
+            const result = await this.collegeService.searchFilteredColleges(filters);
             
             res.json(result);
         } catch (error) {
@@ -116,6 +134,8 @@ class CollegeController {
             res.status(500).json({ success: false, message: 'Error deleting college', error: error.message });
         }
     }
+
+
 }
 
 // Create instance of controller
@@ -128,5 +148,6 @@ export default {
     searchColleges: collegeController.searchColleges.bind(collegeController),
     createCollege: collegeController.createCollege.bind(collegeController),
     updateCollege: collegeController.updateCollege.bind(collegeController),
-    deleteCollege: collegeController.deleteCollege.bind(collegeController)
+    deleteCollege: collegeController.deleteCollege.bind(collegeController),
+    searchFilteredColleges: collegeController.searchFilteredColleges.bind(collegeController) // Reusing searchColleges for filtered search
 };

@@ -1,6 +1,7 @@
 import { db } from "../../config/firebase.js";
 import fs from 'fs/promises';
 import path from 'path';
+import Fuse from 'fuse.js';
 
 class CollegeService {
     constructor() {
@@ -8,6 +9,23 @@ class CollegeService {
         this.collegeUpdates = db.collection('college_updates');
         this.metadata = db.collection('metadata');
         this.COLLEGES_FILE_PATH = path.join(process.cwd(), 'src/data/College_New_Data_2.json');
+        
+        // Fuse.js configuration for college search
+        this.fuseOptions = {
+            keys: [
+                { name: 'instituteName', weight: 0.7 },
+                { name: 'instituteCode', weight: 0.3 },
+                { name: 'city', weight: 0.5 },
+                { name: 'keywords', weight: 0.1 },
+                { name: 'additionalMetadata.autonomyStatus', weight: 0.2 },
+                {name: 'branches.branchName', weight: 0.4},
+            ],
+            threshold: 0.3, // Adjust for search sensitivity (0 = exact match, 1 = match anything)
+            includeScore: true,
+            shouldSort: true,
+            ignoreLocation: true,
+            findAllMatches: true
+        };
     }
 
     async getAllColleges(page = 1, limit = 10, lastDocId = null) {
@@ -63,44 +81,108 @@ class CollegeService {
             const collegesData = JSON.parse(await fs.readFile(this.COLLEGES_FILE_PATH, 'utf8'));
             
             let filteredColleges = [...collegesData];
+            console.log(filteredColleges.length, ' colleges found before filtering');
             
-            // Apply filters
-            if (filters.instituteName) {
-                filteredColleges = filteredColleges.filter(college => 
-                    college.instituteName?.toLowerCase().includes(filters.instituteName.toLowerCase()) ||
-                    this.matchesKeywords(college.keywords, filters.instituteName)
-                );
-            }
-            
+            // Apply non-search filters first
             if (filters.instituteCode) {
                 filteredColleges = filteredColleges.filter(college => 
                     college.instituteCode?.toString() === filters.instituteCode.toString()
                 );
             }
+            console.log(filteredColleges.length, ' colleges found after instituteCode filter');
             
-            if (filters.city) {
+           
+              if (filters.cities && Array.isArray(filters.cities) && filters.cities.length > 0) {
                 filteredColleges = filteredColleges.filter(college => 
-                    college.city?.toLowerCase().includes(filters.city.toLowerCase())
+                    filters.cities.some(city =>
+                        college.city?.toLowerCase().includes(city.toLowerCase())
+                    )
                 );
             }
+            console.log(filteredColleges.length, ' colleges found after city filter');
             
             if (filters.status) {
                 filteredColleges = filteredColleges.filter(college => 
                     college.additionalMetadata?.autonomyStatus?.toLowerCase() === filters.status.toLowerCase()
                 );
             }
-            if (filters.query) {
-                filteredColleges = filteredColleges.filter(college => 
-                    college.instituteName?.toLowerCase().includes(filters.query.toLowerCase()) ||
-                    this.matchesKeywords(college.keywords, filters.query)
-                );
+            console.log(filteredColleges.length, ' colleges found after status filter');
+            
+            // Apply fuzzy search for instituteName and query
+            if (filters.instituteName || filters.query) {
+                const searchTerm = filters.instituteName || filters.query;
+                const fuse = new Fuse(filteredColleges, this.fuseOptions);
+                const searchResults = fuse.search(searchTerm);
+                filteredColleges = searchResults.map(result => result.item);
             }
+            console.log(filteredColleges.length, ' colleges found after query filter');
             
             // Apply pagination if provided
             const page = parseInt(filters.page) || 1;
-            const limit = parseInt(filters.limit) || 10;
+            const limit = parseInt(filters.limit) || 40;
             const startIndex = (page - 1) * limit;
-            const paginatedResults = filteredColleges.slice(startIndex, startIndex + limit);
+            const paginatedResults = filteredColleges;
+            console.log(paginatedResults.length, ' colleges found after paginating filter');
+            
+            return {
+                colleges: paginatedResults,
+                totalCount: filteredColleges.length,
+                currentPage: page,
+                totalPages: Math.ceil(filteredColleges.length / limit),
+                hasMore: (page * limit) < filteredColleges.length
+            };
+        } catch (error) {
+            console.error('Error searching colleges:', error);
+            throw error;
+        }
+    }
+
+    async searchFilteredColleges(filters = {}) {
+        try {
+            const collegesData = JSON.parse(await fs.readFile(this.COLLEGES_FILE_PATH, 'utf8'));
+            
+            let filteredColleges = [...collegesData];
+            console.log(filteredColleges.length, ' colleges found before filtering');
+            
+            // Apply non-search filters first
+            if (filters.instituteCode) {
+                filteredColleges = filteredColleges.filter(college => 
+                    college.instituteCode?.toString() === filters.instituteCode.toString()
+                );
+            }
+            console.log(filteredColleges.length, ' colleges found after instituteCode filter');
+            
+            if (filters.cities && Array.isArray(filters.cities) && filters.cities.length > 0) {
+                filteredColleges = filteredColleges.filter(college => 
+                    filters.cities.some(city =>
+                        college.city?.toLowerCase().includes(city.toLowerCase())
+                    )
+                );
+            }
+            console.log(filteredColleges.length, ' colleges found after city filter');
+            
+            if (filters.branches && Array.isArray(filters.branches) && filters.branches.length > 0) {
+                filteredColleges = filteredColleges.filter(college => 
+                    college.additionalMetadata?.autonomyStatus?.toLowerCase() === filters.status.toLowerCase()
+                );
+            }
+            console.log(filteredColleges.length, ' colleges found after status filter');
+            
+            // Apply fuzzy search for instituteName and query
+            if (filters.instituteName || filters.query) {
+                const searchTerm = filters.instituteName || filters.query;
+                const fuse = new Fuse(filteredColleges, this.fuseOptions);
+                const searchResults = fuse.search(searchTerm);
+                filteredColleges = searchResults.map(result => result.item);
+            }
+            console.log(filteredColleges.length, ' colleges found after query filter');
+            
+            // Apply pagination if provided
+            const page = parseInt(filters.page) || 1;
+            const limit = parseInt(filters.limit) || 40;
+            const startIndex = (page - 1) * limit;
+            const paginatedResults = filteredColleges;
+            console.log(paginatedResults.length, ' colleges found after paginating filter');
             
             return {
                 colleges: paginatedResults,
@@ -247,7 +329,7 @@ class CollegeService {
         }
     }
 
-    // Helper function to check if search term matches keywords
+    // Helper function to check if search term matches keywords (kept for backward compatibility)
     matchesKeywords(keywords, searchTerm) {
         if (!keywords || !Array.isArray(keywords)) return false;
         

@@ -456,7 +456,8 @@ class AdminController {
     async getAllUsersOfForm(req, res) {
         try {
             const formId = req.params.formId;
-            const users = await this.adminService.getAllUsersOfForm(formId);
+            const {userIds} = req.body
+            const users = await this.adminService.getAllUsersOfForm(formId, userIds);
             res.status(200).json(users);
         } catch (error) {
             console.error('Get all users of form error:', error);

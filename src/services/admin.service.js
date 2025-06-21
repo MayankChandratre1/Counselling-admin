@@ -296,13 +296,35 @@ class AdminService {
         }
 
 
-    async getAllUsersOfForm(formId) {
-        const snapshot = await this.users
-        .where('stepsData', '!=', null)
-        .where('stepsData.id', '==', formId)
-        .get();
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    async getAllUsersOfForm(formId, userIds = []) {
+    let usersStepData = [];
+    try {
+        // Use Promise.all with map to wait for all asynchronous operations to complete
+        const userPromises = userIds.map(async (userId) => {
+            const userRef = this.users.doc(userId);
+            const userDoc = await userRef.get();
+            if (userDoc.exists) {
+                const userData = userDoc.data();
+                if (userData.stepsData && userData.stepsData.id === formId) {
+                    console.log(userData.stepsData);
+                    return { id: userDoc.id,name:userDoc.name, stepsData: userData.stepsData };
+                }
+            }
+            return null; // Return null for users that don't match the criteria
+        });
+
+        // Wait for all promises to resolve
+        const results = await Promise.all(userPromises);
+
+        // Filter out null values (users that didn't match the criteria)
+        usersStepData = results.filter(data => data !== null);
+
+        return usersStepData;
+    } catch (err) {
+        console.error('Error fetching users of form:', err);
+        return [];
     }
+  }
 
     async updateUser(userId, userData) {
         try {

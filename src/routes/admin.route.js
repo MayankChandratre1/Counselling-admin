@@ -38,7 +38,7 @@ router.post('/permissions/:role', authorize(['super-admin']), AdminController.ad
 // Routes accessible by both admin and super-admin
 // Protected routes with caching
 router.get('/all-users',cacheMiddleware("all-users", 300), AdminController.getAllUsers);
-router.get('/users/form/:formId',  cacheMiddleware('usersofform', 300), AdminController.getAllUsersOfForm);
+router.post('/users/form/:formId', AdminController.getAllUsersOfForm);
 router.get('/user/:userId', cacheMiddleware('user', 300), AdminController.getUser);
 router.get('/user/phone/:phone',  AdminController.getUserByPhone);
 router.get('/formsteps', cacheMiddleware('formsteps', 3600), AdminController.getFormSteps);

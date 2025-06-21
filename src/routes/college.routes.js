@@ -19,6 +19,13 @@ router.get('/', collegeController.getColleges);
 router.get('/search', collegeController.searchColleges);
 
 /**
+ * @route   POST /api/colleges/filtered-search
+ * @desc    Search colleges based on filters
+ * @access  Public
+ */
+router.post('/filtered-search', collegeController.searchFilteredColleges);
+
+/**
  * @route   GET /api/colleges/:id
  * @desc    Get a single college by ID
  * @access  Public
