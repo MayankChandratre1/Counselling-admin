@@ -2095,8 +2095,11 @@ class AdminService {
                     phone: user.phone,
                     email: user.email,
                     planTitle: user.premiumPlan?.planTitle || 'N/A',
-                    purchasedDate: user.premiumPlan?.purchasedDate || 'N/A'
-                }))
+                    purchasedDate: user.premiumPlan?.purchasedDate?.toDate() || 'N/A'
+                })).sort((a, b) => {
+                    if (!a.purchasedDate || !b.purchasedDate) return 0; // Handle cases where purchasedDate is missing
+                    return b.purchasedDate - a.purchasedDate; // Sort by purchased date
+                })
             }
 
             const onlineBatch = users.filter(user => user.isPremium && user.batch == 'online').length;
@@ -2153,8 +2156,11 @@ class AdminService {
                 email: user.email,
                 planTitle: user.premiumPlan?.planTitle || 'N/A',
                 purchasedDate: user.premiumPlan?.purchasedDate?.toDate() || 'N/A'
-            }))
-            }
+            })).sort((a, b) => {
+                if (!a.purchasedDate || !b.purchasedDate) return 0; // Handle cases where purchasedDate is missing
+                return b.purchasedDate - a.purchasedDate; // Sort by purchased date
+            })
+        }
             
             const paymentPendingUsers = {
                 total: users.filter(user => user.isPremium && user.premiumPlan.isPaymentPending).length,
