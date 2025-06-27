@@ -296,7 +296,7 @@ class AdminService {
         }
 
 
-    async getAllUsersOfForm(formId, userIds = []) {
+  async getAllUsersOfForm(formId, userIds = []) {
     let usersStepData = [];
     try {
         // Use Promise.all with map to wait for all asynchronous operations to complete
@@ -325,6 +325,8 @@ class AdminService {
         return [];
     }
   }
+
+  
 
     async updateUser(userId, userData) {
         try {
@@ -2102,9 +2104,7 @@ class AdminService {
                 })
             }
 
-            const onlineBatch = users.filter(user => user.isPremium && user.batch == 'online').length;
-            const offlineBatch = users.filter(user => user.isPremium && user.batch == 'offline').length;
-            
+           
             const todayEnrolled = {
                 total: users.filter(user => {
                 if (!user.premiumPlan?.purchasedDate) return false;
@@ -2186,21 +2186,7 @@ class AdminService {
             const usersWithoutLists = totalInstalls - usersWithLists;
 
 
-            const usersWithListsOnline = {
-                total: users.filter(user => user.isPremium && user.batch == 'online' && user.lists && user.lists.length > 0).length,
-                users: users.filter(user => user.isPremium && user.batch == 'online' && user.lists && user.lists.length > 0).map(user => ({
-                    id: user.id,
-                    lists: user.lists.map(list => list.title)
-                })),
-            } 
-           
-            const usersWithListsOffline = {
-                total: users.filter(user => user.isPremium && user.batch == 'offline' && user.lists && user.lists.length > 0).length,
-                users: users.filter(user => user.isPremium && user.batch == 'offline' && user.lists && user.lists.length > 0).map(user => ({
-                    id: user.id,
-                    lists: user.lists.map(list => list.title)
-                })),
-            } 
+
             
 
 
@@ -2257,10 +2243,250 @@ class AdminService {
                         lists: []
                     });
             })
+
+
+            const formStepsAnalysis = {};
+            const forms = await this.counsellingForms.get();
+
+            forms.forEach(form => {
+                console.log(`Analyzing form: ${form.id}`);
                 
+                 formStepsAnalysis[form.id] = {
+                    formTitle: form.id,
+                    totalUsers: 0,
+                    steps: {}
+                }
+            })
             
-          
-            
+
+            forms.forEach(form => {
+                const formData = form.data();
+    //             {
+    //   number: 1,
+    //   title: 'Your Number is added to Exclusive WhatsApp Group for Saarthi Plus?',       
+    //   description: 'You are Part of Exclusive WhatsApp group?',
+    //   showListButton: false,
+    //   isLocked: false,
+    //   premiumOnly: true,
+    //   isCapSpecific: false,
+    //   cap: 1,
+    //   isVerdict: false,
+    //   isCapQuery: false
+    // },
+    // {
+    //   number: 2,
+    //   title: 'Documents verified by Team on Google Meet.',
+    //   description: 'Special session will be conducted to verify your documents if they are completed or not?',
+    //   showListButton: false,
+    //   isLocked: false,
+    //   premiumOnly: true,
+    //   isCapSpecific: false,
+    //   cap: 1,
+    //   isVerdict: false,
+    //   isCapQuery: false
+    // },
+                const formId = form.id;
+               
+                formData.steps.forEach(step => {
+                    formStepsAnalysis[formId].steps[step.number] = {
+                        title: step.title,
+                    
+                        completedCount: 0,
+                        rejectedCount: 0,
+                    };
+                });
+
+                //user.stepsData
+//                 {
+//   "id": "63e53",
+//   "steps": [
+//     {
+//       "number": 1,
+//       "title": "Your Number is added to Exclusive WhatsApp Group for Saarthi Plus?",
+//       "description": "You are Part of Exclusive WhatsApp group?",
+//       "showListButton": false,
+//       "isLocked": false,
+//       "premiumOnly": true,
+//       "isCapSpecific": false,
+//       "cap": 1,
+//       "isVerdict": false,
+//       "isCapQuery": false,
+//       "status": "No",
+//       "remark": null,
+//       "collegeName": "",
+//       "branchCode": "",
+//       "verdict": "",
+//       "data": null
+//     },
+//     {
+//       "number": 2,
+//       "title": "Documents verified by Team on Google Meet.",
+//       "description": "Special session will be conducted to verify your documents if they are completed or not?",
+//       "showListButton": false,
+//       "isLocked": false,
+//       "premiumOnly": true,
+//       "isCapSpecific": false,
+//       "cap": 1,
+//       "isVerdict": false,
+//       "isCapQuery": false,
+//       "status": "No",
+//       "remark": null,
+//       "data": null,
+//       "collegeName": "",
+//       "branchCode": "",
+//       "verdict": ""
+//     },
+//     {
+//       "title": "REGISTRATION Done by Team on CET Cell website.",
+//       "number": 3,
+//       "description": "Did team complete your Registration? ",
+//       "isLocked": true,
+//       "premiumOnly": true,
+//       "status": null,
+//       "remark": null,
+//       "data": null
+//     },
+//     {
+//       "number": 4,
+//       "title": "Document Verified by CET Cell and form Confirmed.",
+//       "isLocked": true,
+//       "premiumOnly": true,
+//       "status": null,
+//       "remark": null,
+//       "data": null
+//     },
+//     {
+//       "number": 5,
+//       "title": "Attended Session with Team or Yash Dada Regarding List Making?",
+//       "isLocked": true,
+//       "premiumOnly": true,
+//       "status": null,
+//       "remark": null,
+//       "data": null
+//     },
+//     {
+//       "number": 6,
+//       "title": "Preference List Available on App?",
+//       "description": "",
+//       "showListButton": true,
+//       "isLocked": true,
+//       "premiumOnly": true,
+//       "status": null,
+//       "remark": null,
+//       "data": null
+//     },
+//     {
+//       "number": 7,
+//       "title": "Did you finalize your list?",
+//       "description": "The list available in your app is final for you now?",
+//       "showListButton": false,
+//       "isLocked": true,
+//       "premiumOnly": true,
+//       "status": null,
+//       "remark": null,
+//       "data": null
+//     },
+//     {
+//       "number": 8,
+//       "title": "Provisional Rank Declared By CET Cell",
+//       "description": "",
+//       "showListButton": false,
+//       "isLocked": true,
+//       "premiumOnly": true,
+//       "status": null,
+//       "remark": null,
+//       "data": null
+//     },
+//     {
+//       "number": 9,
+//       "title": "Final Rank Declared by CET CELL Your Rank?",
+//       "description": "",
+//       "showListButton": false,
+//       "isLocked": false,
+//       "premiumOnly": true,
+//       "status": null,
+//       "remark": null,
+//       "data": null
+//     },
+//     {
+//       "number": 10,
+//       "title": "Ready for CAP-1 Round?",
+//       "description": "",
+//       "showListButton": false,
+//       "isLocked": true,
+//       "premiumOnly": true,
+//       "status": null,
+//       "remark": null,
+//       "data": null
+//     },
+//     {
+//       "number": 11,
+//       "title": "Form Filling Done on CET Cell Website for CAP-1 by Team?",
+//       "description": "Your form is submitted by team?",
+//       "showListButton": false,
+//       "isLocked": true,
+//       "premiumOnly": true,
+//       "status": null,
+//       "remark": null,
+//       "data": null
+//     },
+//     {
+//       "number": 12,
+//       "title": "CAP-1 Allotment Declared Enter your College and Branch?",
+//       "description": "",
+//       "showListButton": false,
+//       "isLocked": true,
+//       "premiumOnly": true,
+//       "isCapSpecific": true,
+//       "isVerdict": false,
+//       "cap": 1,
+//       "isCapQuery": true,
+//       "status": null,
+//       "remark": null,
+//       "data": null
+//     },
+//     {
+//       "number": 13,
+//       "title": "Next Steps will available soon.",
+//       "description": "",
+//       "showListButton": false,
+//       "isLocked": true,
+//       "premiumOnly": true,
+//       "status": null,
+//       "remark": null,
+//       "data": null
+//     }
+//   ]
+// }
+                users.forEach(user => {
+                    if(!user.isPremium) return;
+                    if (!user.stepsData || !user.stepsData.id) {    
+                       
+                        return
+                    };
+
+                    if(user.stepsData.id !== formId) return;
+                    
+                    formStepsAnalysis[formId].totalUsers++;
+                    
+                    user.stepsData.steps.forEach(step => {
+                        if (step.number in formStepsAnalysis[formId].steps) {
+                            const stepData = formStepsAnalysis[formId].steps[step.number];
+                            stepData.totalUsers++;
+                            
+                            if (step.status === 'Yes') {
+                                stepData.completedCount++;
+                            } else if (step.status === 'No') {
+                                stepData.rejectedCount++;
+                            }
+                        }
+                    });
+                }
+                );
+                
+            }
+            );
+        
             return {
                 totalUsers: totalInstalls,
                 metrics: {
@@ -2272,11 +2498,13 @@ class AdminService {
                 premiumPlanDistribution,
                 usersWithLists,
                 usersWithoutLists,
+                formStepsAnalysis,
                 listData:{
                 userListDistributionWithLists,
                 userListDistributionWithoutLists,
                 userListDistributionWithCreatedLists,
                 userListDistributionWithoutCreatedLists,
+                
                 }
             };
         } catch (error) {
