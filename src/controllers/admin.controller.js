@@ -21,6 +21,18 @@ class AdminController {
         
     }
 
+    async dummyController(req, res) {
+        try {
+            const result = await this.adminService.resetUsersStepData();
+            console.log(result);
+            // This is a dummy controller for testing purposes
+            res.status(200).json({ message: 'Dummy controller is working', result });
+        } catch (error) {
+            console.error('Dummy controller error:', error);
+            res.status(500).json({ error: 'Internal server error' });
+        }
+    }
+
     async requestOTP(req, res) {
         try {
             const { email } = req.body;
@@ -413,6 +425,17 @@ class AdminController {
             const {listId} = req.body;
             
             const result = await this.adminService.releaseListToUser(userId, listId);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Error assigning list to user:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+    async releaseAllListToUser(req, res) {
+        try {
+            const { userId } = req.params;
+            
+            const result = await this.adminService.releaseAllListToUser(userId);
             res.status(200).json(result);
         } catch (error) {
             console.error('Error assigning list to user:', error);
@@ -813,6 +836,8 @@ class AdminController {
         }
     }
 
+
+
     
 }
 
@@ -821,6 +846,7 @@ const adminController = new AdminController();
 
 // Export controller methods individually
 export default {
+    dummyController: adminController.dummyController.bind(adminController),
     login: adminController.login.bind(adminController),
     getAllUsers: adminController.getAllUsers.bind(adminController),
     updateUser: adminController.updateUser.bind(adminController),
@@ -847,7 +873,7 @@ export default {
     updateUserList: adminController.updateUserList.bind(adminController),
     deleteUserList: adminController.deleteUserList.bind(adminController),
     assignListToUser: adminController.assignListToUser.bind(adminController),
-    releaseListToUser: adminController.releaseListToUser.bind(adminController),
+    releaseListToUser: adminController.releaseAllListToUser.bind(adminController),
     getFormConfig: adminController.getFormConfig.bind(adminController),
     saveFormConfig: adminController.saveFormConfig.bind(adminController),
     addAdmin: adminController.addAdmin.bind(adminController),

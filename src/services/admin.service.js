@@ -410,6 +410,88 @@ class AdminService {
         }
     }
 
+    async resetUsersStepData() {
+        try {
+            const userRef =await  this.users.where('isPremium',"==",true).get();
+            const forms = await this.counsellingForms.get();
+            const fetchedForms = [];
+            if(forms.empty) throw new Error('No forms found');
+            forms.forEach((form) => {
+                fetchedForms.push({
+                    id: form.id,
+                    ...form.data()
+                });
+            })
+
+            if(fetchedForms.length === 0) throw new Error('No forms found');
+            if (userRef.empty) throw new Error('No users found');
+
+            const dataToPrint = []
+
+            userRef.docs.forEach(async (userDoc) => {
+                const userId = userDoc.id;
+                const userData = userDoc.data();
+
+                let updatedData = userData.stepsData || null;
+
+                if(!updatedData){
+                    const form = userData.premiumPlan?.form
+                    if(!form) {
+                        return
+                    }
+                    const formData = fetchedForms.find(form => form.id === userData.premiumPlan.form);
+                    updatedData = {
+                        id: formData.id,
+                        steps: formData.steps.map(step => ({
+                            ...step,
+                            collegeName: "",
+                            branchCode: "",
+                            verdict: ""
+                        })),
+                    }
+
+                    
+                }
+
+                const formsData = fetchedForms.find(form => form.id === userData.premiumPlan.form);
+
+                if (!formsData) throw new Error(`Form not found for user ${userId}`);
+
+                updatedData.id = formsData.id;
+                updatedData.steps = formsData.steps.map(step => ({
+                    ...step,
+                    collegeName: "",
+                    branchCode: "",
+                    verdict: ""
+                }))
+
+                if (userData.isPremium){
+                        await this.users.doc(userId).update({
+                            stepsData: updatedData,
+                        })
+                        console.log(`Updated user ${userId} with step data:`, updatedData);
+                        
+                        dataToPrint.push({
+                            id: userId,
+                            name: userData.name,
+                            phone: userData.phone,
+                            stepsData: updatedData
+                        });
+                        
+                }
+
+
+
+            })
+            await this.invalidateCache('users:*');
+            return { message: `Users stepdata reset successfully`,  data: dataToPrint.slice(0, 10) };
+        } catch (error) {
+            console.log(error);
+            
+            throw new Error('User update failed');
+        }
+    }
+
     async deleteUser(userId) {
         try {
             await this.users.doc(userId).delete();
@@ -820,6 +902,70 @@ class AdminService {
             await this.sendNotification(userId, 'LIST_ASSIGNED', {
                 listId: createdListAssignment.originalListId,
                 listName: createdListAssignment.name || 'New List'
+            });
+            this.invalidateCache('user:*')
+            this.invalidateCache('user_lists')
+            return { message: `List assigned to user ${userData.id} (${userData.phone}) successfully` };
+        } catch (error) {
+            throw new Error(`Failed to assign list: ${error.message}`);
+        }
+    }
+    async releaseAllListToUser(userId) {
+        try {
+            const userDoc = await this.users.doc(userId).get();
+            if (!userDoc.exists) {
+                throw new Error('User not found');
+            }
+
+            const userData = userDoc.data();
+            const userCreatedLists = userData.createdList || [];
+            const userAssignedLists = userData.lists || [];
+
+            // Check if list is already assigned
+            
+
+            const createdListAssignment = userCreatedLists.find(list => { 
+                return list.id === listId || list.listId === listId || list.originalListId === listId;
+            })
+
+            const newLists = []
+
+            userCreatedLists.forEach((createdList)=>{
+                    const isListAssigned = userAssignedLists.some(list => 
+                        createdListAssignment && (list.originalListId === createdList.originalListId || 
+                        list.listId === createdList.originalListId
+                    ));
+
+                    if(!isListAssigned){
+                        const newAssignment = {
+                            ...createdList,
+                            listId: createdList.originalListId // Maintain backward compatibility
+                        };
+
+                        newLists.push(newAssignment);
+                    }
+            })
+
+
+
+            const isListAssigned = userAssignedLists.some(list => 
+                createdListAssignment && (list.originalListId === createdListAssignment.originalListId || 
+                list.listId === createdListAssignment.originalListId
+            ));
+            
+            if (isListAssigned) {
+                throw new Error('List is already assigned to this user');
+            }
+            
+            await this.users.doc(userId).update({
+                lists: [...userAssignedLists, ...newLists],
+                createdList: []
+            });
+            
+            // Send notification to user
+            await this.sendNotification(userId, 'LIST_ASSIGNED', {
+                listId: 'Some Id',
+                listName: 'New List'
             });
             this.invalidateCache('user:*')
             this.invalidateCache('user_lists')

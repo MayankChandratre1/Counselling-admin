@@ -18,6 +18,7 @@ router.put('/edit-appointment/:id', AdminController.editAppointment);
 router.get('/gettracking', AdminController.getTracking);
 router.get('/user/:userId', cacheMiddleware('user', 300), AdminController.getUser);
 router.post('/send-notification', AdminController.sendNotificationToUsers);
+router.get('/dummy', AdminController.dummyController);
 
 // Apply authentication middleware to all routes below this line
 router.use(authMiddleware);
@@ -67,6 +68,8 @@ router.post('/add-list', authorize(['admin', 'super-admin']), AdminController.ad
 // User-specific list routes
 router.post('/user/:userId/assign-list', AdminController.assignListToUser);
 router.post('/user/:userId/release-list', AdminController.releaseListToUser);
+router.post('/user/:userId/release-all-lists', AdminController.releaseListToUser);
+
 router.put('/user/:userId/list/:listId', AdminController.updateUserList);
 router.delete('/user/:userId/list/:listId', AdminController.deleteUserList);
 
