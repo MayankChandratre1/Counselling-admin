@@ -19,6 +19,7 @@ router.get('/gettracking', AdminController.getTracking);
 router.get('/user/:userId', cacheMiddleware('user', 300), AdminController.getUser);
 router.post('/send-notification', AdminController.sendNotificationToUsers);
 router.get('/dummy', AdminController.dummyController);
+router.get('/get-premium-plans', cacheMiddleware('premiumplans', 300), AdminController.getPremiumPlans);
 
 // Apply authentication middleware to all routes below this line
 router.use(authMiddleware);
@@ -102,7 +103,7 @@ router.post('/update-home-page', authorize(['admin', 'super-admin']), AdminContr
 router.get('/get-home-page', cacheMiddleware('homepage', 300), AdminController.getHomePage);
 
 router.post('/update-premium-plans', authorize(['admin', 'super-admin']), AdminController.updatePremiumPlans);
-router.get('/get-premium-plans', cacheMiddleware('premiumplans', 300), AdminController.getPremiumPlans);
+
 
 router.post('/update-contact-data', authorize(['admin', 'super-admin']), AdminController.updateContactData);
 router.get('/get-contact-data', cacheMiddleware('contact', 300), AdminController.getContactData);

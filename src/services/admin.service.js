@@ -491,6 +491,48 @@ class AdminService {
             throw new Error('User update failed');
         }
     }
+    async addEmailToCounselling() {
+        try {
+            const userRef =await  this.users.get();
+           
+    
+            if (userRef.empty) throw new Error('No users found');
+
+            const dataToPrint = []
+            
+
+            userRef.docs.forEach(async (userDoc) => {
+                const userId = userDoc.id;
+                const userData = userDoc.data();
+
+                if (userData.email){
+                        await this.users.doc(userId).update({
+                            counsellingData:{
+                                ...userData.counsellingData,
+                                email: userData.email
+                            }
+                        })
+                        
+                        dataToPrint.push({
+                            id: userId,
+                            name: userData.name,
+                            phone: userData.phone,
+                            counsellingData:{
+                                ...userData.counsellingData,
+                                email: userData.email
+                            }
+                        });
+                        
+                }
+            })
+            await this.invalidateCache('users:*');
+            return { message: `Users stepdata reset successfully`,  data: dataToPrint.slice(0, 10) };
+        } catch (error) {
+            console.log(error);
+            
+            throw new Error('User update failed');
+        }
+    }
 
     async deleteUser(userId) {
         try {
