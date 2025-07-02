@@ -24,7 +24,6 @@ class AdminController {
     async dummyController(req, res) {
         try {
             const result = await this.adminService.addEmailToCounselling();
-            console.log(result);
             // This is a dummy controller for testing purposes
             res.status(200).json({ message: 'Dummy controller is working', result });
         } catch (error) {

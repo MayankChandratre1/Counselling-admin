@@ -1,11 +1,13 @@
 import express, { json } from 'express';
 import cors from "cors"
+import compression from 'compression';
 import adminRouter from './routes/admin.route.js';
 import collegeRouter from './routes/college.routes.js';
 import razRouter from './routes/raz.routes.js';
 import errorHandler from './middleware/errorHandler.js';
 
 const app = express();
+app.use(compression()); 
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
