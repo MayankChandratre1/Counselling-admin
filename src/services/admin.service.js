@@ -5,7 +5,7 @@ import redis from '../config/redisClient.js';
 import pkg from "firebase-admin";
 const { firestore } = pkg;
 import path from 'path';
-import { sendOneSignalNotification } from '../util/sendPushNotification.js';
+import { sendOneSignalNotification, sendToAllSubscribers } from '../util/sendPushNotification.js';
 import fs from 'fs';
 import ExcelJS from 'exceljs';
 
@@ -2165,20 +2165,7 @@ async sendNotification(userId, notificationId, customData = {}, toAll = false) {
                 })
 
                 console.log(`Sending notification to: `, userOneSignalIds.length, " users");
-                userOneSignalIds.forEach(async (oneSignalId) => {
-                    // Merge default additional data with custom data
-                    const additionalData = {
-                        userId: userIds
-                    };
-                    
-                    // Send notification using the utility
-                    return sendOneSignalNotification(
-                        oneSignalId,
-                        title,
-                        message, 
-                        additionalData
-                    );
-                });
+                await sendToAllSubscribers(userOneSignalIds, title, message, {});
 
                 return {success: true, message: `Notification sent to filtered users`};
             }   
@@ -2616,6 +2603,5 @@ async updateUserWithOrderId(orderId, planData, orderData) {
     }
 }
 
-// new AdminService().exportAllUsersToExcel()
 
 export default AdminService;
