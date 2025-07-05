@@ -2001,6 +2001,619 @@ class AdminService {
     }
 }
 
+
+async sendNotification(userId, notificationId, customData = {}, toAll = false) {
+        try {
+            // Get user to retrieve OneSignal playerId
+            if (toAll) {
+                const allUsers = await this.users.get();
+                allUsers.forEach(async (userDoc) => {
+                    const userData = userDoc.data();
+                    const oneSignalId = userData.oneSignalId;
+                    
+                    // Skip if no OneSignal ID is associated with the user
+                    if (!oneSignalId) {
+                        console.log(`No OneSignal ID found for user ${userDoc.id}, skipping notification`);
+                        return null;
+                    }
+                    
+                    // Get notification template from the map
+                    const notificationTemplate = this.notificationsMap[notificationId];
+                    if (!notificationTemplate) {
+                        throw new Error(`Notification template with ID "${notificationId}" not found`);
+                    }
+                    
+                    // Merge default additional data with custom data
+                    const additionalData = {
+                        ...notificationTemplate.additionalData,
+                        ...customData,
+                        userId: userDoc.id
+                    };
+                    
+                    // Send notification using the utility
+                    return await sendOneSignalNotification(
+                        oneSignalId,
+                        notificationTemplate.title,
+                        notificationTemplate.message,
+                        additionalData
+                    );
+                });
+                return null;
+            }
+
+
+            const userDoc = await this.users.doc(userId).get();
+            if (!userDoc.exists) {
+                throw new Error('User not found');
+            }
+            
+            const userData = userDoc.data();
+            const oneSignalId = userData.oneSignalId;
+            
+            // Skip if no OneSignal ID is associated with the user
+            if (!oneSignalId) {
+                console.log(`No OneSignal ID found for user ${userId}, skipping notification`);
+                return null;
+            }
+            
+            // Get notification template from the map
+            const notificationTemplate = this.notificationsMap[notificationId];
+            if (!notificationTemplate) {
+                throw new Error(`Notification template with ID "${notificationId}" not found`);
+            }
+            
+            // Merge default additional data with custom data
+            const additionalData = {
+                ...notificationTemplate.additionalData,
+                ...customData,
+                userId: userId
+            };
+            
+            // Send notification using the utility
+            return await sendOneSignalNotification(
+                oneSignalId,
+                notificationTemplate.title,
+                notificationTemplate.message,
+                additionalData
+            );
+        } catch (error) {
+            console.error('Send notification error:', error);
+            // We don't want notification errors to break the main functionality
+            // So we log the error but don't throw it
+            return null;
+        }
+    }
+
+
+     async sendNotificationToUsers(userIds,title, message, toAll = false, filters = null) {
+        try {
+            // Get user to retrieve OneSignal playerId
+            if (toAll) {
+                const allUsers = await this.users.get();
+                console.log(`Sending notification to: `, allUsers.docs.length, " users");
+                allUsers.forEach(async (userDoc) => {
+                    const userData = userDoc.data();
+                    const oneSignalId = userData.oneSignalId;
+                    console.log(oneSignalId);
+                    
+                    
+                    // Skip if no OneSignal ID is associated with the user
+                    if (!oneSignalId) {
+                        // console.log(`No OneSignal ID found for user ${userDoc.id}, skipping notification`);
+                        return null;
+                    }
+                    
+                    
+                    
+                    // Merge default additional data with custom data
+                    const additionalData = {
+                        userId: userDoc.id
+                    };
+                    
+                    // Send notification using the utility
+                    return await sendOneSignalNotification(
+                        oneSignalId,
+                        title,
+                        message,
+                        additionalData
+                    );
+                });
+                return {success: true, message: `Notification sent to all users`};
+            }
+
+            if(filters){
+                let userOneSignalIds = [];
+                let query = this.users.orderBy("createdAt", "desc");
+                if(filters.isPremium){
+                    query = query.where('isPremium', '==', true);
+                }
+                if(filters.isFree){
+                    query = query.where('isPremium', '==', false);
+                }
+
+
+                if(filters.plan && filters.plan !== 'all' && filters.plan.length > 0) {
+                    query = query.where('premiumPlan.planTitle', '==', filters.plan);
+                }
+
+                if(filters.listAssigned){
+                    query = query.where('lists', '!=', null);
+                }
+
+                if(filters.listsNotAssigned){
+                    query = query.where('lists', '==', null);
+                }
+
+                userOneSignalIds = await query.get().then(snapshot => {
+                    if (snapshot.empty) {
+                        console.log('No users found with the applied filters');
+                        return [];
+                    }
+                    
+                    return snapshot.docs.map(doc => {
+                        const userData = doc.data();
+                        const oneSignalId = userData.oneSignalId;
+                        
+                        // Skip if no OneSignal ID is associated with the user
+                        if (!oneSignalId) {
+                            console.log(`No OneSignal ID found for user ${doc.id}, skipping notification`);
+                            return null;
+                        }
+                        
+                        return oneSignalId
+                    }).filter(user => user !== null);
+                })
+
+                console.log(`Sending notification to: `, userOneSignalIds.length, " users");
+                userOneSignalIds.forEach(async (oneSignalId) => {
+                    // Merge default additional data with custom data
+                    const additionalData = {
+                        userId: userIds
+                    };
+                    
+                    // Send notification using the utility
+                    return sendOneSignalNotification(
+                        oneSignalId,
+                        title,
+                        message, 
+                        additionalData
+                    );
+                });
+
+                return {success: true, message: `Notification sent to filtered users`};
+            }   
+
+
+            // userIds.forEach(async (userId) => {
+            //     const userDoc = await this.users.doc(userId).get();
+            //     if (!userDoc.exists) {
+            //         return null;
+            //     }
+            
+            //     const userData = userDoc.data();
+            //     const oneSignalId = userData.oneSignalId;
+            
+            //     // Skip if no OneSignal ID is associated with the user
+            //     if (!oneSignalId) {
+            //         console.log(`No OneSignal ID found for user ${userId}, skipping notification`);
+            //         return null;
+            //     }
+                
+                
+            
+            //     // Merge default additional data with custom data
+            //     const additionalData = {
+            //         userId: userId
+            //     };
+            
+            //     // Send notification using the utility
+            //     return await sendOneSignalNotification(
+            //         oneSignalId,
+            //         title,
+            //         message,
+            //         additionalData
+            //     );
+            //     })
+        } catch (error) {
+            console.error('Send group notification error:', error);
+            // We don't want notification errors to break the main functionality
+            // So we log the error but don't throw it
+            return null;
+        }
+    }
+
+    async findUserByOrderId(orderId) {
+        try {
+        // First, try to find by orderIds array
+        let query = this.users.where('orderIds', 'array-contains', orderId);
+        let usersSnapshot = await query.get();
+        
+        if (!usersSnapshot.empty) {
+            return usersSnapshot;
+        }
+        
+        // If not found, try currentOrderId
+        query = this.users.where('currentOrderId', '==', orderId);
+        usersSnapshot = await query.get();
+        
+        return usersSnapshot;
+        
+    } catch (error) {
+        console.error('Find user with order error:', error);
+        throw new Error('Failed to find user with order: ' + error.message);
+    }
+}
+
+async updateUserWithOrderId(orderId, planData, orderData) {
+        try {
+            const userSnapshot = await this.findUserByOrderId(orderId);
+            if (userSnapshot.empty) {
+                console.log('No user found with the provided order ID');
+                return {sucess: false, message: 'No user found with the provided order ID'};
+            }
+            
+            const userDoc = userSnapshot.docs[0];
+            const userId = userDoc.id;
+            const userData = userDoc.data();
+            const orders = userData.orders || [];
+            const existingOrder = orders.find(order => order.id === orderId);
+            const updatedOrders = orders.map(order =>
+                order.id === orderId ? { ...order, ...orderData, paymentStatus: orderData.status == "paid" ? "completed":orderData.status } : order
+            );
+            // Update user's premium plan and order details
+            if(orderData.status === "paid")
+                await this.users.doc(userId).update({
+                    isPremium: true,
+                    premiumPlan: {
+                        ...planData,
+                        purchasedDate: new Date(),
+                        isPaymentPending: false
+                    },
+                    currentOrderId: orderId,
+                    orders: updatedOrders
+                });
+            
+            return { 
+                message: 'User updated with order ID successfully',
+                userId,
+                planData,
+                orderData
+            };
+        } catch (error) {
+            console.error('Update user with order ID error:', error);
+            throw new Error('Failed to update user with order ID: ' + error.message);
+        }
+    }
+
+    async getAppointments(filters = null) {
+        try {
+            let query = this.appointments.orderBy("createdAt", "desc");
+            // Apply filters if provided
+            if (filters) {
+                // Date range filtering
+                if (filters.fromDate) {
+                    const fromDate = new Date(filters.fromDate);
+                    fromDate.setHours(0, 0, 0, 0); // Start of day
+                    const fromTimestamp = firestore.Timestamp.fromDate(fromDate);
+                    query = query.where('createdAt', '>=', fromTimestamp);
+                }
+                
+                if (filters.toDate) {
+                    const toDate = new Date(filters.toDate);
+                    toDate.setHours(23, 59, 59, 999); // End of day
+                    const toTimestamp = firestore.Timestamp.fromDate(toDate);
+                    query = query.where('createdAt', '<=', toTimestamp);
+                }
+                
+                // Filter by status if provided
+                if (filters.status) {
+                    query = query.where('status', '==', filters.status);
+                }
+                if(filters.phone){
+                    query = query.where('phone', '==', filters.phone);
+                }
+            }
+
+                const snapshot = await query.get();
+                if (snapshot.empty) {
+                    return [];
+                }
+                  const appointments = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            
+            return appointments;
+        } catch (error) {
+            console.error('Get appointments error:', error);
+            throw new Error('Failed to get appointments: ' + error.message);
+        }
+    }
+
+    async editAppointment(appointmentId, appointmentData) {
+        try {
+            const appointmentDoc = await this.appointments.doc(appointmentId).get();
+            if (!appointmentDoc.exists) throw new Error('Appointment not found');
+
+            const timestamp = new Date().toISOString();
+            await this.appointments.doc(appointmentId).update({
+                ...appointmentData,
+                updatedAt: timestamp
+            });
+
+            return { 
+                message: 'Appointment updated successfully',
+                appointment: {
+                    id: appointmentId,
+                    ...appointmentData
+                }
+            };
+        } catch (error) {
+            throw new Error(`Failed to update appointment: ${error.message}`);
+        }
+    }
+
+    async getTracking() {
+        try {
+            // Get all users
+            const userSnapshot = await this.users.get();
+            const users = userSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Get today's date in YYYY-MM-DD format
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Calculate metrics
+            const totalInstalls = users.length;
+           return {
+                totalUsers: totalInstalls,
+               
+            };
+        } catch (error) {
+            console.error('Get tracking error:', error);
+            throw new Error('Failed to get tracking data: ' + error.message);
+        }
+}
+
+    async getAnalytics() {
+        try {
+            // Get all users
+            const userSnapshot = await this.users.get();
+            const users = userSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            
+            // Get today's date in YYYY-MM-DD format
+            const today = new Date().toISOString().split('T')[0];
+            
+            // Calculate metrics
+            const totalInstalls = users.length;
+            const enrolledUsers = {
+                total: users.filter(user => user.isPremium).length,
+                users: users.filter(user => user.isPremium).map(user => ({
+                    id: user.id,
+                    name: user.name,
+                    phone: user.phone,
+                    email: user.email,
+                    planTitle: user.premiumPlan?.planTitle || 'N/A',
+                    purchasedDate: user.premiumPlan?.purchasedDate?.toDate() || 'N/A'
+                })).sort((a, b) => {
+                    if (!a.purchasedDate || !b.purchasedDate) return 0; // Handle cases where purchasedDate is missing
+                    return b.purchasedDate - a.purchasedDate; // Sort by purchased date
+                })
+
+                }
+
+           
+            const todayEnrolled = {
+                total: users.filter(user => {
+                if (!user.premiumPlan?.purchasedDate) return false;
+                
+                // Handle different date formats
+                let purchaseDate;
+                if (user.premiumPlan.purchasedDate._seconds) {
+                    // Firestore Timestamp
+                    purchaseDate = new Date(user.premiumPlan.purchasedDate._seconds * 1000);
+                } else if (user.premiumPlan.purchasedDate.toDate) {
+                    // Firestore Timestamp object with toDate method
+                    purchaseDate = user.premiumPlan.purchasedDate.toDate();
+                } else if (user.premiumPlan.purchasedDate instanceof Date) {
+                    // JavaScript Date object
+                    purchaseDate = user.premiumPlan.purchasedDate;
+                } else {
+                    // String or timestamp
+                    purchaseDate = new Date(user.premiumPlan.purchasedDate);
+                }
+                
+                const purchaseDateStr = purchaseDate.toISOString().split('T')[0];
+                return purchaseDateStr === today;
+            }).length,
+            users: users.filter(user => {
+                if (!user.premiumPlan?.purchasedDate) return false;
+                
+                // Handle different date formats
+                let purchaseDate;
+                if (user.premiumPlan.purchasedDate._seconds) {
+                    // Firestore Timestamp
+                    purchaseDate = new Date(user.premiumPlan.purchasedDate._seconds * 1000);
+                } else if (user.premiumPlan.purchasedDate.toDate) {
+                    // Firestore Timestamp object with toDate method
+                    purchaseDate = user.premiumPlan.purchasedDate.toDate();
+                } else if (user.premiumPlan.purchasedDate instanceof Date) {
+                    // JavaScript Date object
+                    purchaseDate = user.premiumPlan.purchasedDate;
+                } else {
+                    // String or timestamp
+                    purchaseDate = new Date(user.premiumPlan.purchasedDate);
+                }
+                
+                const purchaseDateStr = purchaseDate.toISOString().split('T')[0];
+                return purchaseDateStr === today;
+            }).map(user => ({
+                id: user.id,
+                name: user.name,
+                phone: user.phone,
+                email: user.email,
+                planTitle: user.premiumPlan?.planTitle || 'N/A',
+                purchasedDate: user.premiumPlan?.purchasedDate?.toDate() || 'N/A'
+            })).sort((a, b) => {
+                if (!a.purchasedDate || !b.purchasedDate) return 0; // Handle cases where purchasedDate is missing
+                return b.purchasedDate - a.purchasedDate; // Sort by purchased date
+            })
+
+            }
+            
+            const paymentPendingUsers = {
+                total: users.filter(user => user.isPremium && user.premiumPlan.isPaymentPending).length,
+                users: users.filter(user => user.isPremium && user.premiumPlan.isPaymentPending).map(user => ({
+                    id: user.id,
+                    name: user.name,
+                    phone: user.phone,
+                    email: user.email,
+                    amountRemaining: user.premiumPlan.amountRemaining || 'N/A',
+                }))
+            }
+            
+            // Get premium plan distribution
+            const premiumPlanDistribution = {};
+            users.filter(user => user.isPremium && user.premiumPlan?.planTitle)
+                .forEach(user => {
+                    const planTitle = user.premiumPlan.planTitle;
+                    premiumPlanDistribution[planTitle] = (premiumPlanDistribution[planTitle] || 0) + 1;
+                });
+            
+            //User with and without lists
+            const usersWithLists = users.filter(user => user.lists && user.lists.length > 0).length;
+            const usersWithoutLists = totalInstalls - usersWithLists;
+
+             //User with list sorted by premium plans
+            const userListDistributionWithLists = {};
+            const userListDistributionWithoutLists = {};
+            const userListDistributionWithCreatedLists = {};
+            const userListDistributionWithoutCreatedLists = {};
+            users.filter(user => user.isPremium)
+            .map(user => {
+                const planTitle = user.premiumPlan?.planTitle || 'N/A';
+                if (!userListDistributionWithLists[planTitle]) {
+                    userListDistributionWithLists[planTitle] = [];
+                }
+                if(!userListDistributionWithoutLists[planTitle]) {
+                    userListDistributionWithoutLists[planTitle] = [];
+                    }
+                if (!userListDistributionWithCreatedLists[planTitle]) {
+                    userListDistributionWithCreatedLists[planTitle] = [];
+                }
+                if(!userListDistributionWithoutCreatedLists[planTitle]) {
+                    userListDistributionWithoutCreatedLists[planTitle] = [];
+                }
+                if(user.lists && user.lists.length > 0)
+                    userListDistributionWithLists[planTitle].push({
+                        id: user.id,
+                        name: user.name,
+                        phone: user.phone,
+                        email: user.email,
+                        lists: user.lists.map(list => list.title)
+                    });
+                else 
+                    userListDistributionWithoutLists[planTitle].push({
+                        id: user.id,
+                        name: user.name,
+                        phone: user.phone,
+                        email: user.email,
+                        lists: []
+                    });
+                if(user.createdList && user.createdList.length > 0)
+                    userListDistributionWithCreatedLists[planTitle].push({
+                        id: user.id,
+                        name: user.name,
+                        phone: user.phone,
+                        email: user.email,
+                        lists: user.createdList.map(list => list.title)
+                    });
+                else 
+                    userListDistributionWithoutCreatedLists[planTitle].push({
+                        id: user.id,
+                        name: user.name,
+                        phone: user.phone,
+                        email: user.email,
+                        lists: []
+                    });
+            })
+             const formStepsAnalysis = {};
+            const forms = await this.counsellingForms.get();
+
+            forms.forEach(form => {
+                console.log(`Analyzing form: ${form.id}`);
+                
+                 formStepsAnalysis[form.id] = {
+                    formTitle: form.id,
+                    totalUsers: 0,
+                    steps: {}
+                }
+            })
+
+                forms.forEach(form => {
+                const formData = form.data();
+                 const formId = form.id;
+               
+                formData.steps.forEach(step => {
+                    formStepsAnalysis[formId].steps[step.number] = {
+                        title: step.title,
+                    
+                        completedCount: 0,
+                        rejectedCount: 0,
+                    };
+                });
+
+                 users.forEach(user => {
+                    if(!user.isPremium) return;
+                    if (!user.stepsData || !user.stepsData.id) {    
+                       
+                        return
+                    }
+                     if(user.stepsData.id !== formId) return;
+                    
+                    formStepsAnalysis[formId].totalUsers++;
+                    
+                    user.stepsData.steps.forEach(step => {
+                        if (step.number in formStepsAnalysis[formId].steps) {
+                            const stepData = formStepsAnalysis[formId].steps[step.number];
+                            stepData.totalUsers++;
+                            
+                            if (step.status === 'Yes') {
+                                stepData.completedCount++;
+                            } else if (step.status === 'No') {
+                                stepData.rejectedCount++;
+                            }
+                        }
+                    });
+                }
+                );
+                
+            }
+            );
+            return {
+                totalUsers: totalInstalls,
+                metrics: {
+                    installs: totalInstalls,
+                    enrolled: enrolledUsers,
+                    todayEnrolled: todayEnrolled,
+                    paymentPending: paymentPendingUsers
+                },
+                premiumPlanDistribution,
+                usersWithLists,
+                usersWithoutLists,
+                formStepsAnalysis,
+                listData:{
+                userListDistributionWithLists,
+                userListDistributionWithoutLists,
+                userListDistributionWithCreatedLists,
+                userListDistributionWithoutCreatedLists,
+                
+                }
+            };
+        } catch (error) {
+            console.error('Get analytics error:', error);
+            throw new Error('Failed to get analytics data: ' + error.message);
+        }
+    }
 }
 
 // new AdminService().exportAllUsersToExcel()
