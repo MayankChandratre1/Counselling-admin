@@ -1015,6 +1015,7 @@ class AdminService {
             //     listId: listAssignment.originalListId,
             //     listName: listAssignment.name || 'New List'
             // });
+            
             this.invalidateCache('user:*')
             this.invalidateCache('user_lists')
             return { message: `List assigned to user ${userData.id} (${userData.phone}) successfully` };
@@ -1171,6 +1172,53 @@ class AdminService {
             await this.users.doc(userId).update({
                 lists: userLists
             });
+            
+            this.invalidateCache(`userlists:*/user/${userId}/lists`);
+            this.invalidateCache(`user:*/user/${userId}`);
+            this.invalidateCache(`user:*`);
+          
+
+            return { 
+                message: 'List removed successfully',
+                remainingLists: userLists
+            };
+        } catch (error) {
+            console.error('Delete user list error:', error);
+            throw new Error('Failed to delete user list: ' + error.message);
+        }
+    }
+    async deleteUserCreatedList(userId, listId) {
+        try {
+            const userDoc = await this.users.doc(userId).get();
+            if (!userDoc.exists) {
+                throw new Error('User not found');
+            }
+
+            const userData = userDoc.data();
+            const userLists = userData.createdList || [];
+            console.log(listId);
+            
+
+            // Find list by either id or listId (for backward compatibility)
+            const listIndex = userLists.findIndex(list => 
+                list.id === listId || list.listId === listId
+            );
+
+            if (listIndex === -1) {
+                throw new Error('List not found');
+            }
+
+            // Remove the list
+            userLists.splice(listIndex, 1);
+
+            // Update user document
+            await this.users.doc(userId).update({
+            createdList: userLists
+            });
+
+               this.invalidateCache(`userlists:*/user/${userId}/lists`);
+            this.invalidateCache(`user:*/user/${userId}`);
+            this.invalidateCache(`user:*`);
             
           
 
@@ -2731,7 +2779,7 @@ async updateUserWithOrderId(orderId, planData, orderData) {
 
     async bulkUpdate() {
         try {
-            const query = this.users.where('premiumPlan.planTitle', '==', "Saarthi").get();
+            const query = this.users.where('isPremium', '==', true).get();
             // Perform the bulk update
             query.then(snapshot => {
                 if (snapshot.empty) {
@@ -2742,10 +2790,12 @@ async updateUserWithOrderId(orderId, planData, orderData) {
                 const batch = firestore().batch();
                 snapshot.docs.forEach(doc => {
                     const userRef = this.users.doc(doc.id);
-                    batch.update(userRef, {
-                        'premiumPlan.id': 'plan_1',
-                        'premiumPlan.planTitle': 'Saarthi - PERSONAL Counselling'
-                    });
+                    const userData = doc.data();
+                    if(userData.email && (!userData.counsellingData || !userData.counsellingData.email)) {
+                        batch.update(userRef, {
+                            'counsellingData.email': userData.email,
+                        })
+                    }
                 });
                 
                 return batch.commit();
@@ -3069,6 +3119,202 @@ async moveListToFolder(listId, targetFolderId, admin) {
     } catch (error) {
         console.error('Copy list error:', error);
         throw new Error('Failed to copy list: ' + error.message);
+    }
+}
+
+async exportPremiumUsersCounsellingData() {
+    try {
+        console.log('Starting export of premium users counselling data to Excel');
+        let premiumUsers = [];
+        let lastDoc = null;
+        const batchSize = 1000;
+
+        // Paginate Firestore query to get all premium users
+        while (true) {
+            let query = this.users
+                .orderBy('createdAt', 'desc')
+                .where('isPremium', '==', true)
+                .limit(batchSize);
+
+            if (lastDoc) {
+                query = query.startAfter(lastDoc);
+            }
+
+            const snapshot = await query.get();
+            if (snapshot.empty) {
+                break;
+            }
+
+            const batchUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            premiumUsers = premiumUsers.concat(batchUsers);
+            lastDoc = snapshot.docs[snapshot.docs.length - 1];
+
+            if (snapshot.size < batchSize) {
+                break;
+            }
+        }
+
+        console.log(`Found ${premiumUsers.length} premium users`);
+
+        // Prepare data for Excel
+        const userData = premiumUsers.map((user, index) => {
+            // Format dates if they exist
+            let purchasedDate = 'N/A';
+            if (user.premiumPlan?.purchasedDate) {
+                if (user.premiumPlan.purchasedDate._seconds) {
+                    purchasedDate = new Date(user.premiumPlan.purchasedDate._seconds * 1000).toLocaleDateString();
+                } else if (user.premiumPlan.purchasedDate.toDate) {
+                    purchasedDate = user.premiumPlan.purchasedDate.toDate().toLocaleDateString();
+                }
+            }
+            
+            let expiryDate = 'N/A';
+            if (user.premiumPlan?.expiryDate) {
+                if (user.premiumPlan.expiryDate._seconds) {
+                    expiryDate = new Date(user.premiumPlan.expiryDate._seconds * 1000).toLocaleDateString();
+                } else if (user.premiumPlan.expiryDate.toDate) {
+                    expiryDate = user.premiumPlan.expiryDate.toDate().toLocaleDateString();
+                }
+            }
+
+            return {
+                'S.No': index + 1,
+                'Name': user.name || 'N/A',
+                'Phone': user.phone || 'N/A',
+                'Email': user.email || 'N/A',
+                
+                // Plan details
+                'CET Marks': user.counsellingData?.cetMarks || 'N/A',
+                'JEE Marks': user.counsellingData?.jeeMarks || 'N/A',
+                'CET Percentile': user.counsellingData?.cetPercentile || 'N/A',
+                'JEE Percentile': user.counsellingData?.jeePercentile || 'N/A',
+
+               
+                // Personal counselling data
+                'Full Name': user.counsellingData?.fullName || user.name || 'N/A',
+                'City': user.counsellingData?.city || 'N/A',
+                'Category': user.counsellingData?.category || 'N/A',
+                'Defense': user.counsellingData?.isDefense || 'N/A',
+                'PWD': user.counsellingData?.isPwd || 'N/A',
+                
+                // Academic details
+                'Board Marks': user.counsellingData?.boardMarks || 'N/A',
+                'Board Type': user.counsellingData?.boardType || 'N/A',
+                'CET Seat Number': user.counsellingData?.cetSeatNumber || 'N/A',
+                
+                'JEE Seat Number': user.counsellingData?.jeeSeatNumber || 'N/A',
+               
+                
+                // Preferences
+                'Preferred Locations': user.counsellingData?.preferredLocations || 'N/A',
+                'Budget': user.counsellingData?.budget || 'N/A',
+                
+                // Payment details
+                'Plan Title': user.premiumPlan?.planTitle || 'N/A',
+                'Purchase Date': purchasedDate,
+                'Expiry Date': expiryDate,
+                'Form Type': user.premiumPlan?.form || 'N/A',
+                
+            };
+        });
+
+        // Create Excel workbook
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Premium Users Counselling');
+
+        // Add headers
+        const headers = Object.keys(userData[0] || {});
+        worksheet.addRow(headers);
+
+        // Style header row
+        const headerRow = worksheet.getRow(1);
+        headerRow.eachCell((cell) => {
+            cell.font = { bold: true };
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFE0E0E0' }
+            };
+            cell.border = {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
+            };
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        });
+
+        // Add data rows
+        userData.forEach(user => {
+            const rowValues = Object.values(user);
+            const row = worksheet.addRow(rowValues);
+            
+            row.eachCell((cell) => {
+                cell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
+                };
+            });
+        });
+
+        // Auto-fit columns
+        worksheet.columns.forEach(column => {
+            let maxLength = 0;
+            column.eachCell({ includeEmpty: true }, (cell) => {
+                const columnLength = cell.value ? cell.value.toString().length : 10;
+                if (columnLength > maxLength) {
+                    maxLength = columnLength;
+                }
+            });
+            column.width = maxLength < 12 ? 12 : maxLength + 2;
+        });
+
+        // Freeze the header row
+        worksheet.views = [
+            { state: 'frozen', ySplit: 1 }
+        ];
+
+        // Add color bands for easier reading
+        for (let i = 2; i <= worksheet.rowCount; i++) {
+            if (i % 2 === 0) {
+                worksheet.getRow(i).eachCell(cell => {
+                    cell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFF5F5F5' }
+                    };
+                });
+            }
+        }
+
+        // Create exports directory if needed
+        const exportsDir = path.join(process.cwd(), 'exports');
+        if (!fs.existsSync(exportsDir)) {
+            fs.mkdirSync(exportsDir, { recursive: true });
+        }
+
+        // Generate file name
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const filename = `premium_users_counselling_data_${timestamp}.xlsx`;
+        const filepath = path.join(exportsDir, filename);
+
+        // Write file
+        await workbook.xlsx.writeFile(filepath);
+
+        console.log(`Exported ${userData.length} premium users to Excel file: ${filename}`);
+
+        return {
+            message: `Successfully exported ${userData.length} premium users counselling data`,
+            filename,
+            filepath,
+            totalUsers: userData.length,
+            exportedData: userData.slice(0, 5) // Preview of first 5 records
+        };
+    } catch (error) {
+        console.error('Error exporting premium users counselling data to Excel:', error);
+        throw new Error(`Failed to export premium users data: ${error.message}`);
     }
 }
 

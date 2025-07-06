@@ -404,6 +404,14 @@ class AdminController {
             res.status(400).json({ error: error.message });
         }
     }
+    async deleteUserCreatedList(req, res) {
+        try {
+            const result = await this.adminService.deleteUserCreatedList(req.params.userId, req.params.listId);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    }
 
     async assignListToUser(req, res) {
         try {
@@ -980,8 +988,10 @@ export default {
     createUserList: adminController.createUserList.bind(adminController),
     updateUserList: adminController.updateUserList.bind(adminController),
     deleteUserList: adminController.deleteUserList.bind(adminController),
+    deleteUserCreatedList: adminController.deleteUserCreatedList.bind(adminController),
     assignListToUser: adminController.assignListToUser.bind(adminController),
-    releaseListToUser: adminController.releaseAllListToUser.bind(adminController),
+    releaseListToUser: adminController.releaseListToUser.bind(adminController),
+    releaseAllListToUser: adminController.releaseAllListToUser.bind(adminController),
     getFormConfig: adminController.getFormConfig.bind(adminController),
     saveFormConfig: adminController.saveFormConfig.bind(adminController),
     addAdmin: adminController.addAdmin.bind(adminController),

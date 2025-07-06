@@ -77,10 +77,11 @@ router.post('/list/:listId/move-to-folder/:folderId', authorize(['admin', 'super
 // User-specific list routes
 router.post('/user/:userId/assign-list', AdminController.assignListToUser);
 router.post('/user/:userId/release-list', AdminController.releaseListToUser);
-router.post('/user/:userId/release-all-lists', AdminController.releaseListToUser);
+router.post('/user/:userId/release-all-lists', AdminController.releaseAllListToUser);
 
 router.put('/user/:userId/list/:listId', AdminController.updateUserList);
 router.delete('/user/:userId/list/:listId', AdminController.deleteUserList);
+router.delete('/user/:userId/created-list/:listId', AdminController.deleteUserCreatedList);
 
 // Form config routes with caching
 router.get('/form-config', cacheMiddleware('formconfig', 3600), AdminController.getFormConfig);
