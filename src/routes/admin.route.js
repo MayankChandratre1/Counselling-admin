@@ -80,6 +80,7 @@ router.post('/user/:userId/release-list', AdminController.releaseListToUser);
 router.post('/user/:userId/release-all-lists', AdminController.releaseAllListToUser);
 
 router.put('/user/:userId/list/:listId', AdminController.updateUserList);
+router.put('/user/:userId/created-list/:listId', AdminController.updateUserList);
 router.delete('/user/:userId/list/:listId', AdminController.deleteUserList);
 router.delete('/user/:userId/created-list/:listId', AdminController.deleteUserCreatedList);
 

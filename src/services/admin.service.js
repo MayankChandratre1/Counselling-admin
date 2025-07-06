@@ -810,16 +810,7 @@ class AdminService {
                 });
             } else {
                 // If no folderId is provided, default to "default" folder
-                data.folderId = "default";
-                const defaultFolderDoc = await this.list_folders.doc("default").get();
-                if (!defaultFolderDoc.exists) {
-                    throw new Error('Default folder does not exist');
-                }
-                // Increment the list count for the default folder
-                const defaultFolderRef = this.list_folders.doc("default");
-                await defaultFolderRef.update({
-                    list_count: firestore.FieldValue.increment(1)
-                });
+                data.folderId = null;
             }
             
             const docRef = await this.lists.add(data);
@@ -918,6 +909,8 @@ class AdminService {
     async updateUserList(userId, listId, listData, admin) {
         try {
             console.log(`Updating user list. UserID: ${userId}, ListID: ${listId}`);
+            console.log(listData.colleges[0]);
+            
             
             if (!listId) {
                 throw new Error('List ID is required');
@@ -966,6 +959,71 @@ class AdminService {
             
             await this.users.doc(userId).update({
                 lists: userLists
+            });
+
+            await this.invalidateCache(`userlists:*/user/${userId}/lists`);
+            await this.invalidateCache(`user:*`);
+            await this.invalidateCache(`users:*`);
+            
+            
+            
+            return userLists[listIndex];
+        } catch (error) {
+            console.error('Update user list error:', error);
+            throw new Error('Failed to update user list: ' + error.message);
+        }
+    }
+    async updateCreatedUserList(userId, listId, listData, admin) {
+        try {
+            console.log(`Updating user list. UserID: ${userId}, ListID: ${listId}`);
+            
+            if (!listId) {
+                throw new Error('List ID is required');
+            }
+            
+            const userDoc = await this.users.doc(userId).get();
+            if (!userDoc.exists) {
+                throw new Error('User not found');
+            }
+
+            const userData = userDoc.data();
+            const userLists = userData.createdList || [];
+            
+            // Find the list by any of its potential ID fields
+            const listIndex = userLists.findIndex(l => {
+                console.log(`Comparing list IDs: list.id=${l.id}, list.listId=${l.listId}, list.originalListId=${l.originalListId}, targetId=${listId}`);
+                return (l.id && l.id === listId) || 
+                       (l.listId && l.listId === listId) || 
+                       (l.originalListId && l.originalListId === listId);
+            });
+            
+            console.log(`Found list at index: ${listIndex}`);
+
+            if (listIndex === -1) {
+                throw new Error(`List not found in user's lists. Searched for ID: ${listId}`);
+            }
+
+            // Update the specific list in user's lists array
+            const timestamp = new Date().toISOString();
+            const originalList = userLists[listIndex];
+            
+            
+            userLists[listIndex] = {
+                ...originalList,
+                ...listData,
+                id: originalList.id || listId,
+                listId: originalList.listId || originalList.id || listId, // Ensure listId is preserved
+                originalListId: originalList.originalListId || originalList.listId || originalList.id || listId,
+                updatedAt: timestamp,
+                lastUpdatedBy: admin.email,
+                isCustomized: true,
+                customized: true
+            };
+
+            console.log('Updated list data:', userLists[listIndex]);
+            
+            await this.users.doc(userId).update({
+                createdList: userLists
             });
 
             await this.invalidateCache(`userlists:*/user/${userId}/lists`);

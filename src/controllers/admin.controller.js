@@ -395,6 +395,23 @@ class AdminController {
             res.status(400).json({ error: error.message });
         }
     }
+    async updateCreatedUserList(req, res) {
+        try {
+            console.log('Update user list request for user:', req.params.userId);
+            console.log('List ID:', req.params.listId);
+            console.log('Request body:', req.body);
+            
+            if (!req.body.colleges || !Array.isArray(req.body.colleges)) {
+                return res.status(400).json({ error: 'Invalid colleges data - must be an array' });
+            }
+            
+            const userList = await this.adminService.updateCreatedUserList(req.params.userId, req.params.listId, req.body, req.admin);
+            res.status(200).json(userList);
+        } catch (error) {
+            console.error('Controller error updating user list:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
 
     async deleteUserList(req, res) {
         try {
@@ -987,6 +1004,7 @@ export default {
     getUserLists: adminController.getUserLists.bind(adminController),
     createUserList: adminController.createUserList.bind(adminController),
     updateUserList: adminController.updateUserList.bind(adminController),
+    updateCreatedUserList: adminController.updateCreatedUserList.bind(adminController),
     deleteUserList: adminController.deleteUserList.bind(adminController),
     deleteUserCreatedList: adminController.deleteUserCreatedList.bind(adminController),
     assignListToUser: adminController.assignListToUser.bind(adminController),
