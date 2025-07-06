@@ -704,13 +704,26 @@ class AdminService {
     async editList(listId, requestData, admin) {
         try {
             const timestamp = new Date().toISOString();
-            
+            const listDoc = await this.lists.doc(listId).get();
+            if (!listDoc.exists) throw new Error('List not found');
+            // Check if folderId exists
+            if (requestData.folderId) {
+                const folderDoc = await this.list_folders.doc(requestData.folderId).get();
+                if (!folderDoc.exists) {
+                    throw new Error(`Folder with ID ${requestData.folderId} does not exist`);
+                }
+            }
+            const oldFolderId = listDoc.get('folderId') || null;
             // Regular list update
             await this.lists.doc(listId).update({
                 ...requestData,
+                folderId: requestData.folderId || oldFolderId,
                 lastUpdatedBy: admin.email,
                 updatedAt: timestamp
             });
+
+            this.invalidateCache('lists:*');
+            this.invalidateCache(`list:${listId}`);
             
             return await this.getList(listId);
         } catch (error) {
@@ -725,7 +738,9 @@ class AdminService {
             if (!listDoc.exists) throw new Error('List not found');
             // Move to archive folder
             const archRef = this.list_folders.doc("archive_1");
-            const folderRef = this.list_folders.doc(listDoc.get('folderId'));
+            const originalFolderId = await listDoc.get('folderId') || null;
+            
+            const folderRef = originalFolderId ? this.list_folders.doc(originalFolderId): null;
             const isDeleted = listDoc.get('isDeleted') || false;
             if (isDeleted) {
                 console.warn(`List ${listId} is already archived, deleting permanently.`);
@@ -733,6 +748,7 @@ class AdminService {
                 await archRef.update({
                     list_count: firestore.FieldValue.increment(-1),
                 });
+                if(folderRef)
                 await folderRef.update({
                     list_count: firestore.FieldValue.increment(-1),
                 });
@@ -752,6 +768,7 @@ class AdminService {
             batch.update(archRef, {
                 list_count: firestore.FieldValue.increment(1),
             })
+            if(folderRef)
             batch.update(folderRef, {
                 list_count: firestore.FieldValue.increment(-1),
             });
@@ -762,6 +779,8 @@ class AdminService {
             this.invalidateCache(`list:${listId}`);
             return { message: 'List deleted successfully' };
         } catch (error) {
+            console.log(error);
+            
             throw new Error('List deletion failed');
         }
     }
