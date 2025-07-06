@@ -27,6 +27,7 @@ class AdminService {
         this.appointments = db.collection('appointments');
         this.COLLEGES_FILE_PATH = path.join(process.cwd(), 'src/data/College_New_Data_2.json');
         this.notificationsMap = JSON.parse(fs.readFileSync(path.join(process.cwd(), 'src/data/Notifications.json'), 'utf8'));
+        this.list_folders = db.collection('list_folders');
     }
 
     async invalidateCache(pattern) {
@@ -601,11 +602,25 @@ class AdminService {
             
             Object.entries(listsData).forEach(([id, data]) => {
                 const docRef = this.lists.doc(id);
+                const oldFolderId = data.folderId || null;
                 batch.set(docRef, {
                     ...data,
                     lastUpdatedBy: admin.email,
                     updatedAt: timestamp
                 }, { merge: true });
+
+                if (data.folderId && oldFolderId !== data.folderId) {
+                    const folderRef = this.list_folders.doc(data.folderId);
+                    batch.update(folderRef, {
+                        list_count: firestore.FieldValue.increment(1)
+                    });
+                    if (oldFolderId) {
+                        const oldFolderRef = this.list_folders.doc(oldFolderId);
+                        batch.update(oldFolderRef, {
+                            list_count: firestore.FieldValue.increment(-1)
+                        });
+                    }
+                }
             });
             
             await batch.commit();
@@ -627,6 +642,10 @@ class AdminService {
                     lastUpdatedBy: admin.email,
                     updatedAt: timestamp
                 }, { merge: true });
+
+            // Update the list folder's list_count
+            const listDoc = await docRef.get();
+            if (!listDoc.exists) throw new Error('List not found');
             
             
             await batch.commit();
@@ -642,7 +661,32 @@ class AdminService {
             const batch = this.db.batch();
             listIds.forEach(id => {
                 const docRef = this.lists.doc(id);
-                batch.delete(docRef);
+                const archRef = this.list_folders.doc("archive_1");
+                const folderRef = this.list_folders.doc(docRef.get('folderId'));
+                const isDeleted = docRef.get('isDeleted') || false;
+                if (isDeleted) {
+                    console.warn(`List ${id} is archived, deleting permanently.`);
+                    batch.delete(docRef);
+                    batch.update(archRef, {
+                        list_count: firestore.FieldValue.increment(-1),
+                    })
+                } else {
+                    batch.update(docRef, {
+                    isDeleted: true,
+                    deletedAt: new Date().toISOString(),
+                    deleteFolderId: "archive_1"
+                    });
+                    batch.update(archRef, {
+                        list_count: firestore.FieldValue.increment(1),
+                    })
+                }
+                // Move to archive folder
+                
+                // Optionally, you can also remove the list from the folder's lists array
+                
+                batch.update(folderRef, {
+                    list_count: firestore.FieldValue.increment(-1),
+                });
             });
             await batch.commit();
             return { message: 'Lists deleted successfully' };
@@ -677,7 +721,45 @@ class AdminService {
 
     async deleteList(listId) {
         try {
-            await this.lists.doc(listId).delete();
+            const listDoc = await this.lists.doc(listId).get();
+            if (!listDoc.exists) throw new Error('List not found');
+            // Move to archive folder
+            const archRef = this.list_folders.doc("archive_1");
+            const folderRef = this.list_folders.doc(listDoc.get('folderId'));
+            const isDeleted = listDoc.get('isDeleted') || false;
+            if (isDeleted) {
+                console.warn(`List ${listId} is already archived, deleting permanently.`);
+                await this.lists.doc(listId).delete();
+                await archRef.update({
+                    list_count: firestore.FieldValue.increment(-1),
+                });
+                await folderRef.update({
+                    list_count: firestore.FieldValue.increment(-1),
+                });
+                this.invalidateCache('lists:*');
+                this.invalidateCache(`list:${listId}`);
+                return { message: 'List deleted permanently' };
+            }
+            console.log(`Deleting list ${listId} and moving to archive folder`);
+            
+            const batch = this.db.batch();
+            batch.update(this.lists.doc(listId), {
+                isDeleted: true,
+                deletedAt: new Date().toISOString(),
+                deleteFolderId: "archive_1"
+            });
+            // Optionally, you can also remove the list from the folder's lists array
+            batch.update(archRef, {
+                list_count: firestore.FieldValue.increment(1),
+            })
+            batch.update(folderRef, {
+                list_count: firestore.FieldValue.increment(-1),
+            });
+
+            await batch.commit();
+
+            this.invalidateCache('lists:*');
+            this.invalidateCache(`list:${listId}`);
             return { message: 'List deleted successfully' };
         } catch (error) {
             throw new Error('List deletion failed');
@@ -695,8 +777,34 @@ class AdminService {
                 lastUpdatedBy: admin.email,
                 createdBy: admin.email
             };
+
+            // If folderId is provided, ensure it exists
+            if (data.folderId) {
+                const folderDoc = await this.list_folders.doc(data.folderId).get();
+                if (!folderDoc.exists) {
+                    throw new Error(`Folder with ID ${data.folderId} does not exist`);
+                }
+                // Increment the list count for the folder
+                const folderRef = this.list_folders.doc(data.folderId);
+                await folderRef.update({
+                    list_count: firestore.FieldValue.increment(1)
+                });
+            } else {
+                // If no folderId is provided, default to "default" folder
+                data.folderId = "default";
+                const defaultFolderDoc = await this.list_folders.doc("default").get();
+                if (!defaultFolderDoc.exists) {
+                    throw new Error('Default folder does not exist');
+                }
+                // Increment the list count for the default folder
+                const defaultFolderRef = this.list_folders.doc("default");
+                await defaultFolderRef.update({
+                    list_count: firestore.FieldValue.increment(1)
+                });
+            }
             
             const docRef = await this.lists.add(data);
+            this.invalidateCache('lists:*');
             return { id: docRef.id, ...data };
         } catch (error) {
             throw new Error('Failed to add list');
@@ -2601,7 +2709,353 @@ async updateUserWithOrderId(orderId, planData, orderData) {
             throw new Error('Failed to get analytics data: ' + error.message);
         }
     }
+
+    async bulkUpdate() {
+        try {
+            const query = this.users.where('premiumPlan.planTitle', '==', "Saarthi").get();
+            // Perform the bulk update
+            query.then(snapshot => {
+                if (snapshot.empty) {
+                    console.log('No users found with the specified plan title');
+                    return;
+                }
+                
+                const batch = firestore().batch();
+                snapshot.docs.forEach(doc => {
+                    const userRef = this.users.doc(doc.id);
+                    batch.update(userRef, {
+                        'premiumPlan.id': 'plan_1',
+                        'premiumPlan.planTitle': 'Saarthi - PERSONAL Counselling'
+                    });
+                });
+                
+                return batch.commit();
+            }).then(() => {
+                console.log('Bulk update completed successfully');
+            }).catch(error => {
+                console.error('Error during bulk update:', error);
+            });
+            console.log(`Bulk update query: `, query);
+            
+            
+        } catch (error) {
+            console.error('Get analytics error:', error);
+            throw new Error('Failed to get analytics data: ' + error.message);
+        }
+    }
+
+
+
+// Get all list folders
+async getListFolders() {
+    try {
+        const snapshot = await this.list_folders.get();
+        return snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+    } catch (error) {
+        console.error('Get list folders error:', error);
+        throw new Error('Failed to get list folders: ' + error.message);
+    }
 }
 
+// Get a single list folder
+async getListFolder(folderId) {
+    try {
+        const folderDoc = await this.list_folders.doc(folderId).get();
+        if (!folderDoc.exists) {
+            throw new Error('List folder not found');
+        }
+        return {
+            id: folderDoc.id,
+            ...folderDoc.data()
+        };
+    } catch (error) {
+        console.error('Get list folder error:', error);
+        throw new Error('Failed to get list folder: ' + error.message);
+    }
+}
+
+// Create a new list folder
+async createListFolder(folderData, admin) {
+    try {
+        const timestamp = new Date().toISOString();
+        const data = {
+            name: folderData.name,
+            isArchive: folderData.isArchive || false,
+            list_count: folderData.list_count || 0,
+            createdBy: admin.email,
+            createdAt: timestamp,
+            updatedAt: timestamp
+        };
+        
+        const docRef = await this.list_folders.add(data);
+        return {
+            id: docRef.id,
+            ...data
+        };
+    } catch (error) {
+        console.error('Create list folder error:', error);
+        throw new Error('Failed to create list folder: ' + error.message);
+    }
+}
+
+// Update a list folder
+async updateListFolder(folderId, folderData, admin) {
+    try {
+        const folderDoc = await this.list_folders.doc(folderId).get();
+        if (!folderDoc.exists) {
+            throw new Error('List folder not found');
+        }
+        
+        const timestamp = new Date().toISOString();
+        const data = {
+            ...folderData,
+            updatedAt: timestamp
+        };
+        
+        await this.list_folders.doc(folderId).update(data);
+        return {
+            id: folderId,
+            ...folderDoc.data(),
+            ...data
+        };
+    } catch (error) {
+        console.error('Update list folder error:', error);
+        throw new Error('Failed to update list folder: ' + error.message);
+    }
+}
+
+// Delete a list folder
+async deleteListFolder(folderId) {
+    try {
+        const folderDoc = await this.list_folders.doc(folderId).get();
+        if (!folderDoc.exists) {
+            throw new Error('List folder not found');
+        }
+
+        const lists = this.lists.where('folderId', '==', folderId);
+        const listsSnapshot = await lists.get();
+       // delete all lists in the folder
+        if (!listsSnapshot.empty) {
+            const batch = firestore().batch();
+            listsSnapshot.docs.forEach(doc => {
+                batch.update(this.lists.doc(doc.id), {
+                    isDeleted: true,
+                    deletedAt: new Date().toISOString(),
+                    deleteFolderId: "archive_1" // Move to archive folder
+                })
+            });   
+            await batch.commit();
+        }
+        // Delete the folder
+        await this.list_folders.doc(folderId).delete();
+        this.invalidateCache('list_folders:*');
+        return {
+            message: 'List folder deleted successfully'
+        };
+    } catch (error) {
+        console.error('Delete list folder error:', error);
+        throw new Error('Failed to delete list folder: ' + error.message);
+    }
+}
+
+// Archive/unarchive a list folder
+async archiveListFolder(folderId, isArchive, admin) {
+    try {
+        const folderDoc = await this.list_folders.doc(folderId).get();
+        if (!folderDoc.exists) {
+            throw new Error('List folder not found');
+        }
+        
+        const timestamp = new Date().toISOString();
+        await this.list_folders.doc(folderId).update({
+            isArchive: isArchive,
+            updatedAt: timestamp
+        });
+        
+        return {
+            id: folderId,
+            isArchive: isArchive,
+            message: `List folder ${isArchive ? 'archived' : 'unarchived'} successfully`
+        };
+    } catch (error) {
+        console.error('Archive list folder error:', error);
+        throw new Error('Failed to archive list folder: ' + error.message);
+    }
+}
+
+
+// Restore a deleted list
+async restoreList(listId) {
+    try {
+        const listDoc = await this.lists.doc(listId).get();
+        if (!listDoc.exists) throw new Error('List not found');
+        
+        const listData = listDoc.data();
+        if (!listData.isDeleted) throw new Error('List is not marked as deleted');
+        
+        // Get the original folder ID
+        const originalFolderId = listData.folderId || 'default';
+        const archiveFolderId = "archive_1";
+        
+        const batch = this.db.batch();
+        batch.update(this.lists.doc(listId), {
+            isDeleted: false,
+            deletedAt: null,
+            deleteFolderId: null
+        });
+        
+        // Update folder list counts
+        const archiveRef = this.list_folders.doc(archiveFolderId);
+        const folderRef = this.list_folders.doc(originalFolderId);
+        
+        batch.update(archiveRef, {
+            list_count: firestore.FieldValue.increment(-1),
+        });
+        console.log(`Updating folder ${originalFolderId} list count`);
+        const folderData = await folderRef.get();
+        if (folderData.exists) {
+            batch.update(folderRef, {
+            list_count: firestore.FieldValue.increment(1),
+            });
+        }else{
+            console.warn(`Folder ${originalFolderId} does not exist, skipping list count update`);
+            batch.update(this.lists.doc(listId), {
+                folderId: null // Move to archive folder if original folder does not exist
+            });
+        }
+        
+        
+        
+        
+        
+        await batch.commit();
+        
+        this.invalidateCache('lists:*');
+        this.invalidateCache(`list:${listId}`);
+        
+        return { 
+            message: 'List restored successfully',
+            listId: listId,
+            folderId: originalFolderId
+        };
+    } catch (error) {
+        console.error('Restore list error:', error);
+        throw new Error('List restoration failed: ' + error.message);
+    }
+}
+
+// Copy list to another folder
+async copyListToFolder(listId, targetFolderId, admin) {
+    try {
+        // Verify list exists
+        const listDoc = await this.lists.doc(listId).get();
+        if (!listDoc.exists) throw new Error('List not found');
+        
+        // Verify target folder exists
+        const folderDoc = await this.list_folders.doc(targetFolderId).get();
+        if (!folderDoc.exists) throw new Error('Target folder not found');
+        
+        // Get the list data
+        const listData = listDoc.data();
+        
+        // Create a new list with the same data but a new ID
+        const timestamp = new Date().toISOString();
+        const newListData = {
+            ...listData,
+            folderId: targetFolderId,
+            title: `${listData.title} (Copy)`, // Append (Copy) to title
+            createdAt: timestamp,
+            updatedAt: timestamp,
+            lastUpdatedBy: admin.email,
+            createdBy: admin.email,
+            isDeleted: false,
+            deletedAt: null,
+            deleteFolderId: null
+        };
+        
+        // Add the new list
+        const newListRef = await this.lists.add(newListData);
+        
+        // Update target folder list count
+        await this.list_folders.doc(targetFolderId).update({
+            list_count: firestore.FieldValue.increment(1)
+        });
+        
+        this.invalidateCache('lists:*');
+        
+        return { 
+            message: 'List copied successfully',
+            newListId: newListRef.id,
+            targetFolderId: targetFolderId,
+            newList: {
+                id: newListRef.id,
+                ...newListData
+            }
+        };
+    } catch (error) {
+        console.error('Copy list error:', error);
+        throw new Error('Failed to copy list: ' + error.message);
+    }
+}
+async moveListToFolder(listId, targetFolderId, admin) {
+    try {
+        // Verify list exists
+        const listDoc = await this.lists.doc(listId).get();
+        if (!listDoc.exists) throw new Error('List not found');
+
+        const originalFolderId = listDoc.data().folderId || 'default';
+        
+        // Verify target folder exists
+        const originalFolderDoc = await this.list_folders.doc(originalFolderId).get();
+       
+        if (originalFolderId === targetFolderId) {
+            console.log('List is already in the target folder, no action taken');  
+        }else{
+        const targetFolderDoc = await this.list_folders.doc(targetFolderId).get();
+             if (!targetFolderDoc.exists) throw new Error('Target folder not found');
+             const batch = this.db.batch();
+        // Move the list to the new folder
+        batch.update(this.lists.doc(listId), {
+            folderId: targetFolderId,
+            updatedAt: new Date().toISOString(),
+            lastUpdatedBy: admin.email
+        });
+        // Update original folder list count
+        if(originalFolderDoc.exists)
+        batch.update(this.list_folders.doc(originalFolderId), {
+            list_count: firestore.FieldValue.increment(-1)
+        });
+        // Update target folder list count
+        batch.update(this.list_folders.doc(targetFolderId), {
+            list_count: firestore.FieldValue.increment(1)
+        });
+        // Commit the batch
+        await batch.commit();
+        }
+       
+       
+       
+        
+        this.invalidateCache('lists:*');
+        this.invalidateCache(`list:${listId}`);
+        this.invalidateCache(`list_folders:*`);
+        
+        return { 
+            message: 'List moved successfully',
+            
+        };
+    } catch (error) {
+        console.error('Copy list error:', error);
+        throw new Error('Failed to copy list: ' + error.message);
+    }
+}
+
+
+}
+
+// new AdminService().bulkUpdate();
 
 export default AdminService;

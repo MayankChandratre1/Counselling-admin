@@ -836,6 +836,115 @@ class AdminController {
     }
 
 
+// Add these methods to the AdminController class
+
+async getListFolders(req, res) {
+    try {
+        const folders = await this.adminService.getListFolders();
+        res.status(200).json(folders);
+    } catch (error) {
+        console.error('Get list folders error:', error);
+        res.status(400).json({ error: error.message });
+    }
+}
+
+async getListFolder(req, res) {
+    try {
+        const folder = await this.adminService.getListFolder(req.params.folderId);
+        res.status(200).json(folder);
+    } catch (error) {
+        console.error('Get list folder error:', error);
+        res.status(400).json({ error: error.message });
+    }
+}
+
+async createListFolder(req, res) {
+    try {
+        const folder = await this.adminService.createListFolder(req.body, req.admin);
+        res.status(201).json(folder);
+    } catch (error) {
+        console.error('Create list folder error:', error);
+        res.status(400).json({ error: error.message });
+    }
+}
+
+async updateListFolder(req, res) {
+    try {
+        const folder = await this.adminService.updateListFolder(
+            req.params.folderId,
+            req.body,
+            req.admin
+        );
+        res.status(200).json(folder);
+    } catch (error) {
+        console.error('Update list folder error:', error);
+        res.status(400).json({ error: error.message });
+    }
+}
+
+async deleteListFolder(req, res) {
+    try {
+        const result = await this.adminService.deleteListFolder(req.params.folderId);
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Delete list folder error:', error);
+        res.status(400).json({ error: error.message });
+    }
+}
+
+async archiveListFolder(req, res) {
+    try {
+        const { isArchive } = req.body;
+        const result = await this.adminService.archiveListFolder(
+            req.params.folderId,
+            isArchive,
+            req.admin
+        );
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Archive list folder error:', error);
+        res.status(400).json({ error: error.message });
+    }
+}
+
+// ...existing code...
+
+async restoreList(req, res) {
+    try {
+        const { listId } = req.params;
+        const result = await this.adminService.restoreList(listId);
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Restore list error:', error);
+        res.status(400).json({ error: error.message });
+    }
+}
+
+async copyListToFolder(req, res) {
+    try {
+        const { listId, folderId } = req.params;
+        const result = await this.adminService.copyListToFolder(listId, folderId, req.admin);
+        res.status(201).json(result);
+    } catch (error) {
+        console.error('Copy list error:', error);
+        res.status(400).json({ error: error.message });
+    }
+}
+async moveListToFolder(req, res) {
+    try {
+        const { listId, folderId } = req.params;
+        const result = await this.adminService.moveListToFolder(listId, folderId, req.admin);
+        res.status(201).json(result);
+    } catch (error) {
+        console.error('Copy list error:', error);
+        res.status(400).json({ error: error.message });
+    }
+}
+
+// ...existing code...
+
+
+
 
     
 }
@@ -909,6 +1018,16 @@ export default {
     editAppointment: adminController.editAppointment.bind(adminController),
     getTracking: adminController.getTracking.bind(adminController),
     appendList: adminController.appendList.bind(adminController),
-    sendNotificationToUsers: adminController.sendNotificationToUsers.bind(adminController)
+    sendNotificationToUsers: adminController.sendNotificationToUsers.bind(adminController),
+    getListFolders: adminController.getListFolders.bind(adminController),
+    getListFolder: adminController.getListFolder.bind(adminController),
+    createListFolder: adminController.createListFolder.bind(adminController),
+    updateListFolder: adminController.updateListFolder.bind(adminController),
+    deleteListFolder: adminController.deleteListFolder.bind(adminController),
+    archiveListFolder: adminController.archiveListFolder.bind(adminController),
+    restoreList: adminController.restoreList.bind(adminController),
+    copyListToFolder: adminController.copyListToFolder.bind(adminController),
+    moveListToFolder: adminController.moveListToFolder.bind(adminController),
+
 };
 

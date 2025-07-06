@@ -65,6 +65,14 @@ router.post('/edit-list/:listId', authorize(['admin', 'super-admin']), AdminCont
 router.post('/append-list/:listId', authorize(['admin', 'super-admin']), AdminController.appendList);
 router.delete('/delete-list/:listId', authorize(['admin', 'super-admin']), AdminController.deleteList);
 router.post('/add-list', authorize(['admin', 'super-admin']), AdminController.addList);
+// ...existing code...
+
+// List restoration and copying routes
+router.post('/list/restore-list/:listId', authorize(['admin', 'super-admin']), AdminController.restoreList);
+router.post('/list/:listId/copy-to-folder/:folderId', authorize(['admin', 'super-admin']), AdminController.copyListToFolder);
+router.post('/list/:listId/move-to-folder/:folderId', authorize(['admin', 'super-admin']), AdminController.moveListToFolder);
+
+// ...existing code...
 
 // User-specific list routes
 router.post('/user/:userId/assign-list', AdminController.assignListToUser);
@@ -112,6 +120,13 @@ router.post('/update-dynamic-pages', authorize(['admin', 'super-admin']), AdminC
 router.get('/get-dynamic-pages', cacheMiddleware('dynamic', 300), AdminController.getDynamicPages);
 
 router.get('/getAll', authorize(['admin', 'super-admin']), AdminController.getAll);
+router.get('/list-folders', cacheMiddleware('list_folders', 300), AdminController.getListFolders);
+router.get('/list-folder/:folderId', cacheMiddleware('list_folder', 300), AdminController.getListFolder);
+router.post('/list-folder', authorize(['admin', 'super-admin']), AdminController.createListFolder);
+router.put('/list-folder/:folderId', authorize(['admin', 'super-admin']), AdminController.updateListFolder);
+router.delete('/list-folder/:folderId', authorize(['admin', 'super-admin']), AdminController.deleteListFolder);
+router.put('/list-folder/:folderId/archive', authorize(['admin', 'super-admin']), AdminController.archiveListFolder);
+
 
 
 // Remove unused routes
