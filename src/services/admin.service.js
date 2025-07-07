@@ -962,8 +962,8 @@ class AdminService {
                 lists: userLists
             });
 
-            await this.invalidateCache(`userlists:*/user/${userId}/lists`);
             await this.invalidateCache(`user:*`);
+            await this.invalidateCache(`userlists:*/user/${userId}/lists`);
             await this.invalidateCache(`users:*`);
             
             
@@ -1022,6 +1022,9 @@ class AdminService {
             };
 
             console.log('Updated list data:', userLists[listIndex]);
+             await this.invalidateCache(`user:*`);
+            await this.invalidateCache(`userlists:*/user/${userId}/lists`);
+            await this.invalidateCache(`users:*`);
             
             await this.users.doc(userId).update({
                 createdList: userLists
