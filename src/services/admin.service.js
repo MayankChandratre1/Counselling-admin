@@ -931,6 +931,7 @@ class AdminService {
                        (l.listId && l.listId === listId) || 
                        (l.originalListId && l.originalListId === listId);
             });
+           
             
             console.log(`Found list at index: ${listIndex}`);
 
