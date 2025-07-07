@@ -403,6 +403,7 @@ class AdminService {
             await userRef.update(updatedData);
             await this.invalidateCache('users:*');
             await this.invalidateCache(`user:*/user/${userId}`);
+            await this.invalidateCache(`user:*`);
             
             
             
