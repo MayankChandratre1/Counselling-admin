@@ -1156,17 +1156,12 @@ class AdminService {
             const userAssignedLists = userData.lists || [];
 
             // Check if list is already assigned
-            
-
-            const createdListAssignment = userCreatedLists.find(list => { 
-                return list.id === listId || list.listId === listId || list.originalListId === listId;
-            })
 
             const newLists = []
 
             userCreatedLists.forEach((createdList)=>{
                     const isListAssigned = userAssignedLists.some(list => 
-                        createdListAssignment && (list.originalListId === createdList.originalListId || 
+                        (list.originalListId === createdList.originalListId || 
                         list.listId === createdList.originalListId
                     ));
 
@@ -1180,23 +1175,14 @@ class AdminService {
                     }
             })
 
+            if (newLists.length === 0) {
+                return { message: 'No new lists to assign to user' };
+            }            // Send notification to user
 
-
-            const isListAssigned = userAssignedLists.some(list => 
-                createdListAssignment && (list.originalListId === createdListAssignment.originalListId || 
-                list.listId === createdListAssignment.originalListId
-            ));
-            
-            if (isListAssigned) {
-                throw new Error('List is already assigned to this user');
-            }
-            
             await this.users.doc(userId).update({
                 lists: [...userAssignedLists, ...newLists],
                 createdList: []
             });
-            
-            // Send notification to user
             await this.sendNotification(userId, 'LIST_ASSIGNED', {
                 listId: 'Some Id',
                 listName: 'New List'
@@ -1204,6 +1190,117 @@ class AdminService {
             this.invalidateCache('user:*')
             this.invalidateCache('user_lists')
             return { message: `List assigned to user ${userData.id} (${userData.phone}) successfully` };
+        } catch (error) {
+            throw new Error(`Failed to assign list: ${error.message}`);
+        }
+    }
+
+    async releaseAllListBulk(userIds) {
+        try {
+            let messages = [];
+            messages.push(`Releasing all lists to user ${userIds.length} users`);
+            const batch = this.db.batch();
+            for (const userId of userIds) {
+                messages.push(`Releasing lists to user ${userId}`);
+                messages = Promise.all(userIds.map(async (userId) => {
+                    const userDoc = await this.users.doc(userId).get();
+                    if (!userDoc.exists) {
+                        throw new Error(`User ${userId} not found`);
+                    }
+
+                    const userData = userDoc.data();
+                    const userCreatedLists = userData.createdList || [];
+                    const userAssignedLists = userData.lists || [];
+
+                    // Check if list is already assigned
+                    const newLists = [];
+
+                    userCreatedLists.forEach((createdList) => {
+                        const isListAssigned = userAssignedLists.some(list => 
+                            (list.originalListId === createdList.originalListId || 
+                            list.listId === createdList.originalListId
+                        ));
+
+                        if (!isListAssigned) {
+                            const newAssignment = {
+                                ...createdList,
+                                listId: createdList.originalListId // Maintain backward compatibility
+                            };
+
+                            newLists.push(newAssignment);
+                        }
+                    });
+
+                    if (newLists.length > 0) {
+                        batch.update(this.users.doc(userId), {
+                            lists: [...userAssignedLists, ...newLists],
+                            createdList: []
+                        });
+                    }
+                }));
+            }
+
+            await batch.commit();
+            this.invalidateCache('user:*');
+            this.invalidateCache('user_lists');
+            this.invalidateCache(`users:*`);
+            return { message: `All lists released to ${userIds.length} users successfully`, details: messages };
+
+        } catch (error) {
+            throw new Error(`Failed to assign list: ${error.message}`);
+        }
+    }
+
+    async releaseAllListBulk(userIds) {
+        try {
+            let messages = [];
+            messages.push(`Releasing all lists to user ${userIds.length} users`);
+            const batch = this.db.batch();
+            for (const userId of userIds) {
+                messages.push(`Releasing lists to user ${userId}`);
+                messages = Promise.all(userIds.map(async (userId) => {
+                    const userDoc = await this.users.doc(userId).get();
+                    if (!userDoc.exists) {
+                        throw new Error(`User ${userId} not found`);
+                    }
+
+                    const userData = userDoc.data();
+                    const userCreatedLists = userData.createdList || [];
+                    const userAssignedLists = userData.lists || [];
+
+                    const newLists = [];
+
+                    userCreatedLists.forEach((createdList) => {
+                        const isListAssigned = userAssignedLists.some(list => 
+                            (list.originalListId === createdList.originalListId || 
+                            list.listId === createdList.originalListId
+                        ));
+
+                        if (!isListAssigned) {
+                            const newAssignment = {
+                                ...createdList,
+                                listId: createdList.originalListId // Maintain backward compatibility
+                            };
+
+                            newLists.push(newAssignment);
+                        }
+                    });
+
+                    if (newLists.length > 0) {
+                        batch.update(this.users.doc(userId), {
+                            lists: [...userAssignedLists, ...newLists],
+                            createdList: []
+                        });
+                    }
+                }));
+            }
+
+            await batch.commit();
+            this.invalidateCache('user:*');
+            this.invalidateCache('user_lists');
+            this.invalidateCache(`users:*`);
+            return { message: `All lists released to ${userIds.length} users successfully`, details: messages };
+
         } catch (error) {
             throw new Error(`Failed to assign list: ${error.message}`);
         }
