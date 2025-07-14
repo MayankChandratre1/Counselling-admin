@@ -1195,116 +1195,120 @@ class AdminService {
         }
     }
 
-    async releaseAllListBulk(userIds) {
-        try {
-            let messages = [];
-            messages.push(`Releasing all lists to user ${userIds.length} users`);
-            const batch = this.db.batch();
-            for (const userId of userIds) {
-                messages.push(`Releasing lists to user ${userId}`);
-                messages = Promise.all(userIds.map(async (userId) => {
-                    const userDoc = await this.users.doc(userId).get();
-                    if (!userDoc.exists) {
-                        throw new Error(`User ${userId} not found`);
-                    }
+    // async releaseAllListBulk(userIds) {
+    //     try {
+    //         let messages = [];
+    //         messages.push(`Releasing all lists to user ${userIds.length} users`);
+    //         // const batch = this.db.batch();
+    //         // for (const userId of userIds) {
+    //         //     messages.push(`Releasing lists to user ${userId}`);
+    //         //     messages = Promise.all(userIds.map(async (userId) => {
+    //         //         const userDoc = await this.users.doc(userId).get();
+    //         //         if (!userDoc.exists) {
+    //         //             throw new Error(`User ${userId} not found`);
+    //         //         }
 
-                    const userData = userDoc.data();
-                    const userCreatedLists = userData.createdList || [];
-                    const userAssignedLists = userData.lists || [];
+    //         //         const userData = userDoc.data();
+    //         //         const userCreatedLists = userData.createdList || [];
+    //         //         const userAssignedLists = userData.lists || [];
 
-                    // Check if list is already assigned
-                    const newLists = [];
+    //         //         // Check if list is already assigned
+    //         //         const newLists = [];
 
-                    userCreatedLists.forEach((createdList) => {
-                        const isListAssigned = userAssignedLists.some(list => 
-                            (list.originalListId === createdList.originalListId || 
-                            list.listId === createdList.originalListId
-                        ));
+    //         //         userCreatedLists.forEach((createdList) => {
+    //         //             const isListAssigned = userAssignedLists.some(list => 
+    //         //                 (list.originalListId === createdList.originalListId || 
+    //         //                 list.listId === createdList.originalListId
+    //         //             ));
 
-                        if (!isListAssigned) {
-                            const newAssignment = {
-                                ...createdList,
-                                listId: createdList.originalListId // Maintain backward compatibility
-                            };
+    //         //             if (!isListAssigned) {
+    //         //                 const newAssignment = {
+    //         //                     ...createdList,
+    //         //                     listId: createdList.originalListId // Maintain backward compatibility
+    //         //                 };
 
-                            newLists.push(newAssignment);
-                        }
-                    });
+    //         //                 newLists.push(newAssignment);
+    //         //             }
+    //         //         });
 
-                    if (newLists.length > 0) {
-                        batch.update(this.users.doc(userId), {
-                            lists: [...userAssignedLists, ...newLists],
-                            createdList: []
-                        });
-                    }
-                }));
+    //         //         if (newLists.length > 0) {
+    //         //             batch.update(this.users.doc(userId), {
+    //         //                 lists: [...userAssignedLists, ...newLists],
+    //         //                 createdList: []
+    //         //             });
+    //         //         }
+    //         //     }));
+    //         // }
+
+    //         // await batch.commit();
+    //         this.invalidateCache('user:*');
+    //         this.invalidateCache('user_lists');
+    //         this.invalidateCache(`users:*`);
+    //         return { message: `All lists released to ${userIds.length} users successfully`, details: messages };
+
+    //     } catch (error) {
+    //         throw new Error(`Failed to assign list: ${error.message}`);
+    //     }
+    // }
+
+async releaseAllListBulk(userIds) {
+    try {
+        const messages = [];
+        messages.push(`Releasing all lists to ${userIds.length} users`);
+
+        const batch = this.db.batch();
+
+        await Promise.all(userIds.map(async (userId) => {
+            messages.push(`Releasing lists to user ${userId}`);
+
+            const userDoc = await this.users.doc(userId).get();
+            if (!userDoc.exists) {
+                throw new Error(`User ${userId} not found`);
             }
 
-            await batch.commit();
-            this.invalidateCache('user:*');
-            this.invalidateCache('user_lists');
-            this.invalidateCache(`users:*`);
-            return { message: `All lists released to ${userIds.length} users successfully`, details: messages };
+            const userData = userDoc.data();
+            const userCreatedLists = userData.createdList || [];
+            const userAssignedLists = userData.lists || [];
 
-        } catch (error) {
-            throw new Error(`Failed to assign list: ${error.message}`);
-        }
-    }
+            const newLists = [];
 
-    async releaseAllListBulk(userIds) {
-        try {
-            let messages = [];
-            messages.push(`Releasing all lists to user ${userIds.length} users`);
-            const batch = this.db.batch();
-            for (const userId of userIds) {
-                messages.push(`Releasing lists to user ${userId}`);
-                messages = Promise.all(userIds.map(async (userId) => {
-                    const userDoc = await this.users.doc(userId).get();
-                    if (!userDoc.exists) {
-                        throw new Error(`User ${userId} not found`);
-                    }
+            userCreatedLists.forEach((createdList) => {
+                const isListAssigned = userAssignedLists.some(list =>
+                    list.originalListId === createdList.originalListId ||
+                    list.listId === createdList.originalListId
+                );
 
-                    const userData = userDoc.data();
-                    const userCreatedLists = userData.createdList || [];
-                    const userAssignedLists = userData.lists || [];
+                if (!isListAssigned) {
+                    const newAssignment = {
+                        ...createdList,
+                        listId: createdList.originalListId // Maintain backward compatibility
+                    };
+                    newLists.push(newAssignment);
+                }
+            });
 
-                    const newLists = [];
-
-                    userCreatedLists.forEach((createdList) => {
-                        const isListAssigned = userAssignedLists.some(list => 
-                            (list.originalListId === createdList.originalListId || 
-                            list.listId === createdList.originalListId
-                        ));
-
-                        if (!isListAssigned) {
-                            const newAssignment = {
-                                ...createdList,
-                                listId: createdList.originalListId // Maintain backward compatibility
-                            };
-
-                            newLists.push(newAssignment);
-                        }
-                    });
-
-                    if (newLists.length > 0) {
-                        batch.update(this.users.doc(userId), {
-                            lists: [...userAssignedLists, ...newLists],
-                            createdList: []
-                        });
-                    }
-                }));
+            if (newLists.length > 0) {
+                batch.update(this.users.doc(userId), {
+                    lists: [...userAssignedLists, ...newLists],
+                    createdList: []
+                });
             }
+        }));
 
-            await batch.commit();
-            this.invalidateCache('user:*');
-            this.invalidateCache('user_lists');
-            this.invalidateCache(`users:*`);
-            return { message: `All lists released to ${userIds.length} users successfully`, details: messages };
+        await batch.commit();
 
-        } catch (error) {
-            throw new Error(`Failed to assign list: ${error.message}`);
-        }
+        this.invalidateCache('user:*');
+        this.invalidateCache('user_lists');
+        this.invalidateCache('users:*');
+        console.log(messages);
+
+        return { message: `All lists released to ${userIds.length} users successfully`, details: messages };
+
+    } catch (error) {
+        throw new Error(`Failed to assign list: ${error.message}`);
     }
+}
+
 
     async deleteUserList(userId, listId) {
         try {
@@ -2211,133 +2215,10 @@ class AdminService {
     }
 }
 
-    async exportAllUsersToExcel(filters = null) {
-    try {
-        let users = [];
-        let lastDoc = null;
-        const batchSize = 1000;
-
-        // Paginate Firestore query to get all premium users
-        while (true) {
-            let query = this.users
-                .orderBy('createdAt', 'desc')
-                .where('isPremium', '==', false)
-                .limit(batchSize);
-
-            if (lastDoc) {
-                query = query.startAfter(lastDoc);
-            }
-
-            const snapshot = await query.get();
-            if (snapshot.empty) {
-                break;
-            }
-
-            const batchUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            users = users.concat(batchUsers);
-            lastDoc = snapshot.docs[snapshot.docs.length - 1];
-
-            if (snapshot.size < batchSize) {
-                break;
-            }
-        }
-
-        // Prepare data for Excel
-        const userData = users.map((user, index) => ({
-            'S.No': index + 1,
-            'Name': user.name || 'N/A',
-            'Phone': user.phone || 'N/A',
-            'Email': user.email || 'N/A',
-        }));
-
-        // Create Excel workbook
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Users Data');
-
-        // Add headers
-        const headers = ['S.No', 'Name', 'Phone', 'Email'];
-        worksheet.addRow(headers);
-
-        // Style header row
-        const headerRow = worksheet.getRow(1);
-        headerRow.eachCell((cell) => {
-            cell.font = { bold: true };
-            cell.fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: 'FFE0E0E0' }
-            };
-            cell.border = {
-                top: { style: 'thin' },
-                left: { style: 'thin' },
-                bottom: { style: 'thin' },
-                right: { style: 'thin' }
-            };
-        });
-
-        // Add data rows
-        userData.forEach(user => {
-            const row = worksheet.addRow([
-                user['S.No'],
-                user['Name'],
-                user['Phone'],
-                user['Email']
-            ]);
-            row.eachCell((cell) => {
-                cell.border = {
-                    top: { style: 'thin' },
-                    left: { style: 'thin' },
-                    bottom: { style: 'thin' },
-                    right: { style: 'thin' }
-                };
-            });
-        });
-
-        // Auto-fit columns
-        worksheet.columns.forEach(column => {
-            let maxLength = 0;
-            column.eachCell({ includeEmpty: true }, (cell) => {
-                const columnLength = cell.value ? cell.value.toString().length : 10;
-                if (columnLength > maxLength) {
-                    maxLength = columnLength;
-                }
-            });
-            column.width = maxLength < 10 ? 10 : maxLength + 2;
-        });
-
-        // Create exports directory if needed
-        const exportsDir = path.join(process.cwd(), 'exports');
-        if (!fs.existsSync(exportsDir)) {
-            fs.mkdirSync(exportsDir, { recursive: true });
-        }
-
-        // Generate file name
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const filename = `users_export_${timestamp}.xlsx`;
-        const filepath = path.join(exportsDir, filename);
-
-        // Write file
-        await workbook.xlsx.writeFile(filepath);
-
-        console.log(`Exported ${userData.length} users to Excel file: ${filename}`);
-
-        return {
-            message: `Successfully exported ${userData.length} users to Excel`,
-            filename,
-            filepath,
-            totalUsers: userData.length,
-            exportedData: userData.slice(0, 5),
-            appliedFilters: filters || {}
-        };
-
-    } catch (error) {
-        console.error('Error exporting users to Excel:', error);
-        throw new Error(`Failed to export users to Excel: ${error.message}`);
-    }
-}
+    
 
 
-async sendNotification(userId, notificationId, customData = {}, toAll = false) {
+    async sendNotification(userId, notificationId, customData = {}, toAll = false) {
         try {
             // Get user to retrieve OneSignal playerId
             if (toAll) {
@@ -3479,8 +3360,134 @@ async exportPremiumUsersCounsellingData() {
 }
 
 
+async exportAllUsersToExcel(filters = null) {
+    try {
+        let users = [];
+        let lastDoc = null;
+        const batchSize = 1000;
+
+        // Paginate Firestore query to get all premium users
+        while (true) {
+            let query = this.users
+                .orderBy('createdAt', 'false')
+                .where('isPremium', '==', true)
+                .limit(batchSize);
+
+            if (lastDoc) {
+                query = query.startAfter(lastDoc);
+            }
+
+            const snapshot = await query.get();
+            if (snapshot.empty) {
+                break;
+            }
+
+            const batchUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            users = users.concat(batchUsers);
+            lastDoc = snapshot.docs[snapshot.docs.length - 1];
+
+            if (snapshot.size < batchSize) {
+                break;
+            }
+        }
+
+        // Prepare data for Excel
+        const userData = users.map((user, index) => ({
+            'S.No': index + 1,
+            'Name': user.name || 'N/A',
+            'Phone': user.phone || 'N/A',
+            'Email': user.email || 'N/A'
+        }));
+
+        // Create Excel workbook
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet('Users Data');
+
+        // Add headers
+        const headers = ['S.No', 'Name', 'Phone', 'Email'];
+        worksheet.addRow(headers);
+
+        // Style header row
+        const headerRow = worksheet.getRow(1);
+        headerRow.eachCell((cell) => {
+            cell.font = { bold: true };
+            cell.fill = {
+                type: 'pattern',
+                pattern: 'solid',
+                fgColor: { argb: 'FFE0E0E0' }
+            };
+            cell.border = {
+                top: { style: 'thin' },
+                left: { style: 'thin' },
+                bottom: { style: 'thin' },
+                right: { style: 'thin' }
+            };
+        });
+
+        // Add data rows
+        userData.forEach(user => {
+            const row = worksheet.addRow([
+                user['S.No'],
+                user['Name'],
+                user['Phone'],
+                user['Email']
+            ]);
+            row.eachCell((cell) => {
+                cell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
+                };
+            });
+        });
+
+        // Auto-fit columns
+        worksheet.columns.forEach(column => {
+            let maxLength = 0;
+            column.eachCell({ includeEmpty: true }, (cell) => {
+                const columnLength = cell.value ? cell.value.toString().length : 10;
+                if (columnLength > maxLength) {
+                    maxLength = columnLength;
+                }
+            });
+            column.width = maxLength < 10 ? 10 : maxLength + 2;
+        });
+
+        // Create exports directory if needed
+        const exportsDir = path.join(process.cwd(), 'exports');
+        if (!fs.existsSync(exportsDir)) {
+            fs.mkdirSync(exportsDir, { recursive: true });
+        }
+
+        // Generate file name
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const filename = `users_export_${timestamp}.xlsx`;
+        const filepath = path.join(exportsDir, filename);
+
+        // Write file
+        await workbook.xlsx.writeFile(filepath);
+
+        console.log(`Exported ${userData.length} users to Excel file: ${filename}`);
+
+        return {
+            message: `Successfully exported ${userData.length} users to Excel`,
+            filename,
+            filepath,
+            totalUsers: userData.length,
+            exportedData: userData.slice(0, 5),
+            appliedFilters: filters || {}
+        };
+
+    } catch (error) {
+        console.error('Error exporting users to Excel:', error);
+        throw new Error(`Failed to export users to Excel: ${error.message}`);
+    }
+    }
+
+
 }
 
-// new AdminService().bulkUpdate();
+// new AdminService().exportPremiumUsersCounsellingData();
 
 export default AdminService;
