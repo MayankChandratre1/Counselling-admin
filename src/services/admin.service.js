@@ -279,6 +279,14 @@ class AdminService {
             filteredCountSnapshot.data().count : 
             users.length; // This is approximate for the current page
         
+        users.map(async user => {
+            const noteDoc = await this.notes.doc(user.id).get();
+            return {
+                ...user,
+                notes: noteDoc.data()
+            }
+        })  
+
         console.log(`Total users: ${totalUsers}, Filtered count: ${filteredCount}, Page results: ${users.length}`);
         
         return {
@@ -569,7 +577,12 @@ class AdminService {
             query = query.where('counsellingData.cetSeatNumber', '>=', searchCriteria.cetSeatNumber);
         }
         const snapshot = await query.get();
-        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const userId = snapshot.docs[0]?.id;
+        let notes = []
+        if(userId){
+            notes = (await this.notes.doc(userId).get()).data()
+        }
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), notes }));
     }
 
     async getFormSteps() {
@@ -1720,6 +1733,8 @@ async releaseAllListBulk(userIds) {
             }, { merge: true });
 
             await this.invalidateCache(`notes:*/get-notes/${userId}`);
+            await this.invalidateCache(`user:*`);
+            await this.invalidateCache(`users:*`);
             
         
 
