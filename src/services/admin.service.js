@@ -2737,15 +2737,34 @@ async updateUserWithOrderId(orderId, planData, orderData) {
                         email: user.email,
                         lists: []
                     });
-                if(user.createdList && user.createdList.length > 0)
+
+                if((user.createdList && user.createdList.length > 0)|| (user.lists && user.lists.length > 0)){
+                    if(user.createdList && user.createdList.length > 0 && (user.lists && user.lists.length > 0))
                     userListDistributionWithCreatedLists[planTitle].push({
                         id: user.id,
                         name: user.name,
                         phone: user.phone,
                         email: user.email,
-                        lists: user.createdList.map(list => list.title)
+                        lists: [...user.createdList.map(list => list.title),...user.lists.map(list => list.title+" #RL")]
                     });
-                else 
+                    else if(user.createdList && user.createdList.length > 0)
+                    userListDistributionWithCreatedLists[planTitle].push({
+                        id: user.id,
+                        name: user.name,
+                        phone: user.phone,
+                        email: user.email,
+                        lists: user.createList.map(list => list.title)
+                    });
+                    else if(user.lists && user.lists.length > 0)
+                    userListDistributionWithCreatedLists[planTitle].push({
+                        id: user.id,
+                        name: user.name,
+                        phone: user.phone,
+                        email: user.email,
+                        lists: user.lists.map(list => list.title+" #RL")
+                    });
+                 }
+                else{ 
                     userListDistributionWithoutCreatedLists[planTitle].push({
                         id: user.id,
                         name: user.name,
@@ -2753,6 +2772,7 @@ async updateUserWithOrderId(orderId, planData, orderData) {
                         email: user.email,
                         lists: []
                     });
+                }
             })
              const formStepsAnalysis = {};
             const forms = await this.counsellingForms.get();
