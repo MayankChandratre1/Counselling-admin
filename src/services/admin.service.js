@@ -2706,8 +2706,7 @@ async updateUserWithOrderId(orderId, planData, orderData) {
             const userListDistributionWithoutLists = {};
             const userListDistributionWithCreatedLists = {};
             const userListDistributionWithoutCreatedLists = {};
-            users.filter(user => user.isPremium)
-            .map(user => {
+            users.filter(user => user.isPremium).map(user => {
                 const planTitle = user.premiumPlan?.planTitle || 'N/A';
                 if (!userListDistributionWithLists[planTitle]) {
                     userListDistributionWithLists[planTitle] = [];
@@ -2745,7 +2744,7 @@ async updateUserWithOrderId(orderId, planData, orderData) {
                         name: user.name,
                         phone: user.phone,
                         email: user.email,
-                        lists: [...user.createdList.map(list => list.title),...user.lists.map(list => list.title+" #RL")]
+                        lists: [...user.createdList?.map(list => list.title),...user.lists.map(list => list.title+" #RL")]
                     });
                     else if(user.createdList && user.createdList.length > 0)
                     userListDistributionWithCreatedLists[planTitle].push({
@@ -2753,7 +2752,7 @@ async updateUserWithOrderId(orderId, planData, orderData) {
                         name: user.name,
                         phone: user.phone,
                         email: user.email,
-                        lists: user.createList.map(list => list.title)
+                        lists: user.createdList.map(list => list.title)
                     });
                     else if(user.lists && user.lists.length > 0)
                     userListDistributionWithCreatedLists[planTitle].push({
