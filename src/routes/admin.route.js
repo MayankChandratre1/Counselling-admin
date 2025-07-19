@@ -12,7 +12,7 @@ router.post('/login', AdminController.login);
 router.post('/request-otp', AdminController.requestOTP);
 router.post('/verify-otp', AdminController.verifyOTP);
 router.post('/change-password', AdminController.changePassword);
-router.get('/get-analytics', AdminController.getAnalytics);
+router.get('/get-analytics',AdminController.getAnalytics);
 router.get('/get-appointments', AdminController.getAppointments);
 router.put('/edit-appointment/:id', AdminController.editAppointment);
 router.get('/gettracking', AdminController.getTracking);

@@ -316,7 +316,6 @@ class AdminService {
             if (userDoc.exists) {
                 const userData = userDoc.data();
                 if (userData.stepsData && userData.stepsData.id === formId) {
-                    console.log(userData.stepsData);
                     return { id: userDoc.id,name:userDoc.name, stepsData: userData.stepsData };
                 }
             }
@@ -2772,7 +2771,31 @@ async updateUserWithOrderId(orderId, planData, orderData) {
                         lists: []
                     });
                 }
+
+                userListDistributionWithCreatedLists[planTitle].sort((a, b) => {
+                // Helper function to determine the user type
+                        const getUserType = (user) => {
+                            const hasCreatedLists = user.lists.some(list => !list.endsWith(" #RL"));
+                            const hasRegularLists = user.lists.some(list => list.endsWith(" #RL"));
+
+                            if (hasCreatedLists && !hasRegularLists) {
+                                return 1; // Only created lists
+                            } else if (hasCreatedLists && hasRegularLists) {
+                                return 2; // Both
+                            } else if (!hasCreatedLists && hasRegularLists) {
+                                return 3; // Only regular lists
+                            }
+                            return 4; // Should not happen if initial check is correct, but for safety
+                        };
+
+                    const typeA = getUserType(a);
+                    const typeB = getUserType(b);
+
+                    return typeA - typeB;
+                });
             })
+
+
              const formStepsAnalysis = {};
             const forms = await this.counsellingForms.get();
 
