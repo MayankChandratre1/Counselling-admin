@@ -2725,6 +2725,9 @@ async updateUserWithOrderId(orderId, planData, orderData) {
                         name: user.name,
                         phone: user.phone,
                         email: user.email,
+                        formFilled: user.formFilled,
+                        formFilledAt: user.formFilledAt,
+                        formFilledBy: user.formFilledBy,
                         lists: user.lists.map(list => list.title)
                     });
                 else 
@@ -2733,6 +2736,9 @@ async updateUserWithOrderId(orderId, planData, orderData) {
                         name: user.name,
                         phone: user.phone,
                         email: user.email,
+                        formFilled: user.formFilled,
+                        formFilledAt: user.formFilledAt,
+                        formFilledBy: user.formFilledBy,
                         lists: []
                     });
 
@@ -2743,6 +2749,9 @@ async updateUserWithOrderId(orderId, planData, orderData) {
                         name: user.name,
                         phone: user.phone,
                         email: user.email,
+                        formFilled: user.formFilled,
+                        formFilledAt: user.formFilledAt,
+                        formFilledBy: user.formFilledBy,
                         lists: [...user.createdList?.map(list => list.title),...user.lists.map(list => list.title+" #RL")]
                     });
                     else if(user.createdList && user.createdList.length > 0)
@@ -2751,6 +2760,9 @@ async updateUserWithOrderId(orderId, planData, orderData) {
                         name: user.name,
                         phone: user.phone,
                         email: user.email,
+                        formFilled: user.formFilled,
+                        formFilledAt: user.formFilledAt,
+                        formFilledBy: user.formFilledBy,
                         lists: user.createdList.map(list => list.title)
                     });
                     else if(user.lists && user.lists.length > 0)
@@ -2759,6 +2771,9 @@ async updateUserWithOrderId(orderId, planData, orderData) {
                         name: user.name,
                         phone: user.phone,
                         email: user.email,
+                        formFilled: user.formFilled,
+                        formFilledAt: user.formFilledAt,
+                        formFilledBy: user.formFilledBy,
                         lists: user.lists.map(list => list.title+" #RL")
                     });
                  }
@@ -2768,6 +2783,9 @@ async updateUserWithOrderId(orderId, planData, orderData) {
                         name: user.name,
                         phone: user.phone,
                         email: user.email,
+                        formFilled: user.formFilled,
+                        formFilledAt: user.formFilledAt,
+                        formFilledBy: user.formFilledBy,
                         lists: []
                     });
                 }
@@ -3540,6 +3558,30 @@ async exportAllUsersToExcel(filters = null) {
         console.error('Error exporting users to Excel:', error);
         throw new Error(`Failed to export users to Excel: ${error.message}`);
     }
+    }
+
+     async toggleFormFilled(userId, adminEmail) {
+        try {
+            const userDoc = await this.users.doc(userId).get();
+            if (!userDoc.exists) {
+                throw new Error('User not found');
+            }
+            const userData = userDoc.data();
+            const formFilled = !userData.formFilled; // Toggle the formFilled status
+            
+            await this.users.doc(userId).set({
+                formFilledBy: adminEmail,
+                formFilledAt: formFilled ? new Date().toISOString() : null,
+                formFilled: formFilled
+            }, { merge: true });
+            await this.invalidateCache('users:*');
+            await this.invalidateCache('user:*');
+            return { message: 'Form filled successfully' };
+        } catch (error) {
+            console.log('Toggle form filled error:', error);
+            
+            throw new Error('Form filled update failed');
+        }
     }
 
 

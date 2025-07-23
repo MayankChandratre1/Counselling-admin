@@ -78,6 +78,7 @@ router.post('/list/:listId/move-to-folder/:folderId', authorize(['admin', 'super
 router.post('/user/:userId/assign-list', AdminController.assignListToUser);
 router.post('/user/:userId/release-list', AdminController.releaseListToUser);
 router.post('/user/:userId/release-all-lists', AdminController.releaseAllListToUser);
+router.post('/user/:userId/toggle-form-filled', AdminController.toggleFormFilled);
 router.post('/user/bulk-release-lists', AdminController.releaseAllListBulk);
 
 router.put('/user/:userId/list/:listId', AdminController.updateUserList);

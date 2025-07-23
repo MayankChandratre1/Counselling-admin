@@ -977,6 +977,18 @@ async moveListToFolder(req, res) {
     }
 }
 
+async toggleFormFilled(req, res) {
+    try {
+        const { userId } = req.params;
+        const admin = req.admin;
+        const result = await this.adminService.toggleFormFilled(userId, admin.email);
+        res.status(200).json(result);
+    } catch (error) {
+        console.error('Toggle form filled error:', error);
+        res.status(400).json({ error: error.message });
+    }
+}
+
 // ...existing code...
 
 
@@ -1068,6 +1080,6 @@ export default {
     restoreList: adminController.restoreList.bind(adminController),
     copyListToFolder: adminController.copyListToFolder.bind(adminController),
     moveListToFolder: adminController.moveListToFolder.bind(adminController),
-
+    toggleFormFilled: adminController.toggleFormFilled.bind(adminController),
 };
 
