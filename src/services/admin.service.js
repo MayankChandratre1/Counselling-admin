@@ -923,8 +923,15 @@ class AdminService {
         try {
             console.log(`Updating user list. UserID: ${userId}, ListID: ${listId}`);
             console.log(listData.colleges[0]);
-            
-            
+            listData.colleges = listData.colleges.map(college => {
+                return {
+                    ...college,
+                    branches: [],
+                    additionalData: {},
+                    keywords: []
+                };
+            });
+
             if (!listId) {
                 throw new Error('List ID is required');
             }
@@ -990,6 +997,7 @@ class AdminService {
     async updateCreatedUserList(userId, listId, listData, admin) {
         try {
             console.log(`Updating user list. UserID: ${userId}, ListID: ${listId}`);
+
             
             if (!listId) {
                 throw new Error('List ID is required');
@@ -1002,6 +1010,15 @@ class AdminService {
 
             const userData = userDoc.data();
             const userLists = userData.createdList || [];
+
+             listData.colleges = listData.colleges.map(college => {
+                return {
+                    ...college,
+                    branches: [],
+                    additionalData: {},
+                    keywords: []
+                };
+            });
             
             // Find the list by any of its potential ID fields
             const listIndex = userLists.findIndex(l => {
