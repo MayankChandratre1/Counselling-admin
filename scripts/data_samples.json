@@ -1,0 +1,3914 @@
+{
+  "admins": [
+    {
+      "id": "30kJ6CSxa2fivhv8VRML",
+      "email": "form@gmail.com",
+      "password": "$2b$12$76t54MZdg3Oy/Ia82j..ses5pBu9BNbLd5PDFtyWzd2PLA40cFNQC",
+      "role": "admin",
+      "permissions": {
+        "pages": [
+          "users",
+          "appointments"
+        ]
+      },
+      "createdAt": "2025-08-07T13:20:22.685Z",
+      "updatedAt": "2025-08-07T13:20:22.685Z"
+    },
+    {
+      "id": "GHeKYVBcFy046AhhTTLX",
+      "email": "omghodke02@gmail.com",
+      "password": "$2b$12$ewVETELF6fHcSzkLx7JSnOdN37czcM2fGv2buK77UEWJw7m.m2hke",
+      "role": "super-admin",
+      "permissions": {
+        "pages": [
+          "home",
+          "users",
+          "colleges",
+          "lists",
+          "change-password",
+          "forms",
+          "registrationform",
+          "add-user",
+          "cutoff",
+          "admin-settings",
+          "landing-page",
+          "premium-plans",
+          "payment-logs",
+          "add-users",
+          "edit-user-list",
+          "appointments",
+          "edit-users"
+        ]
+      },
+      "createdAt": "2025-07-07T09:53:56.955Z",
+      "updatedAt": "2025-07-07T09:53:56.955Z"
+    },
+    {
+      "id": "VkBLPLUPrtdnwPHwBqon",
+      "email": "yasharadhyeapp@gmail.com",
+      "role": "super-admin",
+      "permissions": {
+        "pages": [
+          "home",
+          "users",
+          "colleges",
+          "lists",
+          "change-password",
+          "forms",
+          "registrationform",
+          "add-user",
+          "cutoff",
+          "admin-settings"
+        ]
+      },
+      "createdAt": "2025-04-14T09:37:06.154Z",
+      "password": "$2b$12$U9Xc70RcprgIbzW6jgxx7Ou1YplJ/6RAMOB2JMFKTAumhganyhs0a",
+      "updatedAt": "2025-04-15T11:29:15.510Z"
+    }
+  ],
+  "appointments": [
+    {
+      "id": "0NHURxD5kVJYs3aVvVVD",
+      "name": "Sumit shamu jadhav",
+      "phone": "8999817103",
+      "reason": "Suggest collage for engineering in pune",
+      "createdAt": {
+        "_seconds": 1751635338,
+        "_nanoseconds": 536000000
+      }
+    },
+    {
+      "id": "0b9f5zEl7tNMx8d1Vsn9",
+      "name": "Lanke Om",
+      "phone": "9881985160",
+      "reason": "About regarding colleges and choosing branch ",
+      "createdAt": {
+        "_seconds": 1750091283,
+        "_nanoseconds": 538000000
+      }
+    },
+    {
+      "id": "1MEofsOMdGJi67ndwhtR",
+      "name": "Sanket Padghan ",
+      "phone": "9850832767",
+      "reason": "For college admission ",
+      "createdAt": {
+        "_seconds": 1752083051,
+        "_nanoseconds": 967000000
+      }
+    },
+    {
+      "id": "1PChNvoIbHf43lw0VvBI",
+      "name": "Vedant ",
+      "phone": "8459631488",
+      "reason": "For CET(PCM) marks information on colleges which is suitable for me",
+      "createdAt": {
+        "_seconds": 1750323667,
+        "_nanoseconds": 586000000
+      }
+    },
+    {
+      "id": "1Ql0xI2sVE8byVavvumF",
+      "name": "Yash manish pradhan",
+      "phone": "8956676207",
+      "reason": "For admission purpose",
+      "createdAt": {
+        "_seconds": 1748797852,
+        "_nanoseconds": 394000000
+      }
+    }
+  ],
+  "cancellations": [
+    {
+      "id": "AOPgmHepSoWzrToXo1W1",
+      "reason": "My name is akhilesh Patil, I know everything for this process ",
+      "plan": "Saarthi",
+      "amount": 2399,
+      "orderId": "order_Qhu2uN9FfP5G3E",
+      "userId": "p2n5oBpmF6H4arBYPiAu",
+      "userPhone": "9623925258",
+      "name": "Akhilesh Patil ",
+      "createdAt": {
+        "_seconds": 1750084745,
+        "_nanoseconds": 789000000
+      }
+    },
+    {
+      "id": "EqnUYv6Bdb4zq8kHyLmw",
+      "reason": "Want to discuss with your team about Counselling personal",
+      "plan": "Saarthi - PERSONAL Counselling",
+      "amount": 2399,
+      "orderId": "order_QqBBS2TiYQmmCa",
+      "userId": "olKJXlaEsBSU1lbxuX4N",
+      "userPhone": "9922173911",
+      "name": "Palak",
+      "createdAt": {
+        "_seconds": 1751892498,
+        "_nanoseconds": 938000000
+      }
+    },
+    {
+      "id": "Gq1G5kWF4C56KvtddxhP",
+      "reason": "When I select upi option it does not process to next step it is taking too much time",
+      "plan": "Saarthi",
+      "amount": 2399,
+      "orderId": "order_QhpiUiQhYludHQ",
+      "userId": "jnxQhsTX2frV3PmFtd9G",
+      "userPhone": "8983704533",
+      "name": "Jay paturkar ",
+      "createdAt": {
+        "_seconds": 1750069883,
+        "_nanoseconds": 180000000
+      }
+    },
+    {
+      "id": "RnI654u5y652fuppxj75",
+      "reason": "This no only for net and calling\nMy another no is upi\nHow I pay",
+      "plan": "Saarthi - PERSONAL Counselling",
+      "amount": 2399,
+      "orderId": "order_QqB7hGsPFR4tra",
+      "userId": "olKJXlaEsBSU1lbxuX4N",
+      "userPhone": "9922173911",
+      "name": "Palak",
+      "createdAt": {
+        "_seconds": 1751891707,
+        "_nanoseconds": 471000000
+      }
+    }
+  ],
+  "college_updates": [
+    {
+      "id": "78910",
+      "deleted": true
+    }
+  ],
+  "colleges_v4": [
+    {
+      "id": "1105",
+      "instituteCode": 1105,
+      "instituteName": "Prof. Ram Meghe Institute of Technology & Research, Amravati",
+      "city": "amravati",
+      "keywords": [
+        "1105",
+        "prof_rammegheinstituteoftechnologyandresearch_amravati",
+        "amravati",
+        "prof",
+        "ram",
+        "meghe",
+        "institute",
+        "technology",
+        "research",
+        "PRMIOT&RA"
+      ],
+      "branches": [
+        {
+          "branchCode": "110526510",
+          "branchName": "Industrial IoT",
+          "branchShort": "II",
+          "cutoffs": [
+            {
+              "category": "GOPENS",
+              "percentile": 66.6716379,
+              "rank": 73046,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "GSCS",
+              "percentile": 53.8156961,
+              "rank": 93017,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "GVJS",
+              "percentile": 29.3464077,
+              "rank": 121543,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "GNT2S",
+              "percentile": 61.432847,
+              "rank": 81848,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "GOBCS",
+              "percentile": 63.973064,
+              "rank": 77679,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "LOPENS",
+              "percentile": 71.6354089,
+              "rank": 64104,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "LSCS",
+              "percentile": 63.3857031,
+              "rank": 78957,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "LNT1S",
+              "percentile": 60.750409,
+              "rank": 83430,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "LOBCS",
+              "percentile": 64.0952985,
+              "rank": 77480,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "TFWS",
+              "percentile": 78.4065273,
+              "rank": 50452,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "EWS",
+              "percentile": 53.8156961,
+              "rank": 92845,
+              "capRound": "cap1",
+              "year": 2024
+            }
+          ]
+        },
+        {
+          "branchCode": "110537210",
+          "branchName": "Electronics and Telecommunication Engineering",
+          "branchShort": "ETE",
+          "cutoffs": [
+            {
+              "category": "GOPENS",
+              "percentile": 78.067557,
+              "rank": 51559,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "GSCS",
+              "percentile": 66.8171727,
+              "rank": 72749,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "GVJS",
+              "percentile": 66.4309764,
+              "rank": 73632,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "GNT1S",
+              "percentile": 75.1725431,
+              "rank": 56966,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "GNT2S",
+              "percentile": 67.9544349,
+              "rank": 70744,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "GNT3S",
+              "percentile": 49.0455617,
+              "rank": 100056,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "GOBCS",
+              "percentile": 76.8406961,
+              "rank": 53570,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "LOPENS",
+              "percentile": 79.7907966,
+              "rank": 47654,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "LSCS",
+              "percentile": 69.3042857,
+              "rank": 68293,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "LVJS",
+              "percentile": 42.9215913,
+              "rank": 107273,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "LNT2S",
+              "percentile": 71.1698646,
+              "rank": 65236,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "LOBCS",
+              "percentile": 77.7994669,
+              "rank": 52267,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "TFWS",
+              "percentile": 85.4445126,
+              "rank": 34982,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "EWS",
+              "percentile": 63.6508999,
+              "rank": 78484,
+              "capRound": "cap1",
+              "year": 2024
+            }
+          ]
+        },
+        {
+          "branchCode": "110561210",
+          "branchName": "Mechanical Engineering",
+          "branchShort": "ME",
+          "cutoffs": [
+            {
+              "category": "GOPENS",
+              "percentile": 47.387098,
+              "rank": 101231,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "GSCS",
+              "percentile": 29.4111028,
+              "rank": 121193,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "GVJS",
+              "percentile": 32.3660798,
+              "rank": 118778,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "GNT1S",
+              "percentile": 4.1911023,
+              "rank": 140985,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "GNT2S",
+              "percentile": 12.8630551,
+              "rank": 135446,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "GNT3S",
+              "percentile": 41.0926455,
+              "rank": 109339,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "GOBCS",
+              "percentile": 41.1609401,
+              "rank": 109203,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "LOPENS",
+              "percentile": 36.3578395,
+              "rank": 114605,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "LSCS",
+              "percentile": 28.1052376,
+              "rank": 122762,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "LNT1S",
+              "percentile": 29.4111028,
+              "rank": 121305,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "LNT2S",
+              "percentile": 11.2906846,
+              "rank": 136456,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "LOBCS",
+              "percentile": 31.7228694,
+              "rank": 119422,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "TFWS",
+              "percentile": 71.3590844,
+              "rank": 64569,
+              "capRound": "cap1",
+              "year": 2024
+            },
+            {
+              "category": "EWS",
+              "percentile": 10.7415831,
+              "rank": 136954,
+              "capRound": "cap1",
+              "year": 2024
+            }
+          ]
+        }
+      ],
+      "additionalMetadata": {
+        "status": "Un-Aided",
+        "totalIntake": 840,
+        "autonomyStatus": "Autonomous",
+        "minorityStatus": "Non-Minority",
+        "address": "Anjangaon Bari Road, Badnera,  Amravati",
+        "region": "Amravati",
+        "university": "Sant Gadge Baba Amravati University"
+      },
+      "searchIndex": {
+        "instituteCodeName": "1105_Prof_RamMegheInstituteofTechnologyandResearch_Amravati",
+        "instituteCodeCity": "1105_amravati",
+        "instituteCityName": "amravati_Prof_RamMegheInstituteofTechnologyandResearch_Amravati"
+      }
+    }
+  ],
+  "counsellingForms": [
+    {
+      "id": "63e53",
+      "lastUpdatedBy": "prathmeshgangurde333@gmail.com",
+      "steps": [
+        {
+          "number": 1,
+          "title": "Your Number is added to Exclusive WhatsApp Group for Saarthi Plus?",
+          "description": "You are Part of Exclusive WhatsApp group?",
+          "showListButton": false,
+          "isLocked": false,
+          "premiumOnly": true,
+          "isCapSpecific": false,
+          "cap": 1,
+          "isVerdict": false,
+          "isCapQuery": false
+        },
+        {
+          "number": 2,
+          "title": "Documents verified by Team on Google Meet.",
+          "description": "Special session will be conducted to verify your documents if they are completed or not?",
+          "showListButton": false,
+          "isLocked": false,
+          "premiumOnly": true,
+          "isCapSpecific": false,
+          "cap": 1,
+          "isVerdict": false,
+          "isCapQuery": false
+        },
+        {
+          "title": "REGISTRATION Done by Team on CET Cell website.",
+          "number": 3,
+          "description": "Did team complete your Registration? ",
+          "isLocked": false,
+          "premiumOnly": true,
+          "showListButton": false
+        },
+        {
+          "number": 4,
+          "title": "Document Verified by CET Cell and form Confirmed.",
+          "isLocked": false,
+          "premiumOnly": true
+        },
+        {
+          "number": 5,
+          "title": "Attended Session with Team or Yash Dada Regarding List Making?",
+          "isLocked": false,
+          "premiumOnly": true
+        },
+        {
+          "number": 6,
+          "title": "Preference List Available on App?",
+          "description": "",
+          "showListButton": true,
+          "isLocked": true,
+          "premiumOnly": true
+        },
+        {
+          "number": 7,
+          "title": "Did you finalize your list?",
+          "description": "The list available in your app is final for you now?",
+          "showListButton": false,
+          "isLocked": true,
+          "premiumOnly": true
+        },
+        {
+          "number": 8,
+          "title": "Provisional Rank Declared By CET Cell",
+          "description": "",
+          "showListButton": false,
+          "isLocked": true,
+          "premiumOnly": true
+        },
+        {
+          "number": 9,
+          "title": "Final Rank Declared by CET CELL Your Rank?",
+          "description": "",
+          "showListButton": false,
+          "isLocked": false,
+          "premiumOnly": true
+        },
+        {
+          "number": 10,
+          "title": "Ready for CAP-1 Round?",
+          "description": "",
+          "showListButton": false,
+          "isLocked": true,
+          "premiumOnly": true
+        },
+        {
+          "number": 11,
+          "title": "Form Filling Done on CET Cell Website for CAP-1 by Team?",
+          "description": "Your form is submitted by team?",
+          "showListButton": false,
+          "isLocked": true,
+          "premiumOnly": true
+        },
+        {
+          "number": 12,
+          "title": "CAP-1 Allotment Declared Enter your College and Branch?",
+          "description": "",
+          "showListButton": false,
+          "isLocked": true,
+          "premiumOnly": true,
+          "isCapSpecific": true,
+          "isVerdict": false,
+          "cap": 1,
+          "isCapQuery": true
+        },
+        {
+          "number": 13,
+          "title": "Next Steps will available soon.",
+          "description": "",
+          "showListButton": false,
+          "isLocked": true,
+          "premiumOnly": true
+        }
+      ],
+      "updatedAt": "2025-07-08T04:27:56.118Z"
+    },
+    {
+      "id": "Sarathi-Online",
+      "lastUpdatedBy": "prathmeshgangurde333@gmail.com",
+      "steps": [
+        {
+          "description": "",
+          "title": "Your Number is added to Exclusive WhatsApp Group for Saarthi",
+          "number": 1,
+          "isVerdict": false,
+          "isCapSpecific": false,
+          "cap": 1,
+          "isCapQuery": false,
+          "premiumOnly": true,
+          "isLocked": false
+        },
+        {
+          "number": 2,
+          "title": "Documents Ready?",
+          "description": "Are all of your Documents Ready? As per your Category?\nThe category wise List of Documents is posted on Exclusive WhatsApp Group Kindly verify and Answer Yes/No",
+          "showListButton": false,
+          "isLocked": false,
+          "premiumOnly": true,
+          "isCapSpecific": false,
+          "cap": 1,
+          "isVerdict": false,
+          "isCapQuery": false
+        },
+        {
+          "number": 3,
+          "title": "REGISTRATION on CET Cell website.",
+          "description": "",
+          "showListButton": false,
+          "isLocked": false,
+          "premiumOnly": true,
+          "isCapSpecific": false,
+          "cap": 1,
+          "isVerdict": false,
+          "isCapQuery": false
+        },
+        {
+          "number": 4,
+          "title": "Document Verified by CET Cell and form Confirmed.",
+          "description": "",
+          "showListButton": false,
+          "isLocked": false,
+          "premiumOnly": true,
+          "isCapSpecific": false,
+          "cap": 1,
+          "isVerdict": false,
+          "isCapQuery": false
+        },
+        {
+          "number": 5,
+          "title": "Attended Session with Team or Yash Dada Regarding List Making? ",
+          "description": "You had the list making session with team?",
+          "showListButton": false,
+          "isLocked": false,
+          "premiumOnly": true,
+          "isCapSpecific": false,
+          "cap": 1,
+          "isVerdict": false,
+          "isCapQuery": false
+        },
+        {
+          "number": 6,
+          "title": "Personalized  College Preference List Available on App?",
+          "description": "Your Personalized college list is available on the app?",
+          "showListButton": true,
+          "isLocked": false,
+          "premiumOnly": true,
+          "isCapSpecific": false,
+          "cap": 1,
+          "isVerdict": false,
+          "isCapQuery": false
+        },
+        {
+          "number": 7,
+          "title": "Provisional Rank Declared By CET Cell?",
+          "description": "Updated in your Profile?",
+          "showListButton": false,
+          "isLocked": false,
+          "premiumOnly": true,
+          "isCapSpecific": false,
+          "cap": 1,
+          "isVerdict": false,
+          "isCapQuery": false
+        },
+        {
+          "number": 8,
+          "title": "Final Rank Declared By CET Cell?",
+          "description": "",
+          "showListButton": false,
+          "isLocked": false,
+          "premiumOnly": true,
+          "isCapSpecific": false,
+          "cap": 1,
+          "isVerdict": false,
+          "isCapQuery": false
+        },
+        {
+          "number": 9,
+          "title": "CAP Round 1 Form Filling Done?",
+          "description": "Filled & Submitted the CAP-1 Form?",
+          "showListButton": false,
+          "isLocked": false,
+          "premiumOnly": true,
+          "isCapSpecific": false,
+          "cap": 1,
+          "isVerdict": false,
+          "isCapQuery": false
+        },
+        {
+          "number": 10,
+          "title": "CAP 1 Results Declared",
+          "description": "Enter the Allotted College Name/ Branch Name ?",
+          "showListButton": false,
+          "isLocked": false,
+          "premiumOnly": true,
+          "isCapSpecific": true,
+          "cap": 1,
+          "isVerdict": false,
+          "isCapQuery": true
+        },
+        {
+          "number": 11,
+          "title": "CAP Round 2 College List Ready & confirmed By Yash Dada",
+          "description": "",
+          "showListButton": false,
+          "isLocked": false,
+          "premiumOnly": true,
+          "isCapSpecific": false,
+          "cap": 1,
+          "isVerdict": false,
+          "isCapQuery": false
+        },
+        {
+          "number": 12,
+          "title": "Next Steps will available soon.",
+          "description": "",
+          "showListButton": false,
+          "isLocked": true,
+          "premiumOnly": true,
+          "isCapSpecific": false,
+          "cap": 1,
+          "isVerdict": false,
+          "isCapQuery": false
+        }
+      ],
+      "updatedAt": "2025-08-03T19:07:08.236Z"
+    },
+    {
+      "id": "Test",
+      "lastUpdatedBy": "yasharadhyeapp@gmail.com",
+      "steps": [
+        {
+          "number": 1,
+          "title": "New Step 1",
+          "description": "",
+          "showListButton": false,
+          "isLocked": false,
+          "premiumOnly": true,
+          "isCapSpecific": false,
+          "cap": 1,
+          "isVerdict": false,
+          "isCapQuery": false
+        }
+      ],
+      "updatedAt": "2025-06-16T13:04:10.791Z"
+    },
+    {
+      "id": "elite-1234567",
+      "steps": [
+        {
+          "title": "Complete Profile",
+          "number": 1,
+          "isLocked": false,
+          "showListButton": false,
+          "description": "You should complete your profile from Registration Tab.",
+          "isCapSpecific": false,
+          "isVerdict": false,
+          "premiumOnly": false
+        },
+        {
+          "title": "CAP Registrations",
+          "number": 2
+        },
+        {
+          "number": 3,
+          "title": "CAP List release",
+          "showListButton": true
+        },
+        {
+          "isVerdict": true,
+          "title": "New Step 4",
+          "number": 4
+        },
+        {
+          "title": "CAP I Result Query",
+          "description": "What College did you get allotted to?",
+          "isCapQuery": true,
+          "number": 5
+        },
+        {
+          "number": 6,
+          "title": "Testing",
+          "description": "This is a test step",
+          "showListButton": true,
+          "isLocked": false,
+          "premiumOnly": false,
+          "isCapSpecific": true,
+          "cap": 1,
+          "isVerdict": true,
+          "isCapQuery": false
+        }
+      ],
+      "lastUpdatedBy": "mayankmchandratre@gmail.com",
+      "updatedAt": "2025-04-21T17:44:30.895Z"
+    }
+  ],
+  "downtimePayments": [
+    {
+      "id": "bPy3qOnXzshDBvQf1rlD"
+    }
+  ],
+  "dynamicScreens": [
+    {
+      "id": "lSzH6HKdsuwwGfvolWPa",
+      "title": "Documents",
+      "html": null,
+      "url": "https://www.mayankchandratre.tech",
+      "isPremiumOnly": false
+    },
+    {
+      "id": "screens",
+      "data": [
+        {
+          "title": "RECORDING",
+          "url": "",
+          "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"/>\n  <title>Premium Video Sessions</title>\n  <link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <style>\n    :root {\n      --primary: #1e3a8a;\n      --bg-light: #f7f9fc;\n      --text-dark: #2d3436;\n      --text-subtle: #555;\n    }\n\n    * {\n      box-sizing: border-box;\n    }\n\n    body {\n      margin: 0;\n      font-family: 'Inter', sans-serif;\n      background-color: var(--bg-light);\n      color: var(--text-dark);\n    }\n\n    .header {\n      background-color: var(--primary);\n      color: white;\n      padding: 30px 20px;\n      text-align: center;\n    }\n\n    .header img {\n      width: 70px;\n      margin-bottom: 10px;\n    }\n\n    .header h1 {\n      font-size: 26px;\n      font-weight: 600;\n      margin: 0;\n    }\n\n    .container {\n      max-width: 1000px;\n      margin: 40px auto;\n      padding: 0 20px;\n    }\n\n    .session-card {\n      background: #fff;\n      border-radius: 20px;\n      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.07);\n      margin-bottom: 40px;\n      overflow: hidden;\n      transition: transform 0.3s ease;\n    }\n\n    .session-card:hover {\n      transform: translateY(-4px);\n    }\n\n    .session-info {\n      padding: 25px;\n    }\n\n    .session-title {\n      font-size: 20px;\n      font-weight: 600;\n      color: var(--primary);\n      margin-bottom: 8px;\n    }\n\n    .session-description {\n      font-size: 15px;\n      color: var(--text-subtle);\n    }\n\n    .video-wrapper {\n      position: relative;\n      width: 100%;\n      padding-bottom: 56.25%;\n      background: #000;\n    }\n\n    .video-wrapper iframe {\n      position: absolute;\n      top: 0;\n      left: 0;\n      width: 100%;\n      height: 100%;\n      border: none;\n      border-radius: 0 0 20px 20px;\n    }\n\n    .footer {\n      background-color: var(--primary);\n      color: white;\n      text-align: center;\n      padding: 20px 10px;\n      font-size: 14px;\n    }\n\n    .footer a {\n      color: #bbdefb;\n      text-decoration: none;\n      font-weight: 500;\n    }\n\n    .footer a:hover {\n      text-decoration: underline;\n    }\n\n    @media (max-width: 768px) {\n      .header h1 {\n        font-size: 22px;\n      }\n\n      .session-title {\n        font-size: 18px;\n      }\n\n      .session-description {\n        font-size: 14px;\n      }\n    }\n  </style>\n</head>\n<body>\n\n  <div class=\"header\">\n    <img src=\"https://cdn0.iconfinder.com/data/icons/digital-marketing-102/66/9-1024.png\" alt=\"Logo\" />\n    <h1>Premium Video Sessions</h1>\n  </div>\n\n  <div class=\"container\">\n\n    <!-- Session 1 -->\n    <div class=\"session-card\">\n      <div class=\"session-info\">\n        <div class=\"session-title\">Session 1: The Placements</div>\n        <div class=\"session-description\">\n          Understand how engineering placements really work, with real examples and smart strategies to prepare.\n        </div>\n      </div>\n      <div class=\"video-wrapper\">\n        <iframe src=\"https://www.youtube.com/embed/3vDd2IrqBMU?modestbranding=1&rel=0&showinfo=0\" allowfullscreen></iframe>\n      </div>\n    </div>\n\n    <!-- Session 2 -->\n    <div class=\"session-card\">\n      <div class=\"session-info\">\n        <div class=\"session-title\">Session 2: The Cutoff Scam – Part 1</div>\n        <div class=\"session-description\">\n          Discover the truth behind the top cutoff colleges and whether their reputation matches real placement data.\n        </div>\n      </div>\n      <div class=\"video-wrapper\">\n        <iframe src=\"https://www.youtube.com/embed/UcvL2tuMe4E?modestbranding=1&rel=0&showinfo=0\" allowfullscreen></iframe>\n      </div>\n    </div>\n\n    <!-- Session 3 -->\n    <div class=\"session-card\">\n      <div class=\"session-info\">\n        <div class=\"session-title\">Session 3: Branch Vs Percentile</div>\n        <div class=\"session-description\">\n          Actual placement records of high-cutoff colleges — separating fact from marketing hype.\n        </div>\n      </div>\n      <div class=\"video-wrapper\">\n        <iframe src=\"https://www.youtube.com/embed/fA3umWBKWQQ?modestbranding=1&rel=0&showinfo=0\" allowfullscreen></iframe>\n      </div>\n    </div>\n\n  </div>\n\n  <div class=\"footer\">\n    © 2025 Yash Classes | For support, contact <a href=\"tel:+918149205305\">8149205305</a>\n  </div>\n\n</body>\n</html>\n",
+          "isPremiumOnly": true,
+          "plan": "Saarthi - PERSONAL Counselling"
+        },
+        {
+          "plan": "Saarthi PLUS ➕",
+          "title": "RECORDING",
+          "url": "",
+          "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n  <meta charset=\"UTF-8\" />\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\"/>\n  <title>Professional Video Sessions</title>\n  <link href=\"https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap\" rel=\"stylesheet\">\n  <style>\n    body {\n      margin: 0;\n      font-family: 'Inter', sans-serif;\n      background: linear-gradient(135deg, #f0f4f8, #e4ebf5);\n      color: #2d3436;\n    }\n\n    .header {\n      background-color: #1e3a8a;\n      padding: 40px 20px 30px;\n      text-align: center;\n      color: white;\n    }\n\n    .header img {\n      width: 100px;\n      max-width: 80%;\n      margin-bottom: 10px;\n    }\n\n    .header h1 {\n      font-size: 32px;\n      margin: 0;\n    }\n\n    .container {\n      max-width: 960px;\n      margin: 40px auto;\n      padding: 0 20px;\n    }\n\n    .session-card {\n      background-color: white;\n      border-radius: 16px;\n      padding: 25px;\n      margin-bottom: 40px;\n      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);\n      transition: transform 0.3s ease;\n    }\n\n    .session-card:hover {\n      transform: translateY(-4px);\n    }\n\n    .session-title {\n      font-size: 22px;\n      margin-bottom: 10px;\n      font-weight: 600;\n      color: #1e3a8a;\n      border-left: 5px solid #1e3a8a;\n      padding-left: 12px;\n    }\n\n    .session-description {\n      margin-bottom: 15px;\n      color: #555;\n    }\n\n    iframe {\n      width: 100%;\n      height: 450px;\n      border: none;\n      border-radius: 10px;\n    }\n\n    @media (max-width: 768px) {\n      iframe {\n        height: 220px;\n      }\n\n      .session-title {\n        font-size: 20px;\n      }\n    }\n\n    .footer {\n      background-color: #1e3a8a;\n      color: white;\n      text-align: center;\n      padding: 25px 20px;\n      font-size: 14px;\n    }\n\n    .footer a {\n      color: #bbdefb;\n      text-decoration: none;\n      font-weight: 500;\n    }\n\n    .footer a:hover {\n      text-decoration: underline;\n    }\n  </style>\n</head>\n<body>\n\n  <div class=\"header\">\n    <img src=\"https://cdn0.iconfinder.com/data/icons/digital-marketing-102/66/9-1024.png\" alt=\"Logo\" />\n    <h1>Premium Video Sessions</h1>\n  </div>\n\n  <div class=\"container\">\n\n    <div class=\"session-card\">\n      <div class=\"session-title\">Session 1: The Placements</div>\n      <div class=\"session-description\">\n        Understand how engineering placements work, real-life examples, and tips to crack the top company interviews.\n      </div>\n      <iframe src=\"https://www.youtube.com/embed/3vDd2IrqBMU\" allowfullscreen></iframe>\n    </div>\n\n    <div class=\"session-card\">\n      <div class=\"session-title\">Session 2: THE CUTOFF SCAM</div>\n      <div class=\"session-description\">\n        Finding the real placements of the high cutoff colleges.\n      </div>\n      <iframe src=\"https://www.youtube.com/embed/UcvL2tuMe4E\" allowfullscreen></iframe>\n    </div>\n\n  </div>\n\n  <div class=\"footer\">\n    © 2025 Yash Classes | For support, contact 8149205305\n    \n  </div>\n\n</body>\n</html>\n",
+          "isPremiumOnly": true
+        },
+        {
+          "title": "Career Talk - LIVE ",
+          "url": "https://meet.teachmint.com/n/cvw-pv1-kd0",
+          "html": null,
+          "isPremiumOnly": true,
+          "plan": ""
+        }
+      ],
+      "updatedAt": "2025-07-16T13:32:16.716Z"
+    }
+  ],
+  "landingPage": [
+    {
+      "id": "contact",
+      "address": {
+        "value": "Office Number 504, Platinum 9, Near AUDI Showroom, Baner, Pune",
+        "link": "https://maps.app.goo.gl/CVeSLm7N6iGJAWUs9"
+      },
+      "company": {
+        "name": "Yash Aradhye"
+      },
+      "youtube": "https://www.youtube.com/@Yash_Aradhye",
+      "whatsapp": {
+        "groupinvite": "",
+        "number": "918149205305"
+      },
+      "phone": "+918149205305",
+      "updatedAt": "2025-05-21T16:44:07.398Z"
+    },
+    {
+      "id": "homepage",
+      "recommended_colleges": [
+        
+        
+        {
+          "id": "03176",
+          "instituteCode": "03176",
+          "instituteName": "Thakur College of Engineering and Technology, Kandivali, Mumbai",
+          "branches": [
+            {
+              "branchCode": "0317699510",
+              "branchName": "Artificial Intelligence and Data Science",
+              "branchShort": "AIDS",
+              "cutoffs": [
+                {
+                  "category": "GOPENS",
+                  "percentile": 96.0680883,
+                  "rank": 10030,
+                  "capRound": "cap1",
+                  "year": 2023
+                },
+                {
+                  "category": "LOPENS",
+                  "percentile": 95.0628437,
+                  "rank": 12624,
+                  "capRound": "cap1",
+                  "year": 2023
+                },
+                {
+                  "category": "MI",
+                  "percentile": 89.5231349,
+                  "rank": 25706,
+                  "capRound": "cap1",
+                  "year": 2023
+                },
+                {
+                  "category": "TFWS",
+                  "percentile": 96.5461326,
+                  "rank": 8917,
+                  "capRound": "cap1",
+                  "year": 2023
+                },
+                {
+                  "category": "GOPENS",
+                  "percentile": 96.5408332,
+                  "rank": 8946,
+                  "capRound": "cap2",
+                  "year": 2023
+                },
+                {
+                  "category": "LOPENS",
+                  "percentile": 94.8416105,
+                  "rank": 13141,
+                  "capRound": "cap2",
+                  "year": 2023
+                },
+                {
+                  "category": "MI",
+                  "percentile": 89.6939217,
+                  "rank": 25388,
+                  "capRound": "cap2",
+                  "year": 2023
+                },
+                {
+                  "category": "GOPENS",
+                  "percentile": 95.9457938,
+                  "rank": 10402,
+                  "capRound": "cap3",
+                  "year": 2023
+                },
+                {
+                  "category": "LOPENS",
+                  "percentile": 95.8828395,
+                  "rank": 10548,
+                  "capRound": "cap3",
+                  "year": 2023
+                },
+                {
+                  "category": "MI",
+                  "percentile": 91.3774931,
+                  "rank": 21241,
+                  "capRound": "cap3",
+                  "year": 2023
+                },
+                {
+                  "category": "GOPENS",
+                  "percentile": 95.7929744,
+                  "rank": 12778,
+                  "capRound": "cap1",
+                  "year": 2024
+                },
+                {
+                  "category": "LOPENS",
+                  "percentile": 95.2362773,
+                  "rank": 14442,
+                  "capRound": "cap1",
+                  "year": 2024
+                },
+                {
+                  "category": "MI",
+                  "percentile": 91.1269352,
+                  "rank": 26570,
+                  "capRound": "cap1",
+                  "year": 2024
+                },
+                {
+                  "category": "TFWS",
+                  "percentile": 96.3915731,
+                  "rank": 10920,
+                  "capRound": "cap1",
+                  "year": 2024
+                },
+                {
+                  "category": "GOPENS",
+                  "percentile": 95.2642117,
+                  "rank": 14371,
+                  "capRound": "cap2",
+                  "year": 2024
+                },
+                {
+                  "category": "LOPENS",
+                  "percentile": 95.0451763,
+                  "rank": 14894,
+                  "capRound": "cap2",
+                  "year": 2024
+                },
+                {
+                  "category": "MI",
+                  "percentile": 90.8331157,
+                  "rank": 27321,
+                  "capRound": "cap2",
+                  "year": 2024
+                },
+                {
+                  "category": "GOPENS",
+                  "percentile": 95.9287865,
+                  "rank": 12336,
+                  "capRound": "cap3",
+                  "year": 2024
+                },
+                {
+                  "category": "MI",
+                  "percentile": 93.4044269,
+                  "rank": 19857,
+                  "capRound": "cap3",
+                  "year": 2024
+                },
+                {
+                  "category": "AI",
+                  "percentile": 93.1239053,
+                  "rank": 6235,
+                  "capRound": "cap1",
+                  "year": 2024
+                },
+                {
+                  "category": "AI",
+                  "percentile": 92.4373907,
+                  "rank": 6926,
+                  "capRound": "cap2",
+                  "year": 2024
+                },
+                {
+                  "category": "AI",
+                  "percentile": 93.2524661,
+                  "rank": 6085,
+                  "capRound": "cap3",
+                  "year": 2024
+                }
+              ]
+            }
+          ],
+          "city": "mumbai suburban",
+          "keywords": [
+            "3176",
+            "thakurcollegeofengineeringandtechnology_kandivali_mumbai",
+            "mumbaisuburban",
+            "thakur",
+            "college",
+            "engineering",
+            "and",
+            "technology",
+            "kandivali",
+            "mumbai",
+            "TCOEATKM"
+          ],
+          "additionalMetadata": {
+            "status": "Un-Aided",
+            "totalIntake": 1230,
+            "autonomyStatus": "Autonomous",
+            "minorityStatus": "Linguistic Minority - Hindi",
+            "address": "Thakur Shyamnarayan Marg,Thakur Village,Kandivali(E), Mumbai",
+            "region": "Mumbai",
+            "university": "Mumbai University"
+          }
+        }
+      ],
+      "cutoff_video": "https://youtu.be/7WeSQZNDd5U?si=6rj9SCg45cKvxzLK",
+      "events": [
+        {
+          "id": "b94a0b44-39ae-4bdf-a059-79d88206cb8d",
+          "title": "Online registration Closed",
+          "date": "2025-04-28",
+          "description": "Registration Closed for Enginnering Admission for CAP Rounds",
+          "type": "general",
+          "link": "https://fe2025.mahacet.org/StaticPages/HomePage"
+        },
+        {
+          "id": "e4a5e171-aeae-461c-9fce-4bf2e4032545",
+          "title": "MHT-CET PCM Answer Key Available",
+          "date": "2025-05-26",
+          "description": "Check it out on https://cetcell.mahacet.org/",
+          "type": "general",
+          "link": "https://cetcell.mahacet.org/"
+        }
+      ],
+      "updates": [
+        {
+          "id": "80d4c941-4eab-416f-bdad-7fa9379deca2",
+          "title": "MHTCET - Results Announced",
+          "subtitle": "",
+          "type": "news",
+          "date": "2025-06-14",
+          "link": "",
+          "thumbnail": ""
+        },
+        {
+          "id": "fad6a769-e27e-4643-82ca-5002daecc1c4",
+          "title": "Registrations Started ",
+          "subtitle": "",
+          "type": "news",
+          "date": "2025-06-28",
+          "link": "https://fe2025.mahacet.org/StaticPages/HomePage",
+          "thumbnail": ""
+        },
+        {
+          "id": "c4463f6c-57cb-4077-93fa-012d8f993c8d",
+          "title": "Registration Date Extended",
+          "subtitle": "Till 14th July 2025",
+          "type": "news",
+          "date": "2025-07-12",
+          "link": "https://fe2025.mahacet.org/StaticPages/HomePage",
+          "thumbnail": ""
+        },
+        {
+          "id": "9acffc46-042d-4ea9-bf15-faa23b372fe0",
+          "title": "Registration Closed ",
+          "subtitle": "",
+          "type": "news",
+          "date": "2025-07-14",
+          "link": "https://fe2025.mahacet.org/StaticPages/HomePage",
+          "thumbnail": ""
+        }
+      ],
+      "banners": [
+        {
+          "id": "72a3a6ec-d8b7-4bde-9147-49e07d3ebab0",
+          "title": "CODING COURSE",
+          "url": "https://yashclasses.in/",
+          "bannerUrl": "https://res.cloudinary.com/dqt03lz3g/image/upload/v1753322028/banners/jgyftsxdfpb36hpe8sie.png",
+          "isInAppNavigation": false,
+          "isForCounsellingDashboard": false,
+          "html": ""
+        }
+      ],
+      "updatedAt": "2025-07-24T01:54:05.000Z"
+    },
+    {
+      "id": "landingPage",
+      "testimonials": [
+        {
+          "name": "Prasad Deore",
+          "designation": "Student",
+          "feedback": "I think every student should joint this counciling this platform not only guided us to get college but also provided us a platform where we got a community of students with different colleges and branch come together. Unlike other councellor yash dada conducted meetings on verious topics regarding engineering. He also conducted a webinar where he brought TPOs from different colleges like VIT and DYP. I would like to request every student to join this counselling journey. IT'S TOTALLY WORT IT\n"
+        },
+        {
+          "name": "Omkar Sawant",
+          "designation": "Parent",
+          "feedback": "कोणत्याही परिस्थितीत हार मानायची नाही शिकवलंस.आत्तापर्यंत तु दादा आम्हाला खुप मदत केलीस आणि आता इथून पुढेही तु आमच्या मागे खंबीर पणे उभा आहे.. आम्हाला दादा तुझा खुप अभिमान आहे.. आमचंही किती छान नशिब आहे की तु आम्हाला भेटला किती छान counselling केलीस चांगली चांगली collages मिळवून दिलीस.. दादा तुझं शेवटचं lecture मी आणि माझ्या आईवडिलांनी ही माझ्या सोबत ऐकलं त्यांनाही खुप छान वाटत त्यांना तुझं खुप कौतुक केल.. *आपल्यासोबत थोडं काही वाईट झालं मनासारखं नाही झालं तर आपण लगेच tention घेतो पण बाकी इतर मुलांसोबत किती वाईट घडलंय त्यातून पण ते सावरलेत आणि पुढे निघालेत हे तुझ्या lectures मधून खुप छान समजलं..* *तुझे मानावे एवढे आभार कमीच आहेत मनापासून धन्यवाद दादा... 🙏🏻♥️🙏🏻* दादा तु आम्हाला खुप काही शिकवलंस खुप साथ दिलीस आणि इथून पुढेही तु आमच्या सोबत कायम राहणार आहेस.. *तुझ्या सर्व इच्छा आकांक्षा पूर्ण होवोत हीच हीच देवाकडे प्रार्थना.. ♥️♥️🙏🏻* तुझाच लहान भाऊ"
+        },
+        {
+          "name": "Samrudhi Ghute",
+          "designation": "Student",
+          "feedback": "Hello Dada... hope you are doing great.. Dear Dada, l have a younger brother but I always wished to have an elder brother in my life who can guide me and support me in every step..but You covered the void of an elder brother in my life ..now I have two brothers😇🥰 Talking about the counselling journey it's unforgettable and will be a precious part of my life...previous 4 months were very hectic and difficult for me and everyone who were trying to get a good college, but you made it a piece of cake...because of you my parents and every other parents in your counselling were tension free and confident about our admission in a good college.. Words are less to express my gratitude towards you and your team members for your all guidance🙌🙏 I will definitely recommend your personal counselling to every junior & their parents... You are the best teacher, best counsellor, and of course a best DADA Again thank you so so so much dear Dada and team Lots of love and respect to you all❤ Thank you 😊🙏"
+        },
+        {
+          "name": "Samruddhi Choughule",
+          "designation": "Student",
+          "feedback": "धन्यवाद दादा ! खरंच जितके तुझे आभार मानावे ते कमीच आहेत. आयुष्यातील खूप महत्त्वाच्या टप्यात तुझ्यासारखा mentor मिळणे हे आमचे भाग्य आहे. तू फक्तं mentor नसून एक चांगला व्यक्ती आहेस, आगदी फळाची अपेक्षा न करता तु सगळ्यांना मदत करतोस, आम्ही पण तुझ्या सारखा होण्याचा प्रयत्न करू. तुझ्यामुळे आमच्या आयुष्यातील महत्त्वाचा टप्पा पार पडला..so Thank you so much..from me and my family ❣️🙏🏻🙏🏻"
+        },
+        {
+          "name": "Tisha Kumbhar",
+          "designation": "Student",
+          "feedback": "Lucky to found a mentor and brother in same person. Counselling journey was amazing gained new experince from dada's journey too. Not seen you inperson but got emotionally attached through the screen.And will follow yours teaching of hardwork and promise not to go on wrong path. Love you dada🤍"
+        }
+      ],
+      "slogan": {
+        "marathi": "तुमचे प्रवेश, आमची जबाबदारी.",
+        "english": "YOUR ADMISSION OUR RESPONSIBILITY"
+      },
+      "features": [
+        {
+          "english": "Helping you select correct Engineering Branch",
+          "marathi": "योग्य अभियांत्रिकी शाखा निवडण्यास तुम्हाला मदत करणे."
+        },
+        
+        {
+          "english": "Make you land in the best college & Much More...",
+          "marathi": "तुम्हाला सर्वोत्तम महाविद्यालयात प्रवेश मिळवून देण्यासोबतच, आणखी बरेच काही..."
+        }
+      ],
+      "ctaText": {
+        "marathi": "नोंदणी करा!",
+        "english": "Enroll Now!"
+      },
+      "videoUrl": "https://youtu.be/mNC4n5c9C7I",
+      "title": {
+        "marathi": "सारथी",
+        "english": "Saarthi"
+      },
+      "updatedAt": "2025-06-14T08:11:22.387Z"
+    },
+    {
+      "id": "premiumPlans",
+      "plans": [
+        {
+          "title": "Saarthi - PERSONAL Counselling",
+          "price": 2399,
+          "opensAt": {
+            "_nanoseconds": 0,
+            "_seconds": 1746835200
+          },
+          "form": "Sarathi-Online",
+          "isLocked": true,
+          "lockedText": "HOUSE FULL !",
+          "buttonText": "SEATS FULL",
+          "benefits": [
+            "✨ Get Personalized College List. ",
+            "📆 Guidance Till Admission Day",
+            "👥 Personalized Sessions ",
+            "🎙️ Special Sessions by Industry Experts"
+          ]
+        },
+        {
+          "title": "Saarthi PLUS ➕",
+          "price": 6999,
+          "opensAt": {
+            "_seconds": 1748131200,
+            "_nanoseconds": 0
+          },
+          "form": "63e53",
+          "isLocked": true,
+          "lockedText": "SEATS FULL",
+          "buttonText": "SEATS FULL",
+          "benefits": [
+            "✨ Get Personalized College List.",
+            "✔️ List as per college placements",
+            "✔️ Forms Filled & Verified by Experts",
+            "⚠️ Avoid Overall Mistakes"
+          ]
+        }
+      ],
+      "updatedAt": "2025-07-27T18:19:32.134Z"
+    },
+    {
+      "id": "reviews",
+      "data": [
+        {
+          "firstName": "Mayank",
+          "lastName": "Chandratre",
+          "feedback": "Nice",
+          "college": "MSBCEL",
+          "branch": "CSE"
+        },
+        {
+          "id": "acfba32f-9ae6-44eb-a56e-8d960bbcd7d6",
+          "timestamp": "2024/09/22 5:01:38 pm GMT+5:30",
+          "firstName": "Tanvir",
+          "lastName": "Tamboli",
+          "college": "G.H Raisoni College Of Engineering And Management Pune",
+          "branch": "CSE(AI)",
+          "district": "Solapur",
+          "gender": "Male",
+          "feedback": "One Of the best counsellor of Yash dada",
+          "featured": false
+        },
+        {
+          "id": "d7cc35e0-556c-4e4d-8f95-71d5bd4d685a",
+          "timestamp": "2024/09/22 5:02:47 pm GMT+5:30",
+          "firstName": "Prafull",
+          "lastName": "Dhage",
+          "college": "Atharva college of engineering",
+          "branch": "Electronic and computer science",
+          "district": "Aurangabad",
+          "gender": "Male",
+          "feedback": "Ekdmmmmmmmmm Mastchhhh❤️",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1G50ugp0dwPcvgvtDqrathjk3kfyYBH7k"
+        },
+        {
+          "id": "e93ceb89-c4be-4160-8da3-92bfe9dc9932",
+          "timestamp": "2024/09/22 5:03:01 pm GMT+5:30",
+          "firstName": "Tarang",
+          "lastName": "Lade",
+          "college": "Dr. D Y Patil Institute Of Technology,Pimpri,Pune",
+          "branch": "ENTC",
+          "district": "Chandrapur",
+          "gender": "Male",
+          "feedback": "Excellent 👌👍",
+          "featured": true
+        },
+        {
+          "id": "7e3876d1-7e7f-4cae-afd7-72cb7ce4192b",
+          "timestamp": "2024/09/22 5:03:53 pm GMT+5:30",
+          "firstName": "Suhasini",
+          "lastName": "Ade",
+          "college": "Kolhapur institute of technology, Kolhapur.",
+          "branch": "Computer science and business systems",
+          "district": "Yavatmal",
+          "gender": "Female",
+          "feedback": "Best councellor ever!",
+          "featured": false
+        },
+        {
+          "id": "750540c6-0bde-470c-bc13-a9dc20797605",
+          "timestamp": "2024/09/22 5:05:58 pm GMT+5:30",
+          "firstName": "Vrushank",
+          "lastName": "Chavan",
+          "college": "All India shri shivaji memorial society’s college of engineering",
+          "branch": "Mechanical Sandwich Engineering",
+          "district": "Solapur",
+          "gender": "Male",
+          "feedback": "So dada jasa last last la meeting madhe tula jasta samjt navta tasach ata mala pan nahi Samjt aahe last few months have been so tough for us but the way we took the calm and composed decisions on right time it was so much efforts Worthing and we talked about it on 23 augest evening just wadapav to sandwich story 😅 god really blessed me so much by sending you in my life 🥹🫶🏻❤️ mahite aahe Khup messages yet aahe group var na yetil so maza sarkha Khup students and so many humans la tu help kartos so messages tr tula yet rahnarch 😅so stay healthy and happy ❤️✨",
+          "featured": false
+        },
+        {
+          "id": "152dcb39-df46-4151-9d7c-d939a46bd97e",
+          "timestamp": "2024/09/22 5:07:44 pm GMT+5:30",
+          "firstName": "Prathamesh",
+          "lastName": "Sonar",
+          "college": "Terna college of engineering Nerul navi mumbai",
+          "branch": "Electronics engineering",
+          "district": "Jalgaon",
+          "gender": "Male",
+          "feedback": "Dada your efforts made me reach my dream  branch . Thanks a lot for everything dada",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1Yg4r7HCyciZ2capQvC8DKI7LfkQiDJHV"
+        },
+        {
+          "id": "57d9fce1-d2b9-4392-a19b-0fa252af93db",
+          "timestamp": "2024/09/22 5:08:14 pm GMT+5:30",
+          "firstName": "Prasad",
+          "lastName": "Deore",
+          "college": "Mit wpu",
+          "branch": "Ece aiml",
+          "district": "Nashik",
+          "gender": "Male",
+          "feedback": "I think every student should joint this counciling this platform not only guided us to get college but also provided us a platform where we got a community of students with different colleges and branch come together. Unlike other councellor yash dada conducted meetings on verious topics regarding engineering. He also conducted a webinar where he brought TPOs from different colleges like VIT and DYP. I would like to request every student to join this counselling journey.  IT'S TOTALLY WORT IT",
+          "featured": true
+        },
+        {
+          "id": "2dba82f9-e679-4f7d-8b85-48c899289017",
+          "timestamp": "2024/09/22 5:08:27 pm GMT+5:30",
+          "firstName": "Sarthak",
+          "lastName": "Jadhav",
+          "college": "NBN Sinhgad Tenchincal Institute Campus",
+          "branch": "Mechanical",
+          "district": "Chhatrapati Sambhaji nagar",
+          "gender": "Male",
+          "feedback": "Thank you",
+          "featured": false
+        },
+        {
+          "id": "5902f234-1009-4b2f-9d38-5d3604052643",
+          "timestamp": "2024/09/22 5:12:11 pm GMT+5:30",
+          "firstName": "Omkar",
+          "lastName": "Ingale",
+          "college": "Dr Dy patil Institute of Technology, Pimpri",
+          "branch": "Mechanical Engineering",
+          "district": "Solapur",
+          "gender": "Male",
+          "feedback": "No Words For Dada Bcoz The Dada is playing role Of Big Brother  ❤️🥹❤️❤️",
+          "featured": true
+        },
+        {
+          "id": "08510dd1-c3ed-4ad5-a165-45882dd98115",
+          "timestamp": "2024/09/22 5:13:15 pm GMT+5:30",
+          "firstName": "Om",
+          "lastName": "Gharat",
+          "college": "Terna Navi Mumbai",
+          "branch": "Extc",
+          "district": "Raigad",
+          "gender": "Male",
+          "feedback": "Overall was a great journey. Many ups and downs throughout the journey and the outcome was best. Proper guidance throughout the admission process also full support after admissions too. I will always be greatful for Yash dada's guidance.",
+          "featured": true
+        },
+        {
+          "id": "bfe25266-eb35-45fa-aca0-60794bbd714a",
+          "timestamp": "2024/09/22 5:13:31 pm GMT+5:30",
+          "firstName": "Devhuti",
+          "lastName": "Kharat",
+          "college": "Atharva college of engineering malad west mumbai",
+          "branch": "Electronics and telecommunication",
+          "district": "Hingoli",
+          "gender": "Female",
+          "feedback": "Dada tu khup changla support kelas last parynt tu khup mla college mdhe admission parynt support kelas Ani mla khi difficulties alya hota tr tu khup jast support kela thank you so much dada ❤️",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1Zy2eIsc_Qx3pjOh_E89lVGbGmW8zuycn"
+        },
+        {
+          "id": "3a366af5-dbd1-4451-989d-3e10757e69e9",
+          "timestamp": "2024/09/22 5:13:48 pm GMT+5:30",
+          "firstName": "Sail",
+          "lastName": "Nagale",
+          "college": "VIT pune",
+          "branch": "CS (ds)",
+          "district": "Ratnagiri",
+          "gender": "Male",
+          "feedback": "Thanks dada",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=16zdouYVgvGjG2Ebohe9lC4NjRtZVbgeA"
+        },
+        {
+          "id": "1e6cbf63-855a-4869-b746-6e17f210d0c8",
+          "timestamp": "2024/09/22 5:15:17 pm GMT+5:30",
+          "firstName": "Kedar",
+          "lastName": "More",
+          "college": "Mmcoe",
+          "branch": "IT",
+          "district": "Ratnagiri",
+          "gender": "Male",
+          "feedback": "It was nice. Yash dada support me as like he is close one and motivated me to pursue further education and also told that how the engineering will be and gave detailed explanation about everything like obstacles and all thank you yash dada ❤",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1NAYKnQWXgT25tJohSSCiT6DX9UV35YPH"
+        },
+        {
+          "id": "c1ea8c8e-f1f0-447c-aeac-436f6ff83ab5",
+          "timestamp": "2024/09/22 5:16:08 pm GMT+5:30",
+          "firstName": "Vaishnav",
+          "lastName": "Tarde",
+          "college": "MIT Alandi",
+          "branch": "Computer",
+          "district": "Ahmednagar",
+          "gender": "Male",
+          "feedback": "I am Happy to get a best college, while connecting with you in the counselling.",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1dU-FDYnwTzrd-34YKn6ie1j-ROEz9jma"
+        },
+        {
+          "id": "0174f873-21fc-4b66-902c-e5ba5eb62ef8",
+          "timestamp": "2024/09/22 5:17:40 pm GMT+5:30",
+          "firstName": "Sanskar",
+          "lastName": "Kadam",
+          "college": "G. H. Raisoni college of engineering and management, pune",
+          "branch": "CSE (AIML)",
+          "district": "Satara",
+          "gender": "Male",
+          "feedback": "Thanks for all information and your efforts towards getting me a good college. You were always there for clearing my doubts and helping me to take a right decision. The list of college you provided me was perfect due to which I got best college according to my marks. At start I was confused between branches and colleges but your seminars helped me lot to come on a decision. At last thanks of all.....🙏🥹🥹",
+          "featured": false,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1BL2p5fi6b6YYabr10qAqcMH8rggWKyi1"
+        },
+        {
+          "id": "575e0515-4fe7-4fa9-a83b-86334bda7714",
+          "timestamp": "2024/09/22 5:20:35 pm GMT+5:30",
+          "firstName": "Nihar",
+          "lastName": "Malushte",
+          "college": "Dy patil pimpri",
+          "branch": "Mechanical",
+          "district": "Ratnagiri",
+          "gender": "Male",
+          "feedback": "माझे आई बाबा खूप टेन्शन ला होते की कशी काय प्रोसेस असेल वग्रे.\nपण दादा तुझ्या sessions ani guidance मुळे ते खूप नंतर रिलॅक्स झाले.\nThankyouu सो muchh dada",
+          "featured": false
+        },
+        {
+          "id": "be603865-d5c1-4920-b0d1-d88f3c65be0e",
+          "timestamp": "2024/09/22 5:26:05 pm GMT+5:30",
+          "firstName": "Aglave",
+          "lastName": "Suraj",
+          "college": "MIT Academy of engineering college alandi",
+          "branch": "CE",
+          "district": "Latur",
+          "gender": "Male",
+          "feedback": "It is very usefull for me dada",
+          "featured": true
+        },
+        {
+          "id": "caaa3fd1-2071-4dfb-bdc5-fc9b5bce45fe",
+          "timestamp": "2024/09/22 5:30:26 pm GMT+5:30",
+          "firstName": "Rushikesh",
+          "lastName": "Rakh",
+          "college": "Walchand college of engineering sangli",
+          "branch": "Civil engineering",
+          "district": "Beed",
+          "gender": "Male",
+          "feedback": "Counselling is good \nBut the personally answering question during option form filling and clearing each and every   doubt be it small or silly with calmly, clearly and patiently was tremendously helpful\nThank you Dada❤️❤️",
+          "featured": false,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1EFGlNOKkQAl_1dnKqqj7yTXrksdQ1vPW"
+        },
+        {
+          "id": "d26275d9-b879-4e86-8d00-60b714bc3014",
+          "timestamp": "2024/09/22 5:35:24 pm GMT+5:30",
+          "firstName": "Rahi",
+          "lastName": "Sonawane",
+          "college": "COEP Technological University",
+          "branch": "Computer science and engineering",
+          "district": "Pune",
+          "gender": "Female",
+          "feedback": "It was really very helpful to me",
+          "featured": false
+        },
+        {
+          "id": "807be262-bf17-4445-9bfa-7ea99a3f45a2",
+          "timestamp": "2024/09/22 5:38:23 pm GMT+5:30",
+          "firstName": "Sahil",
+          "lastName": "Raut",
+          "college": "Dyp pimpri",
+          "branch": "Computer engineering",
+          "district": "Pune",
+          "gender": "Male",
+          "feedback": "It was very excellent counselling no doubt best of all ! And I had respect for you the way you support everyone in their bad situation was the God's  job ! \n                              -Sahil Raut",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1F49rBACugQepIMuT7JE0PksQez081JWF"
+        },
+        {
+          "id": "1be21a3d-bb70-421a-8b94-3febe2c312f1",
+          "timestamp": "2024/09/22 5:41:06 pm GMT+5:30",
+          "firstName": "Samrudhi",
+          "lastName": "Ghute",
+          "college": "Tssm's Bhivarabai sawant college of engineering and research narhe",
+          "branch": "E&TC",
+          "district": "Pune",
+          "gender": "Female",
+          "feedback": "Hello Dada...\nhope you are doing great..\nDear Dada, l have a younger brother but I always wished to have a elder brother in my life who can guide me and support me in every step..but You cover the void of a elder brother..now I have two brothers😇🥰\nTalking about the counselling journey it's unforgettable and will be a precious part of my life...previous 4 months were very hectic and difficult for me and everyone who were trying to get a good college, but you made it a piece of cake...because of you my parents and every other parents in your counselling were tension free and confident about our admission in a good college..\nWords are less to express my gratitude towards you and your team members for your all guidance🙌🙏\nI will definitely recommend your personal counselling to every junior & their parents...\nYou are the best teacher, best counsellor, and ofcourse a best DADA\nAgain thank you so so so much dear Dada and team \nLots of love and respect to you all❤\nThank you 😊🙏",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1ffCTW2F-poBSdT3AkdC4agOWGFXvDO51"
+        },
+        {
+          "id": "4ed141ca-22f1-412e-9278-a812787825fa",
+          "timestamp": "2024/09/22 5:42:08 pm GMT+5:30",
+          "firstName": "Dewansh",
+          "lastName": "Shirude",
+          "college": "DY Patil Institute of Technology Pimpri",
+          "branch": "Mechanical",
+          "district": "Pune",
+          "gender": "Male",
+          "feedback": "It was an excellent journey with you dada you guided us at each and every point whether it was admission process or cap round your guidance helped me a lot also I took less stress during admission process because of you. Thank you dada",
+          "featured": false
+        },
+        {
+          "id": "e37e4f54-647c-4b17-a070-a5731631d9cb",
+          "timestamp": "2024/09/22 5:46:29 pm GMT+5:30",
+          "firstName": "Aaditya",
+          "lastName": "Jaiswal",
+          "college": "Thakur College of Engineering And Technology",
+          "branch": "CSE (Cyber)",
+          "district": "Nashik",
+          "gender": "Male",
+          "feedback": "Thank you dada for your support and guidance...\nI might have ended up in making wrong choices if you were not there...\nAgain I am very glad and thaaaaannnkkk you...❤️",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1B51rAwvOBQsTljZ4xqlSRdYgNygNocmp"
+        },
+        {
+          "id": "0b6f97e9-34d7-4a5b-aeda-182540a9ff94",
+          "timestamp": "2024/09/22 5:48:30 pm GMT+5:30",
+          "firstName": "Amruta",
+          "lastName": "Kachkure",
+          "college": "St.francis institute of technology",
+          "branch": "Electronics and computer science",
+          "district": "Buldhana",
+          "gender": "Female",
+          "feedback": "Thanku dada for everything you have given us I loved to work under your guidance I definitely got what I deserved or even more than it I loved the way you helped  me throughout my journey thanks for all support and care you had given us .thanku for everything you had done for us.",
+          "featured": true
+        },
+        {
+          "id": "6c1d0103-1743-43a4-8164-6411516105df",
+          "timestamp": "2024/09/22 5:49:19 pm GMT+5:30",
+          "firstName": "Samrudhi",
+          "lastName": "Ghute",
+          "college": "Tssm Bhivarabai sawant college of engineering and research narhe",
+          "branch": "E&TC",
+          "district": "Pune",
+          "gender": "Female",
+          "feedback": "Hello Dada...\nhope you are doing great..\nDear Dada, l have a younger brother but I always wished to have an elder brother in my life who can guide me and support me in every step..but You covered the void of an elder brother in my life ..now I have two brothers😇🥰\nTalking about the counselling journey it's unforgettable and will be a precious part of my life...previous 4 months were very hectic and difficult for me and everyone who were trying to get a good college, but you made it a piece of cake...because of you my parents and every other parents in your counselling were tension free and confident about our admission in a good college..\nWords are less to express my gratitude towards you and your team members for your all guidance🙌🙏\nI will definitely recommend your personal counselling to every junior & their parents...\nYou are the best teacher, best counsellor, and ofcourse a best DADA\nAgain thank you so so so much dear Dada and team \nLots of love and respect to you all❤\nThank you 😊🙏",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=17lUdKG1R85YCd13CK_YnNwJLAzv6f-Zq"
+        },
+        {
+          "id": "44fdfaca-33f2-4371-87e9-5841c589de28",
+          "timestamp": "2024/09/22 5:50:20 pm GMT+5:30",
+          "firstName": "Samrudhi",
+          "lastName": "Chougule",
+          "college": "VISHWAKARMA INSTITUTE OF TECHNOLOGY,PUNE",
+          "branch": "CSE-AIML",
+          "district": "Kolhapur",
+          "gender": "Female",
+          "feedback": "धन्यवाद दादा ! खरंच जितके तुझे आभार मानावे ते कमीच आहेत. आयुष्यातील खूप महत्त्वाच्या टप्यात तुझ्यासारखा mentor मिळणे हे आमचे भाग्य आहे. तू फक्तं mentor नसून एक चांगला व्यक्ती आहेस, आगदी फळाची अपेक्षा न करता तु सगळ्यांना मदत करतोस, आम्ही पण तुझ्या सारखा होण्याचा प्रयत्न करू. तुझ्यामुळे  आमच्या आयुष्यातील महत्त्वाचा टप्पा पार पडला..so Thank you so much..from me and my family ❣️🙏🏻🙏🏻",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1LTqqohax-deWoPIheYMj90oa41f9012j"
+        },
+        {
+          "id": "ccc2b24b-cad5-453c-a00a-7f87061c5b52",
+          "timestamp": "2024/09/22 5:52:19 pm GMT+5:30",
+          "firstName": "Yash",
+          "lastName": "Nargale",
+          "college": "NBN Sinhgad, Pune",
+          "branch": "Mechanical",
+          "district": "Dharashiv",
+          "gender": "Male",
+          "feedback": "Dada, it's a very helpful  journey for us.... Thanks a lot... . 🙏❤",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1afWFxWWpLAOAxeXzAr6BpLc9OpX-se8q"
+        },
+        {
+          "id": "5386e4ee-9b24-481b-894a-0d5179dced27",
+          "timestamp": "2024/09/22 6:01:45 pm GMT+5:30",
+          "firstName": "Harshad",
+          "lastName": "Pasale",
+          "college": "Vishwakarma University",
+          "branch": "CSE",
+          "district": "Pune",
+          "gender": "Male",
+          "feedback": "It was very supporting and helpful journey.\nThis counseling gave me the best capable college I can get for my marks.",
+          "featured": false
+        },
+        {
+          "id": "d5170cd0-fbd0-49eb-b79e-fdee4f59d68f",
+          "timestamp": "2024/09/22 6:08:53 pm GMT+5:30",
+          "firstName": "Shravan",
+          "lastName": "Pulliwar",
+          "college": "Dy Patil Pimpri",
+          "branch": "CS",
+          "district": "Chandrapur",
+          "gender": "Male",
+          "feedback": "Best At The Business.!!",
+          "featured": true
+        },
+        {
+          "id": "693a7cef-1178-4cf8-b676-1700901db117",
+          "timestamp": "2024/09/22 6:09:17 pm GMT+5:30",
+          "firstName": "Om",
+          "lastName": "Khairnar",
+          "college": "Sinhgad college of engineering pune",
+          "branch": "ENTC",
+          "district": "Nashik",
+          "gender": "Male",
+          "feedback": "Thank you very much dada, because of you I understood the more information of engineering and i alloted to best college according to my percentile.. And also your all session are very interesting and informative... Your support is very strong so I don't have any fear always motivating us thank you🙏 j",
+          "featured": false,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1ArbL-V2Wzj66ba9rkgupSQvZjKiyNxCG"
+        },
+        {
+          "id": "8211ff7b-db24-440d-a986-395ed93973d7",
+          "timestamp": "2024/09/22 6:09:37 pm GMT+5:30",
+          "firstName": "Disha",
+          "lastName": "Bagul",
+          "college": "Ssvps dhule",
+          "branch": "E&tc",
+          "district": "Dhule",
+          "gender": "Female",
+          "feedback": "Dada, it was amazing... Tu amahala yeude support kele,,, amchi help kele so thankful for that... Naiter me mazi hope sodun dili hoti.. But ata me mazi life parat restart kele ahe... mala Shobat yechya phude eka mothya bhavva sarkha madat kar 😊😊ani haa me tula text kele hote but Tu reply karyla kadachit visrla ,ik Tu busy asel.. Samju shakatee me.. Once again thankyouuuuuu soooo muchhhhhhh... Me lucky ahe ki mala college changlee bhetle, in fact ghara jawal ach bhtele... Mala fakte tuzya Shobat eka call var bolyche plzzz 😊😊",
+          "featured": false
+        },
+        {
+          "id": "85eb749e-9cbc-4b04-aec2-ebf5e6102fd1",
+          "timestamp": "2024/09/22 6:16:54 pm GMT+5:30",
+          "firstName": "Rohit",
+          "lastName": "Sonne",
+          "college": "VP baramati",
+          "branch": "CS",
+          "district": "Baramati",
+          "gender": "Male",
+          "feedback": "Good",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1ssCgMtf64nHJkob14HlfoGfrB2aLHqS0"
+        },
+        {
+          "id": "2bc04144-66d5-4876-8a0c-4f4817618b6a",
+          "timestamp": "2024/09/22 6:26:46 pm GMT+5:30",
+          "firstName": "Gaurav",
+          "lastName": "Gore",
+          "college": "PVG's college of engineering and technology",
+          "branch": "Electrical engineering",
+          "district": "Latur",
+          "gender": "Male",
+          "feedback": "Thank you so much dada, Want to tell alot of things, but really don't have any words to express the way you helped me and landed me safely in a very good college, but thank you so much dada 😭❤🛐",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=13LcNz3y5vUOKgWOpynkddZ8zpNfEW_w6"
+        },
+        {
+          "id": "cd79d863-a74b-4423-8a3a-74c515be990f",
+          "timestamp": "2024/09/22 6:40:40 pm GMT+5:30",
+          "firstName": "Kiran",
+          "lastName": "Ghorpade",
+          "college": "Jspm hadapsar",
+          "branch": "E&TC",
+          "district": "Satara",
+          "gender": "Male",
+          "feedback": "Dada you are that miracle who give mee my dream branch, my POV my efforts are so less infront of your efforts, after 3 rd cap round i accept my college with some burden but you do your magic. ❤️\n You not just counselor who give only college list, you are such great big brother, who teach mi lifelong lessons. \n.\n. love you bro❤️❤️❤️whenever you'll want my help just call 🤝🫶🏻\n\n\nEnglish चुकलं असलं तर घे समजून तेवढं, मी सुधारणा करेन 😅",
+          "featured": true
+        },
+        {
+          "id": "3ce80377-e1b6-4cc2-8dac-c03c034d933b",
+          "timestamp": "2024/09/22 6:57:15 pm GMT+5:30",
+          "firstName": "Avdhut",
+          "lastName": "Dani",
+          "college": "VIT-Bibwewadi",
+          "branch": "CE",
+          "district": "Wardha",
+          "gender": "Male",
+          "feedback": "Amazing journey Dada, learned a lot from you.",
+          "featured": true
+        },
+        {
+          "id": "9e7d3f8a-0973-4881-8af8-67597b9a1839",
+          "timestamp": "2024/09/22 7:01:03 pm GMT+5:30",
+          "firstName": "Viraj",
+          "lastName": "Patil",
+          "college": "Walchand college of engineering, Sangli",
+          "branch": "Electrical",
+          "district": "Jalgaon",
+          "gender": "Male",
+          "feedback": "Yash Dada tu je kahi krto aamchya sathi counselling madhe te uncountable ahe. \nMaze papa mhnta tu itka hushar ahes ki eka IAS level chya person shi tuzi comparison keli tri  kami asel. \nDada You are not councillor you are also a person who give every year the exam which all students give and come to you. \n❤❤",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1oWVf6KMPtrCinFvAjPMfSmnPvT59bvrL"
+        },
+        {
+          "id": "1ec764a6-ce89-4307-8585-27547b55bb23",
+          "timestamp": "2024/09/22 7:02:42 pm GMT+5:30",
+          "firstName": "Shrishaily",
+          "lastName": "Raykwade",
+          "college": "D. Y Patil Akurdi",
+          "branch": "IT",
+          "district": "Latur",
+          "gender": "Male",
+          "feedback": "Thanks Dada ❤",
+          "featured": true
+        },
+        {
+          "id": "8e264812-de0b-4d7f-acb3-41636dee0735",
+          "timestamp": "2024/09/22 7:25:57 pm GMT+5:30",
+          "firstName": "Srushti",
+          "lastName": "Mohite",
+          "college": "Shah and anchor kutuchhi engineering college, chembur",
+          "branch": "Information technology",
+          "district": "Mumbai city",
+          "gender": "Female",
+          "feedback": "Good !",
+          "featured": true
+        },
+        {
+          "id": "f33b7686-7396-4655-b222-fc91a41be074",
+          "timestamp": "2024/09/22 7:34:56 pm GMT+5:30",
+          "firstName": "Shlok",
+          "lastName": "Dhaybar",
+          "college": "D.J. Sanghavi college of Engg Mumbai",
+          "branch": "Electronics and communication",
+          "district": "Thane",
+          "gender": "Male",
+          "feedback": "We have started our journey with Yash Dada from Apr May 24 and it's  feeling like we are one family. Yash Dada guide us like  our  elder brother.  Dada has put all his efforts from his bottom of heart at every stage . With his guidance and support I m finally admitted at my dream college DJ Sanghavi Andheri Mumbai. \nVery very thankful to Yash Dada and team for all their hard efforts for every students good career path ..Thank you Dada..",
+          "featured": true
+        },
+        {
+          "id": "8e8f3ba0-ad07-4c2a-abe1-95e3424aa201",
+          "timestamp": "2024/09/22 7:55:18 pm GMT+5:30",
+          "firstName": "Nandkumar",
+          "lastName": "Kasbe",
+          "college": "Zeal engineering College and Research,narhe ,pune",
+          "branch": "Electronic and computer engineering",
+          "district": "Dharashiv",
+          "gender": "Male",
+          "feedback": "You are great councler in Marathwada",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1gL3hfvUQlyZAl9GJcfJG3ij6L7lAtYbw"
+        },
+        {
+          "id": "c7a0c5d3-49cc-4f03-af25-369a55484482",
+          "timestamp": "2024/09/22 8:04:28 pm GMT+5:30",
+          "firstName": "Tejas",
+          "lastName": "Newalkar",
+          "college": "Aissms",
+          "branch": "Mechanical sandwich",
+          "district": "Satara",
+          "gender": "Male",
+          "feedback": "Excellent guidence ,supportive 24*7,best conceller",
+          "featured": true
+        },
+        {
+          "id": "df7451b9-18eb-4026-b901-aa2f3a4ce078",
+          "timestamp": "2024/09/22 8:06:23 pm GMT+5:30",
+          "firstName": "Virat",
+          "lastName": "Shinde",
+          "college": "Atharva College of Engineering Malad West Mumbai",
+          "branch": "Electranic and Telecommunications",
+          "district": "Jalgaon",
+          "gender": "Male",
+          "feedback": "I love your Method Of Councelling And Yes I will Really Suggest My Juniors to Do Work With you For This College Life and Dada I think that My life in my college will be Absolutely Happy and Good . And Atlast Thank you Dada . Lastly I have One dream To Meet you yash Dada .",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1i45Rm6k5v37NUJkVKrbOvlWGF32XF0Ee"
+        },
+        {
+          "id": "07dc7705-e9c3-4ad0-b2b9-75e487dfd64f",
+          "timestamp": "2024/09/22 8:15:58 pm GMT+5:30",
+          "firstName": "Pranav",
+          "lastName": "Sharma",
+          "college": "Dy Patil Akurdi",
+          "branch": "Instrumentation",
+          "district": "Raigad",
+          "gender": "Male",
+          "feedback": "Best Dada Every. Stay happy and safe always .",
+          "featured": false,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1bj2bIx8U9NO7KNkOmA6WIeigDVbBAY_8"
+        },
+        {
+          "id": "7184a867-bc2c-48de-a2fd-efa6efc9228c",
+          "timestamp": "2024/09/22 8:24:57 pm GMT+5:30",
+          "firstName": "Ganesh",
+          "lastName": "Jadhav",
+          "college": "NYSS Dattameghe College of engineering Navi Mumbai Airoli",
+          "branch": "Computer Engineering",
+          "district": "Jalgaon",
+          "gender": "Male",
+          "feedback": "Best",
+          "featured": false,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1FoQWw4ldIH7-AEJudBRD5-vS_zZxht2h"
+        },
+        {
+          "id": "24058f46-cdb8-4cf7-98bb-ed81dbe2af6f",
+          "timestamp": "2024/09/22 8:34:48 pm GMT+5:30",
+          "firstName": "Soumya",
+          "lastName": "Deshpande",
+          "college": "PICT",
+          "branch": "EnTC",
+          "district": "Pune",
+          "gender": "Female",
+          "feedback": "Thanks for your guidance and support in this journey. Having your support during testing time was a great asset for us.",
+          "featured": false
+        },
+        {
+          "id": "d2e526cc-65d8-4ca2-b745-3934fb225ca9",
+          "timestamp": "2024/09/22 9:03:05 pm GMT+5:30",
+          "firstName": "Vedant",
+          "lastName": "Khamkar",
+          "college": "Mit",
+          "branch": "Cs",
+          "district": "Sangli",
+          "gender": "Male",
+          "feedback": "Thank you so much dada for your strong support ♥️♥️",
+          "featured": false,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1wvYua_i1euKtGDNV_viSRDWb4gxyqgR0"
+        },
+        {
+          "id": "9f241300-97bb-46bb-9182-ded14977fda5",
+          "timestamp": "2024/09/22 10:14:50 pm GMT+5:30",
+          "firstName": "Ganesh",
+          "lastName": "Kumbhar",
+          "college": "Jspm tatavade",
+          "branch": "Civil",
+          "district": "Solapur",
+          "gender": "Male",
+          "feedback": "Very thanks for guidance",
+          "featured": true
+        },
+        {
+          "id": "4e9db8cb-4953-4ded-8b82-30d7423748cc",
+          "timestamp": "2024/09/22 10:25:22 pm GMT+5:30",
+          "firstName": "Vaishnavi",
+          "lastName": "Patil",
+          "college": "Sinhgad College,  Vadgaon, Pune",
+          "branch": "ENTC",
+          "district": "Pune",
+          "gender": "Female",
+          "feedback": "Very nice guidance, happy with your counseling",
+          "featured": false
+        },
+        {
+          "id": "cee9b839-92f4-45f7-bda8-6667a9f51ac7",
+          "timestamp": "2024/09/22 11:15:41 pm GMT+5:30",
+          "firstName": "Saundarya",
+          "lastName": "Mulik",
+          "college": "Mksss's Cummins college of engineering for women",
+          "branch": "Mechanical",
+          "district": "Solapur",
+          "gender": "Female",
+          "feedback": "Absolutely wonderful....\nAs I said earlier that,yash dada you understood as an elder brother rather than a counselor .\nThe process was very complicated but you always motivated me so thank you very much....",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1tnner6G2CFJwE72fDXEeAJAjH_QoA0Tj"
+        },
+        {
+          "id": "4e61c123-69de-4d4d-8f11-0370c41265a5",
+          "timestamp": "2024/09/22 11:23:34 pm GMT+5:30",
+          "firstName": "Nishant",
+          "lastName": "Tone",
+          "college": "Walchand college of engineering,Sangli",
+          "branch": "Mechanical engineering",
+          "district": "Pune",
+          "gender": "Male",
+          "feedback": "It's very nice journey dada, खूप छान वाटलं दादा गेले ३/४ महिने झालं आपण सोबत आहोत सगळे ही सगळी प्रोसेस खूप सोपी झाली आमच्यासाठी कारण आम्हाला guide karayla tu होतास पण आता krmt नाही ना लेक्चर ना kont doubt session पण तू अगदी आमचा खंबीर मोठा भाऊ असल्यासारखं आमचा पाठीशी होतास आणि असाच कायम रहा आम्ही तुला कधीही कमीपणा वाटू in the sense kdhich kontihi vait गोष्टी करणार नाही rather विचार देखील करणार नाही आम्ही सर्वजण एका छान कॉलेज मधे प्रवेश घेतला आहे so ata इथून पुढची responsibility आमची तू कसलीही काळजी करू नकोस आणि आपला ग्रुप असाच rahudet आपण एक नंतर meet theu mg bhetu आपण झाली असतो भेट पण मी पुण्यात नाही n pn possible zal tr nkkii भेटेल आणि दादा आजवर आमच्यासाठी जे काय केलं त्यासाठी मी माझा परिवाराकडून thank you bolto Ani ha अनुभव खूप काही शिकवून घेला आम्हाला जे घरचे सांगतात त्याहून जास्त चांगल्या गोष्टी तू आम्हला शिकवलं कस वागायचं abhys ksa krycha agdi सगळ तुझाबद्दल बोलेल ते कमी आहे so evdhch and thank you so much dada💖💖🫂for everything Ani ho tu सुद्धा काळजी घे स्वताची आणि तुला देखील कोणती अडचण आली तरी आम्ही सर्व आहोत सोबत god bless you Dada 🌹🌹take care 💕💕",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1rZYXTD6CHL-7kPlrpIuMv7rhzqDcnA6n"
+        },
+        {
+          "id": "e28fec4f-c732-49ec-8cbf-ec2ca2941fda",
+          "timestamp": "2024/09/23 12:17:23 am GMT+5:30",
+          "firstName": "Sanavi",
+          "lastName": "Mahakal",
+          "college": "Bharati vidyapeeth college of engg belapur navi mumbai",
+          "branch": "Entc",
+          "district": "Mumbai",
+          "gender": "Female",
+          "feedback": "Thank you so much dada for each and every thing you've done for all of us... The guidance you gave is the reason that today I'm in a great college... Without you it wouldn't have been possible... I'll always be grateful for your kind words and great help🩷🩷",
+          "featured": false,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1NOHTkhrtSyje5jMEy6av25vtm0HMY918"
+        },
+        {
+          "id": "f7b45035-9834-49db-9858-d9b065dca2cd",
+          "timestamp": "2024/09/23 12:20:57 am GMT+5:30",
+          "firstName": "Soumya",
+          "lastName": "Mundharikar",
+          "college": "Jspm Hadapsar",
+          "branch": "CS",
+          "district": "Nagpur",
+          "gender": "Male",
+          "feedback": "Although Everything Was Good But I think you should Explain More About Reservations Categories Because I was Expecting Better college In 93 Percentile but I got Very Decent Lower Level College !!! Students From That percentile are in Aissms / progressive modern Etc Etc …My Category was SBC means I’ll get remaining seats of OBC !!! That’s Why I didn’t got Aissms and Progg modern!!!!! Although my college fees Is Very Low but I wanted some top college !!!! You should Also Give some predictions over percentile and Category that’ll help students alott!!! Trust me this was best counselling ever !! But I’m Not Satisfied by my college I was very upset about that !!! I wish I could Fill my Cap Round Through Open Category but I can’t now !!! \nI saw My Frnds In Top college with a very low score !!!! It’s Okay Although Everything was best from your side Yash Dada !!!",
+          "featured": true
+        },
+        {
+          "id": "954ae3be-b4c4-4d7e-a310-12230aa6e527",
+          "timestamp": "2024/09/23 1:18:06 am GMT+5:30",
+          "firstName": "Rushikesh",
+          "lastName": "Adhav",
+          "college": "Jspm's Jaywant rao sawant college of engineering",
+          "branch": "Mechanical",
+          "district": "Buldhana",
+          "gender": "Male",
+          "feedback": "awesome",
+          "featured": false
+        },
+        {
+          "id": "5036ef82-133c-4944-85fb-3405dc1c0ac1",
+          "timestamp": "2024/09/23 6:27:55 am GMT+5:30",
+          "firstName": "Soham",
+          "lastName": "Kokadwar",
+          "college": "Gh raisoni wadi",
+          "branch": "Etc",
+          "district": "Wardha",
+          "gender": "Male",
+          "feedback": "This was great dada you have done too good for me",
+          "featured": true
+        },
+        {
+          "id": "cee6d75f-b27b-4684-9986-bf9d7eb9a2de",
+          "timestamp": "2024/09/23 8:45:14 am GMT+5:30",
+          "firstName": "Pratishree",
+          "lastName": "Dhumal",
+          "college": "Vidyalankar Institute of Technology",
+          "branch": "CE",
+          "district": "Thane",
+          "gender": "Female",
+          "feedback": "Those were the knowledgable 3 months apart from academics u have given us values which are more valuale than the academics rel. Knowledge, thankyou for everything",
+          "featured": true
+        },
+        {
+          "id": "8dc1951f-5096-4aeb-b45e-bf23fe07de4e",
+          "timestamp": "2024/09/23 12:42:14 pm GMT+5:30",
+          "firstName": "Mayuresh",
+          "lastName": "Mogal",
+          "college": "AISSMSCOE",
+          "branch": "CS",
+          "district": "NASHIK",
+          "gender": "Male",
+          "feedback": "Happy and Satisfied",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1U4ZclH50tkedIQ_BDIlassrx-nUIKh_Q"
+        },
+        {
+          "id": "9caec5ac-99f1-452a-9e55-b20ea8091a03",
+          "timestamp": "2024/09/23 3:42:46 pm GMT+5:30",
+          "firstName": "Bhumi",
+          "lastName": "Kadam",
+          "college": "Mmit lohgaon",
+          "branch": "Cs",
+          "district": "Pune",
+          "gender": "Female",
+          "feedback": "The best time we spend with uh dada uh helped us a lot....was always with us what ever the situation was this journey was the best journey of my life thanku thanku so much dadu the best dada I have in my life thanku thanku so much ❤️.....we all love uh✨❤️",
+          "featured": false
+        },
+        {
+          "id": "000fe4ae-1e84-4cd4-8490-0d3fc0c87b35",
+          "timestamp": "2024/09/23 6:31:46 pm GMT+5:30",
+          "firstName": "Prathamesh",
+          "lastName": "Lokhande",
+          "college": "AISSMS IOIT",
+          "branch": "IT",
+          "district": "Jalgaon",
+          "gender": "Male",
+          "feedback": "Dada tuze mana pasun dhanyawad❤️,tu Purn cap round chya process madhye help kelis,Thanks Again ❤️",
+          "featured": false
+        },
+        {
+          "id": "ab6cecaf-9260-4f61-b6d8-0a264d3a422a",
+          "timestamp": "2024/09/23 7:25:59 pm GMT+5:30",
+          "firstName": "Tisha",
+          "lastName": "Jambhulkar",
+          "college": "Yeshwantrao chavan college of engineering",
+          "branch": "Entc",
+          "district": "Gomdia",
+          "gender": "Female",
+          "feedback": "Lucky to found a mentor and brother in same person. Counselling journey was amazing gained new experince from dada's journey too. Not seen you inperson but got emotionally attached through the screen.And will follow yours teaching of hardwork and promise not to go on wrong path. \nLove you dada🤍",
+          "featured": true
+        },
+        {
+          "id": "280e5adf-6547-4846-a6fe-0d16d831cf5c",
+          "timestamp": "2024/09/24 7:10:36 am GMT+5:30",
+          "firstName": "Abhijeet",
+          "lastName": "Topale",
+          "college": "MIT Alandi",
+          "branch": "CS(DS)",
+          "district": "Pune",
+          "gender": "Male",
+          "feedback": "Thank you Yash dada for your guidance and support during this journey. I never forgot this in my entire life. I am faithful to you that I was spent time with you.lastly thanks for everything.",
+          "featured": false
+        },
+        {
+          "id": "b24eb396-2517-42c1-bb04-07106367b954",
+          "timestamp": "2024/09/24 7:28:16 pm GMT+5:30",
+          "firstName": "Trunal",
+          "lastName": "Pawar",
+          "college": "Progressive modern college",
+          "branch": "Artificial intelligence and data science",
+          "district": "Pune",
+          "gender": "Male",
+          "feedback": "The councilling was superb and hyper informative it help us to get best college according to my percentile and also it gave us lot of info about further studies and pretty insightful information of Maharashtra colleges which are not known by other councillors, I highly recommend to buy this councilling from Yash dada.Thank you",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1YOA0wqJJwEdldhakNis3454i5_qSdFYz"
+        },
+        {
+          "id": "99cf943d-8f83-4a32-9887-a3b2a5d97eb8",
+          "timestamp": "2024/09/25 12:20:07 am GMT+5:30",
+          "firstName": "Kushal",
+          "lastName": "Jamnekar",
+          "college": "Datta meghe college of engineering airoli",
+          "branch": "AIDS",
+          "district": "Navi Mumbai",
+          "gender": "Female",
+          "feedback": "Dada your all suggestions is too helpful  for us dada thank you so much ✨",
+          "featured": false
+        },
+        {
+          "id": "ccb5b220-b449-4353-91af-88ddd91bf195",
+          "timestamp": "2024/09/25 12:38:39 pm GMT+5:30",
+          "firstName": "Bhakti",
+          "lastName": "Gotmare",
+          "college": "TSSMS bhivrabai sawant college of engineering pune",
+          "branch": "Electrical",
+          "district": "Akola",
+          "gender": "Female",
+          "feedback": "Wonderful journey 🎉🎉",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=140MoqfZyhlASKOXH8KGzjS0eHDZ2_OYl"
+        },
+        {
+          "id": "10b3cbc1-ba4c-47a0-8480-e488c84ce3f6",
+          "timestamp": "2024/09/25 9:56:41 pm GMT+5:30",
+          "firstName": "Soham",
+          "lastName": "Kanade",
+          "college": "D.Y Patil college pimpri",
+          "branch": "Electrical",
+          "district": "Pune",
+          "gender": "Male",
+          "feedback": "Yash dada counselling batch is really fantastic, it help me to get best of best college. \nYash dada also guided us in how to behave in college, how to study.",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=15rVG3QJ9NxDw1ZIzuu_RanIehafgN3Qs"
+        },
+        {
+          "id": "baf1b054-e3a7-4907-8195-b17ac5f6491a",
+          "timestamp": "2024/09/26 3:30:51 pm GMT+5:30",
+          "firstName": "Atharva",
+          "lastName": "Chavan",
+          "college": "Sinhagad College of Engineering",
+          "branch": "Computer Engineering",
+          "district": "Nashik",
+          "gender": "Male",
+          "feedback": "Dada you are just awesome your entire counselling was super great and when 3 months passed away I didn't know.\nThank You Dada❤️❤️👍",
+          "featured": false,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1ZWEVuZG56HOAN_WzoSAnBkq0_H8hB7Sb"
+        },
+        {
+          "id": "341cd39e-8f6e-44e7-a4e6-d5300e2578f1",
+          "timestamp": "2024/09/26 6:19:39 pm GMT+5:30",
+          "firstName": "Omkar",
+          "lastName": "Sawant",
+          "college": "AISSMS COE Pune",
+          "branch": "Mechanical",
+          "district": "Satara",
+          "gender": "Male",
+          "feedback": "कोणत्याही परिस्थितीत हार मानायची नाही शिकवलंस.आत्तापर्यंत तु दादा आम्हाला खुप मदत केलीस आणि आता इथून पुढेही तु आमच्या मागे खंबीर पणे उभा आहे..\nआम्हाला दादा तुझा खुप अभिमान आहे..\nआमचंही किती छान नशिब आहे की तु आम्हाला भेटला किती छान counselling केलीस चांगली चांगली collages मिळवून दिलीस..\nदादा तुझं शेवटचं lecture मी आणि माझ्या आईवडिलांनी ही माझ्या सोबत ऐकलं त्यांनाही खुप छान वाटत त्यांना तुझं खुप कौतुक केल..\n*आपल्यासोबत थोडं काही वाईट झालं मनासारखं नाही झालं तर आपण लगेच tention घेतो पण बाकी इतर मुलांसोबत किती वाईट घडलंय त्यातून पण ते सावरलेत आणि पुढे निघालेत हे तुझ्या lectures मधून खुप छान समजलं..*\n*तुझे मानावे एवढे आभार कमीच आहेत मनापासून धन्यवाद दादा... 🙏🏻♥️🙏🏻*\nदादा तु आम्हाला खुप काही शिकवलंस खुप साथ दिलीस आणि इथून पुढेही तु आमच्या सोबत कायम राहणार आहेस..\n*तुझ्या सर्व इच्छा आकांक्षा पूर्ण होवोत हीच हीच देवाकडे प्रार्थना.. ♥️♥️🙏🏻*\nतुझाच लहान भाऊ\n*Omkar Sawant @ कराड*",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1ZvlKu1KetyoQj-HXJtFWTSKmA5huXkD0"
+        },
+        {
+          "id": "84224b8b-ca9d-4637-9e07-1971273efa37",
+          "timestamp": "2024/09/27 2:34:51 pm GMT+5:30",
+          "firstName": "Mayuri",
+          "lastName": "Meher",
+          "college": "Alard College Of Engenniering (Privert instiute)",
+          "branch": "Cse",
+          "district": "Pune",
+          "gender": "Female",
+          "feedback": "I only say he is really Big Bro 💖",
+          "featured": true,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1VY-2VqnH4L-Xd0WDo6TvzXwVWxcIvQuS"
+        },
+        {
+          "id": "20d14708-c103-43f3-8087-2f6c3bf22ea9",
+          "timestamp": "2024/09/27 9:05:42 pm GMT+5:30",
+          "firstName": "Pranjal",
+          "lastName": "Lad",
+          "college": "St. Francis Institute of technology",
+          "branch": "EXTC",
+          "district": "Mumbai subarban where my college situated",
+          "gender": "Female",
+          "feedback": "I am lucky to have Yeah dada as counsellor.  he have really high level of pensions to solve any problem of his students and repeated problems also. Thank you Yash dada",
+          "featured": true
+        },
+        {
+          "id": "bcb7219f-6cf6-488e-8727-3fd0d9643e34",
+          "timestamp": "2024/09/29 12:46:35 pm GMT+5:30",
+          "firstName": "Arushi",
+          "lastName": "Pande",
+          "college": "MMCOE",
+          "branch": "IT",
+          "district": "Pune",
+          "gender": "Female",
+          "feedback": "It was a very stressful and roller coaster ride journey yet me and my parents enjoyed it a lot 😊. Thank you so much for your help in this journey.",
+          "featured": false
+        },
+        {
+          "id": "60292e97-c7b3-4a6b-b985-ccb15f6e41c5",
+          "timestamp": "2024/09/29 2:21:28 pm GMT+5:30",
+          "firstName": "Shubham",
+          "lastName": "Khedkar",
+          "college": "K. K wagh engineering college",
+          "branch": "Mechanical",
+          "district": "Satara",
+          "gender": "Male",
+          "feedback": "Very Happy with your dealing",
+          "featured": false,
+          "photoUrl": "https://drive.google.com/u/0/open?usp=forms_web&id=1OPpJ9eP2lUlP2WHwO5u287wq3f7XhpQh"
+        },
+        {
+          "id": "472c7feb-6e5f-418a-98d6-2f003fc34992",
+          "timestamp": "2024/09/29 4:11:41 pm GMT+5:30",
+          "firstName": "Parth",
+          "lastName": "Samudra",
+          "college": "Progressive morden college of engineering Pune",
+          "branch": "Information Technology",
+          "district": "Pune",
+          "gender": "Male",
+          "feedback": "Thank you Dada!...!",
+          "featured": false
+        },
+        {
+          "id": "f4091fc4-bb0c-497e-8e16-de773b0c38ef",
+          "timestamp": "2024/10/02 9:21:25 pm GMT+5:30",
+          "firstName": "Kunal",
+          "lastName": "Paliwal",
+          "college": "Ramdeobaba university",
+          "branch": "Cse",
+          "district": "Nagpur",
+          "gender": "Male",
+          "feedback": "Good",
+          "featured": false
+        }
+      ]
+    }
+  ],
+  "list_folders": [
+    {
+      "id": "0Ovc3zNAadbUAcUxoTVI",
+      "name": "80 to 75",
+      "isArchive": false,
+      "createdBy": "prathmeshgangurde333@gmail.com",
+      "createdAt": "2025-07-13T09:25:24.431Z",
+      "updatedAt": "2025-07-13T09:25:24.431Z",
+      "list_count": 4
+    },
+    {
+      "id": "archive_1",
+      "name": "Archive",
+      "isArchive": "true",
+      "createdAt": {
+        "_seconds": 1751740200,
+        "_nanoseconds": 173000000
+      },
+      "updatedAt": {
+        "_seconds": 1751740200,
+        "_nanoseconds": 192000000
+      },
+      "createdBy": "mayankmchandratre@gmail.com",
+      "list_count": 13
+    }
+  ],
+  "lists": [
+    {
+      "id": "1z5pQTXpwlGAnB23wQNK",
+      "title": "All Chemical",
+      "colleges": [
+        {
+          "id": "03036",
+          "instituteCode": "03036",
+          "instituteName": "Institute of Chemical Technology, Matunga, Mumbai",
+          "city": "mumbai city",
+          "uniqueId": "03036_0303650710",
+          "selectedBranch": "Chemical Engineering",
+          "selectedBranchCode": "0303650710",
+          "category": "AI"
+        },
+        {
+          "id": "03036",
+          "instituteCode": "03036",
+          "instituteName": "Institute of Chemical Technology, Matunga, Mumbai",
+          "city": "mumbai city",
+          "uniqueId": "03036_0303651310",
+          "selectedBranch": "Pharmaceuticals Chemistry and Technology",
+          "selectedBranchCode": "0303651310",
+          "category": "AI"
+        },
+        {
+          "id": "03036",
+          "instituteCode": "03036",
+          "instituteName": "Institute of Chemical Technology, Matunga, Mumbai",
+          "city": "mumbai city",
+          "uniqueId": "03036_0303651910",
+          "selectedBranch": "Polymer Engineering and Technology",
+          "selectedBranchCode": "0303651910",
+          "category": "AI"
+        },
+        {
+          "id": "14005",
+          "instituteCode": "14005",
+          "instituteName": "Laxminarayan Innovation Technological University, Nagpur",
+          "city": "nagpur",
+          "uniqueId": "14005_1400550710",
+          "selectedBranch": "Chemical Engineering",
+          "selectedBranchCode": "1400550710"
+        },
+        {
+          "id": "03182",
+          "instituteCode": "03182",
+          "instituteName": "Thadomal Shahani Engineering College, Bandra, Mumbai",
+          "city": "mumbai suburban",
+          "uniqueId": "03182_0318250710",
+          "selectedBranch": "Chemical Engineering",
+          "selectedBranchCode": "0318250710",
+          "category": "AI"
+        },
+        {
+          "id": "06146",
+          "instituteCode": "06146",
+          "instituteName": "MIT Academy of Engineering,Alandi, Pune",
+          "city": "pune",
+          "uniqueId": "06146_0614650710",
+          "selectedBranch": "Chemical Engineering",
+          "selectedBranchCode": "0614650710",
+          "category": "AI"
+        },
+        {
+          "id": "06278",
+          "instituteCode": "06278",
+          "instituteName": "All India Shri Shivaji Memorial Society's College of Engineering, Pune",
+          "city": "pune",
+          "uniqueId": "06278_0627850710",
+          "selectedBranch": "Chemical Engineering",
+          "selectedBranchCode": "0627850710",
+          "category": "AI"
+        },
+        {
+          "id": "06177",
+          "instituteCode": "06177",
+          "instituteName": "Sinhgad College of Engineering, Vadgaon (BK), Pune",
+          "city": "pune",
+          "uniqueId": "06177_0617750710",
+          "selectedBranch": "Chemical Engineering",
+          "selectedBranchCode": "0617750710",
+          "category": "AI"
+        },
+        {
+          "id": "05121",
+          "instituteCode": "05121",
+          "instituteName": "K. K. Wagh Institute of Engineering Education and Research, Nashik",
+          "city": "nashik",
+          "uniqueId": "05121_0512150710",
+          "selectedBranch": "Chemical Engineering",
+          "selectedBranchCode": "0512150710",
+          "category": "AI"
+        },
+        {
+          "id": "06268",
+          "instituteCode": "06268",
+          "instituteName": "Tatyasaheb Kore Institute of Engineering and Technology, Warananagar",
+          "city": "kolhapur",
+          "uniqueId": "06268_0626850710",
+          "selectedBranch": "Chemical Engineering",
+          "selectedBranchCode": "0626850710",
+          "category": "AI"
+        }
+      ],
+      "userIds": [],
+      "createdAt": "2025-07-13T10:31:54.477Z",
+      "lastUpdatedBy": "prathmeshgangurde333@gmail.com",
+      "createdBy": "prathmeshgangurde333@gmail.com",
+      "folderId": "81hMQ8iNzwQcbH0WSee0",
+      "updatedAt": "2025-07-13T10:32:21.373Z"
+    }
+  ],
+  "metadata": [
+    {
+      "id": "allUserIdLists",
+      "userIdList": ["string1","string2"]
+    },
+    {
+      "id": "colleges",
+      "version": 1
+    },
+    {
+      "id": "toggleableFeatured",
+      "enabled": [
+        "predict-chances"
+      ],
+      "total": [
+        "predict-colleges",
+        "predict-chances"
+      ]
+    }
+  ],
+  "notes": [
+    {
+      "id": "4TSZ0leSbbqmeTa6mNGc",
+      "note-adityachawale14@gmail.com": {
+        "createdAt": "2025-04-13T14:06:33.166Z",
+        "note": "asdfg"
+      }
+    },
+    {
+      "id": "DJDTi4XZpzqrOnbU5cBN",
+      "note-yasharadhyeapp@gmail.com": {
+        "createdAt": "2025-07-06T16:04:29.106Z",
+        "note": "Hold"
+      },
+      "note-mayankmchandratre@gmail.com": {
+        "createdAt": "2025-07-15T08:57:48.706Z",
+        "note": "Nana"
+      }
+    },
+    {
+      "id": "WxfYvtjnf5Xvo1imBnDR",
+      "note-adityachawale14@gmail.com": {
+        "createdAt": "2025-04-13T13:29:12.868Z",
+        "note": "Round 2 mismatch"
+      }
+    },
+    {
+      "id": "d0Ektlio8sI9bgXL5qnn",
+      "note-adityachawale14@gmail.com": {
+        "createdAt": "2025-04-13T12:54:51.563Z",
+        "note": "This one is spacial"
+      }
+    }
+  ],
+  "paymentLogs": [
+    {
+      "id": "0065u4J2Ru83FLdW8Thd",
+      "eventType": "order.paid",
+      "data": {
+        "payment": {
+          "id": "pay_Ql5zIGteox1Uaz",
+          "entity": "payment",
+          "amount": 245562,
+          "amount_captured": null,
+          "currency": "INR",
+          "base_amount": 245562,
+          "status": "captured",
+          "order_id": "order_Ql5z5gqtfGLJ9n",
+          "invoice_id": null,
+          "international": false,
+          "method": "upi",
+          "amount_refunded": 0,
+          "amount_transferred": 0,
+          "refund_status": null,
+          "captured": true,
+          "description": "Payment for Saarthi Plan",
+          "card_id": null,
+          "bank": null,
+          "wallet": null,
+          "vpa": "panditsuj25@oksbi",
+          "email": "void@razorpay.com",
+          "contact": "+919270426478",
+          "notes": {
+            "customerPlan": "Saarthi",
+            "planDetails": "{\"isPremium\":true,\"plan\":\"Saarthi\",\"price\":\"2,399\",\"expiry\":60,\"form\":\"Sarathi-Online\"}",
+            "planTitle": "Saarthi",
+            "userPhone": "9270426478"
+          },
+          "fee": 5662,
+          "tax": 864,
+          "error_code": null,
+          "error_description": null,
+          "error_source": null,
+          "error_step": null,
+          "error_reason": null,
+          "acquirer_data": {
+            "rrn": "517532587640"
+          },
+          "created_at": 1750781724,
+          "provider": null,
+          "upi": {
+            "payer_account_type": "bank_account",
+            "vpa": "panditsuj25@oksbi"
+          },
+          "reward": null
+        },
+        "order": {
+          "id": "order_Ql5z5gqtfGLJ9n",
+          "entity": "order",
+          "amount": 239900,
+          "amount_paid": 245562,
+          "amount_due": -5662,
+          "currency": "INR",
+          "receipt": "receipt_9270426478_967rl2xllv",
+          "offer_id": null,
+          "status": "paid",
+          "attempts": 1,
+          "notes": {
+            "planTitle": "Saarthi",
+            "userPhone": "9270426478",
+            "planDetails": "{\"isPremium\":true,\"plan\":\"Saarthi\",\"price\":\"2,399\",\"expiry\":60,\"form\":\"Sarathi-Online\"}",
+            "customerPlan": "Saarthi"
+          },
+          "created_at": 1750781713
+        }
+      },
+      "timestamp": {
+        "_seconds": 1750781744,
+        "_nanoseconds": 860000000
+      }
+    },
+    {
+      "id": "04iCZhYTwdt8Vrmq1hkG",
+      "eventType": "payment.authorized",
+      "data": {
+        "id": "pay_QhpTWgPt5UVr7P",
+        "entity": "payment",
+        "amount": 245562,
+        "currency": "INR",
+        "status": "authorized",
+        "order_id": "order_QhpSeqglhSoBgK",
+        "invoice_id": null,
+        "international": false,
+        "method": "upi",
+        "amount_refunded": 0,
+        "amount_transferred": 0,
+        "refund_status": null,
+        "captured": true,
+        "description": "Payment for Saarthi Plan",
+        "card_id": null,
+        "bank": null,
+        "wallet": null,
+        "vpa": "suhanishinde101@okicici",
+        "email": "void@razorpay.com",
+        "contact": "+919284508838",
+        "notes": {
+          "customerPlan": "Saarthi",
+          "planDetails": "{\"isPremium\":true,\"plan\":\"Saarthi\",\"price\":\"2,399\",\"expiry\":60,\"form\":\"Sarathi-Online\"}",
+          "planTitle": "Saarthi",
+          "userPhone": "9284508838"
+        },
+        "fee": 5662,
+        "tax": 864,
+        "error_code": null,
+        "error_description": null,
+        "error_source": null,
+        "error_step": null,
+        "error_reason": null,
+        "acquirer_data": {
+          "rrn": "516791811609"
+        },
+        "created_at": 1750068554,
+        "provider": null,
+        "upi": {
+          "payer_account_type": "bank_account",
+          "vpa": "suhanishinde101@okicici"
+        },
+        "reward": null
+      },
+      "timestamp": {
+        "_seconds": 1750068593,
+        "_nanoseconds": 60000000
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "id": "super-admin",
+      "role":"super-admin",
+      "pages": [
+        "home",
+        "users",
+        "colleges",
+        "lists",
+        "change-password",
+        "forms",
+        "registrationform",
+        "add-user",
+        "cutoff",
+        "admin-settings",
+        "landing-page",
+        "premium-plans",
+        "payment-logs",
+        "add-users",
+        "edit-user-list",
+        "appointments",
+        "edit-users"
+      ]
+    }
+  ],
+  "registrationForm": [
+    {
+      "id": "Form1",
+      "updatedAt": "2025-05-07T14:46:06.372Z",
+      "steps": [
+        {
+          "fields": [
+            {
+              "id": "fullName",
+              "options": [],
+              "label": "Full Name",
+              "key": "fullName",
+              "additionalRemarks": "Enter like Name Father's Name Surname",
+              "required": true,
+              "type": "text"
+            },
+            {
+              "required": true,
+              "type": "date",
+              "id": "dob",
+              "options": [],
+              "key": "dob",
+              "label": "Date of Birth"
+            },
+            {
+              "id": "city",
+              "required": true,
+              "label": "City",
+              "type": "select",
+              "key": "city",
+              "options": [
+                "AHMEDNAGAR",
+                "AKOLA",
+                "AMRAVATI",
+                "BEED",
+                "BHANDARA",
+                "BULDHANA",
+                "CHANDRAPUR",
+                "CHHATRAPATI SAMBHAJINAGAR",
+                "DHARASHIV",
+                "DHULE",
+                "DIST",
+                "DISTRICT",
+                "JALGAON",
+                "JALNA",
+                "KARJAT",
+                "KOLHAPUR",
+                "LATUR",
+                "MALWADI-BOTA",
+                "MUMBAI",
+                "MUMBAI CITY",
+                "MUMBAI SUBURBAN",
+                "NADURBAR",
+                "NAGPUR",
+                "NANDED",
+                "NANDURBAR",
+                "NASHIK",
+                "PALGHAR",
+                "PANIV",
+                "PARBHANI",
+                "PUNE",
+                "RAIGAD",
+                "RATNAGIRI",
+                "SAKOLI",
+                "SANGLI",
+                "SATARA",
+                "SHEVGAON",
+                "SHIRPUR",
+                "SINDHUDURG",
+                "SOLAPUR",
+                "THANE",
+                "WARDHA",
+                "WASHIM",
+                "YAVATMAL",
+                "YELUR"
+              ]
+            },
+            {
+              "label": "Category",
+              "id": "field_1746598766047",
+              "type": "select",
+              "additionalRemarks": "",
+              "required": true,
+              "options": [
+                "OBC",
+                "OPEN",
+                "SC",
+                "SEBC",
+                "ST",
+                "VJ",
+                "NT1",
+                "NT2",
+                "NT3",
+                "ORPHAN",
+                "EWS",
+                "TFWS"
+              ],
+              "key": "category"
+            },
+            {
+              "label": "Is your Parent/Guardian in defense ?",
+              "additionalRemarks": "",
+              "key": "isDefense",
+              "id": "field_1746628756334",
+              "type": "select",
+              "required": true,
+              "options": [
+                "YES",
+                "NO"
+              ]
+            },
+            {
+              "type": "select",
+              "required": true,
+              "additionalRemarks": "",
+              "id": "field_1746628932112",
+              "options": [
+                "YES",
+                "NO"
+              ],
+              "label": "Do you have any physical disability ?",
+              "key": "isPwd"
+            }
+          ],
+          "title": "Basic Information"
+        },
+        {
+          "fields": [
+            {
+              "id": "boardMarks",
+              "options": [],
+              "type": "number",
+              "required": true,
+              "key": "boardMarks",
+              "label": "12th Board Marks"
+            },
+            {
+              "id": "boardType",
+              "options": [
+                "State Board",
+                "CBSC",
+                "ICSE"
+              ],
+              "type": "select",
+              "required": true,
+              "label": "Board Type",
+              "key": "boardType"
+            },
+            {
+              "label": "CET Seat Number",
+              "type": "text",
+              "additionalRemarks": "",
+              "id": "field_1746599096432",
+              "required": true,
+              "options": [],
+              "key": "cetSeatNumber"
+            },
+            {
+              "required": false,
+              "id": "field_1746599112319",
+              "type": "number",
+              "additionalRemarks": "If results not declared yet fill this with the expected marks.",
+              "label": "CET Marks (out of 200)",
+              "key": "cetMarks",
+              "options": []
+            },
+            {
+              "id": "field_1746599128280",
+              "label": "CET Percentile",
+              "additionalRemarks": "If results not declared yet fill this with the expected percentile.",
+              "type": "number",
+              "required": false,
+              "options": [],
+              "key": "cetPercentile",
+              "isLocked": false
+            },
+            {
+              "required": false,
+              "id": "field_1746599196533",
+              "key": "jeeSeatNumber",
+              "type": "text",
+              "options": [],
+              "additionalRemarks": "",
+              "label": "JEE Seat Number"
+            },
+            {
+              "key": "jeeMarks",
+              "required": false,
+              "id": "field_1746599212984",
+              "label": "JEE Marks",
+              "additionalRemarks": "If results not declared yet fill this with the expected marks.",
+              "options": [],
+              "type": "number"
+            },
+            {
+              "label": "JEE Percentile",
+              "required": false,
+              "options": [],
+              "type": "number",
+              "key": "jeePercentile",
+              "id": "field_1746599235982",
+              "additionalRemarks": "If results not declared yet fill this with the expected percentile."
+            }
+          ],
+          "title": "Academic Information"
+        },
+        {
+          "fields": [
+            {
+              "options": [],
+              "key": "preferredLocations",
+              "type": "text",
+              "label": "Preferred Locations",
+              "id": "preferredLocations",
+              "required": false
+            },
+            {
+              "type": "select",
+              "key": "budget",
+              "id": "budget",
+              "required": true,
+              "label": "Budget",
+              "options": [
+                "Under 1L",
+                "1L - 2L",
+                "Other"
+              ]
+            },
+            {
+              "id": "password",
+              "key": "password",
+              "type": "password",
+              "required": true,
+              "label": "Password",
+              "options": []
+            },
+            {
+              "required": true,
+              "type": "password",
+              "key": "confirmPassword",
+              "id": "confirmPassword",
+              "options": [],
+              "label": "Confirm Password"
+            },
+            {
+              "options": [],
+              "required": true,
+              "label": "I agree to the Terms and Conditions",
+              "type": "checkbox",
+              "key": "termsAccepted",
+              "id": "termsAccepted"
+            }
+          ],
+          "title": "Preferences and Goals"
+        }
+      ]
+    }
+  ],
+  "users": [
+    {
+      "id": "00IwYG8yGo8TQkIqc5vT",
+      "phone": "9561086198",
+      "isPremium": false,
+      "createdAt": {
+        "_seconds": 1748669424,
+        "_nanoseconds": 140000000
+      },
+      "premiumPlan": null,
+      "batch": "online",
+      "otpExpiry": null,
+      "currentDeviceId": "8268edde1e6b454e",
+      "hasLoggedIn": true,
+      "firstLogin": false,
+      "phoneVerified": true,
+      "otp": null,
+      "name": "Vivek ",
+      "email": "vivekchaudhari585@gmail.com",
+      "oneSignalId": "765f943b-dfeb-47dd-9d55-8786f15dafa4"
+    },
+    
+    {
+      "id": "00fWiI3e8B0gPoqU1gv4",
+      "phone": "9325856263",
+      "createdAt": {
+        "_seconds": 1750078814,
+        "_nanoseconds": 155000000
+      },
+      "batch": "online",
+      "otpExpiry": null,
+      "currentDeviceId": "cb245c9bff876f83",
+      "hasLoggedIn": true,
+      "firstLogin": false,
+      "phoneVerified": true,
+      "otp": null,
+      "name": "Saurabh khote",
+      "email": "saurabhtkhote@gmail.com",
+      "oneSignalId": "b22479a2-4090-47ad-8ff2-81e49c2f0e8a",
+      "currentOrderId": "order_QnGkkSvcHP3Ukr",
+      "orderIds": [
+        "order_Qjm1x5m4WS0zeo",
+        "order_Qjm3rCfikYkikD",
+        "order_QkfD1irCLOBNug",
+        "order_QmeWJYJI5Hd9XG",
+        "order_QnGGzFT1XnGkCM",
+        "order_QnGkkSvcHP3Ukr"
+      ],
+      "isPremium": true,
+      "orders": [
+        {
+          "orderId": "order_Qjm1x5m4WS0zeo",
+          "amount": 2399,
+          "currency": "INR",
+          "receipt": "receipt_9325856263_g9tcmo18wjd",
+          "status": "created",
+          "notes": {
+            "customerPlan": "Saarthi",
+            "planDetails": "{\"isPremium\":true,\"plan\":\"Saarthi\",\"price\":\"2,399\",\"expiry\":60,\"form\":\"Sarathi-Online\"}",
+            "planTitle": "Saarthi",
+            "userPhone": "9325856263"
+          },
+          "createdAt": {
+            "_seconds": 1750493103,
+            "_nanoseconds": 521000000
+          },
+          "paymentStatus": "pending"
+        },
+        {
+          "orderId": "order_Qjm3rCfikYkikD",
+          "amount": 2399,
+          "currency": "INR",
+          "receipt": "receipt_9325856263_ih8fva24ukm",
+          "status": "created",
+          "notes": {
+            "customerPlan": "Saarthi",
+            "planDetails": "{\"isPremium\":true,\"plan\":\"Saarthi\",\"price\":\"2,399\",\"expiry\":60,\"form\":\"Sarathi-Online\"}",
+            "planTitle": "Saarthi",
+            "userPhone": "9325856263"
+          },
+          "createdAt": {
+            "_seconds": 1750493211,
+            "_nanoseconds": 711000000
+          },
+          "paymentStatus": "failed",
+          "paymentFailureDetails": {
+            "acquirer_data": {
+              "rrn": null
+            },
+            "amount": 245562,
+            "amount_refunded": 0,
+            "bank": null,
+            "captured": false,
+            "card_id": null,
+            "contact": "+919325856263",
+            "created_at": 1750493243,
+            "currency": "INR",
+            "description": "Payment for Saarthi Plan",
+            "email": "void@razorpay.com",
+            "entity": "payment",
+            "error_code": "BAD_REQUEST_ERROR",
+            "error_description": "You may have cancelled the payment or there was a delay in response from the UPI app.",
+            "error_reason": "payment_cancelled",
+            "error_source": "customer",
+            "error_step": "payment_authentication",
+            "fee": 5662,
+            "id": "pay_Qjm4PocHmUkNkD",
+            "international": false,
+            "invoice_id": null,
+            "method": "upi",
+            "notes": {
+              "customerPlan": "Saarthi",
+              "planDetails": "{\"isPremium\":true,\"plan\":\"Saarthi\",\"price\":\"2,399\",\"expiry\":60,\"form\":\"Sarathi-Online\"}",
+              "planTitle": "Saarthi",
+              "userPhone": "9325856263"
+            },
+            "order_id": "order_Qjm3rCfikYkikD",
+            "provider": null,
+            "refund_status": null,
+            "reward": null,
+            "status": "failed",
+            "tax": 0,
+            "upi": {
+              "flow": "intent",
+              "vpa": null
+            },
+            "vpa": null,
+            "wallet": null
+          },
+          "updatedAt": {
+            "_seconds": 1750493340,
+            "_nanoseconds": 378000000
+          }
+        },
+        {
+          "orderId": "order_QkfD1irCLOBNug",
+          "amount": 2399,
+          "currency": "INR",
+          "receipt": "receipt_9325856263_xy1e3cfn0t9",
+          "status": "created",
+          "notes": {
+            "customerPlan": "Saarthi",
+            "planDetails": "{\"isPremium\":true,\"plan\":\"Saarthi\",\"price\":\"2,399\",\"expiry\":60,\"form\":\"Sarathi-Online\"}",
+            "planTitle": "Saarthi",
+            "userPhone": "9325856263"
+          },
+          "createdAt": {
+            "_seconds": 1750687421,
+            "_nanoseconds": 434000000
+          },
+          "paymentStatus": "pending"
+        },
+        {
+          "orderId": "order_QmeWJYJI5Hd9XG",
+          "amount": 2399,
+          "currency": "INR",
+          "receipt": "receipt_9325856263_7ol6sjvhlff",
+          "status": "created",
+          "notes": {
+            "customerPlan": "Saarthi",
+            "planDetails": "{\"isPremium\":true,\"plan\":\"Saarthi\",\"price\":\"2,399\",\"expiry\":60,\"form\":\"Sarathi-Online\"}",
+            "planTitle": "Saarthi",
+            "userPhone": "9325856263"
+          },
+          "createdAt": {
+            "_seconds": 1751121675,
+            "_nanoseconds": 509000000
+          },
+          "paymentStatus": "pending"
+        },
+        {
+          "orderId": "order_QnGGzFT1XnGkCM",
+          "amount": 6999,
+          "currency": "INR",
+          "receipt": "receipt_9325856263_k9eo93px28",
+          "status": "created",
+          "notes": {
+            "customerPlan": "Saarthi PLUS ➕",
+            "planDetails": "{\"isPremium\":true,\"plan\":\"Saarthi PLUS ➕\",\"price\":\"6,999\",\"expiry\":60,\"form\":\"63e53\"}",
+            "planTitle": "Saarthi PLUS ➕",
+            "userPhone": "9325856263"
+          },
+          "createdAt": {
+            "_seconds": 1751254626,
+            "_nanoseconds": 264000000
+          },
+          "paymentStatus": "pending"
+        },
+        {
+          "orderId": "order_QnGkkSvcHP3Ukr",
+          "amount": 6999,
+          "currency": "INR",
+          "receipt": "receipt_9325856263_sdvxmxbysap",
+          "status": "created",
+          "notes": {
+            "customerPlan": "Saarthi PLUS ➕",
+            "planDetails": "{\"isPremium\":true,\"plan\":\"Saarthi PLUS ➕\",\"price\":\"6,999\",\"expiry\":60,\"form\":\"63e53\"}",
+            "planTitle": "Saarthi PLUS ➕",
+            "userPhone": "9325856263"
+          },
+          "createdAt": {
+            "_seconds": 1751256316,
+            "_nanoseconds": 740000000
+          },
+          "paymentStatus": "completed",
+          "paymentId": "pay_QnGlN7qN5okFup",
+          "paymentDetails": {
+            "id": "pay_QnGlN7qN5okFup",
+            "entity": "payment",
+            "amount": 716418,
+            "amount_captured": null,
+            "currency": "INR",
+            "base_amount": 716418,
+            "status": "captured",
+            "order_id": "order_QnGkkSvcHP3Ukr",
+            "invoice_id": null,
+            "international": false,
+            "method": "upi",
+            "amount_refunded": 0,
+            "amount_transferred": 0,
+            "refund_status": null,
+            "captured": true,
+            "description": "Payment for Saarthi PLUS ➕ Plan",
+            "card_id": null,
+            "bank": null,
+            "wallet": null,
+            "vpa": "93258562@ibl",
+            "email": "void@razorpay.com",
+            "contact": "+919325856263",
+            "notes": {
+              "customerPlan": "Saarthi PLUS ➕",
+              "planDetails": "{\"isPremium\":true,\"plan\":\"Saarthi PLUS ➕\",\"price\":\"6,999\",\"expiry\":60,\"form\":\"63e53\"}",
+              "planTitle": "Saarthi PLUS ➕",
+              "userPhone": "9325856263"
+            },
+            "fee": 16518,
+            "tax": 2520,
+            "error_code": null,
+            "error_description": null,
+            "error_source": null,
+            "error_step": null,
+            "error_reason": null,
+            "acquirer_data": {
+              "rrn": "515735030743"
+            },
+            "created_at": 1751256352,
+            "provider": null,
+            "upi": {
+              "payer_account_type": "bank_account",
+              "vpa": "93258562@ibl"
+            },
+            "reward": null
+          },
+          "orderDetails": {
+            "id": "order_QnGkkSvcHP3Ukr",
+            "entity": "order",
+            "amount": 699900,
+            "amount_paid": 716418,
+            "amount_due": -16518,
+            "currency": "INR",
+            "receipt": "receipt_9325856263_sdvxmxbysap",
+            "offer_id": null,
+            "status": "paid",
+            "attempts": 1,
+            "notes": {
+              "planTitle": "Saarthi PLUS ➕",
+              "userPhone": "9325856263",
+              "planDetails": "{\"isPremium\":true,\"plan\":\"Saarthi PLUS ➕\",\"price\":\"6,999\",\"expiry\":60,\"form\":\"63e53\"}",
+              "customerPlan": "Saarthi PLUS ➕"
+            },
+            "created_at": 1751256316
+          },
+          "updatedAt": {
+            "_seconds": 1751256390,
+            "_nanoseconds": 902000000
+          }
+        }
+      ],
+      "premiumPlan": {
+        "planTitle": "Saarthi PLUS ➕",
+        "purchasedDate": {
+          "_seconds": 1751256390,
+          "_nanoseconds": 903000000
+        },
+        "form": "63e53",
+        "expiryDate": {
+          "_seconds": 1756440390,
+          "_nanoseconds": 903000000
+        }
+      },
+      "counsellingData": {
+        "fullName": "Saurabh Tulshiram Khote ",
+        "dob": "01/01/2006",
+        "city": "BEED",
+        "category": "OBC",
+        "isDefense": "YES",
+        "isPwd": "NO",
+        "boardMarks": "69.17",
+        "boardType": "State Board",
+        "cetPercentile": "80.78",
+        "jeeMarks": "",
+        "jeePercentile": "",
+        "jeeSeatNumber": ".",
+        "cetMarks": "",
+        "cetSeatNumber": "2517195891",
+        "budget": "Other",
+        "termsAccepted": true,
+        "preferredLocations": "Majalgaon ",
+        "email": "saurabhtkhote@gmail.com"
+      },
+      "stepsData": {
+        "id": "63e53",
+        "steps": [
+          {
+            "number": 1,
+            "title": "Your Number is added to Exclusive WhatsApp Group for Saarthi Plus?",
+            "description": "You are Part of Exclusive WhatsApp group?",
+            "showListButton": false,
+            "isLocked": false,
+            "premiumOnly": true,
+            "isCapSpecific": false,
+            "cap": 1,
+            "isVerdict": false,
+            "isCapQuery": false,
+            "collegeName": "",
+            "branchCode": "",
+            "verdict": "",
+            "data": null,
+            "status": "Yes",
+            "remark": null,
+            "accept": false
+          },
+          {
+            "number": 2,
+            "title": "Documents verified by Team on Google Meet.",
+            "description": "Special session will be conducted to verify your documents if they are completed or not?",
+            "showListButton": false,
+            "isLocked": false,
+            "premiumOnly": true,
+            "isCapSpecific": false,
+            "cap": 1,
+            "isVerdict": false,
+            "isCapQuery": false,
+            "collegeName": "",
+            "branchCode": "",
+            "verdict": "",
+            "data": null,
+            "status": "Yes",
+            "remark": null,
+            "accept": false
+          },
+          {
+            "title": "REGISTRATION Done by Team on CET Cell website.",
+            "number": 3,
+            "description": "Did team complete your Registration? ",
+            "isLocked": false,
+            "premiumOnly": true,
+            "showListButton": false,
+            "collegeName": "",
+            "branchCode": "",
+            "verdict": "",
+            "data": null,
+            "status": "Yes",
+            "remark": null,
+            "accept": false
+          },
+          {
+            "number": 4,
+            "title": "Document Verified by CET Cell and form Confirmed.",
+            "isLocked": false,
+            "premiumOnly": true,
+            "collegeName": "",
+            "branchCode": "",
+            "verdict": "",
+            "data": null,
+            "status": "Yes",
+            "remark": null,
+            "accept": false
+          },
+          {
+            "number": 5,
+            "title": "Attended Session with Team or Yash Dada Regarding List Making?",
+            "isLocked": false,
+            "premiumOnly": true,
+            "collegeName": "",
+            "branchCode": "",
+            "verdict": "",
+            "data": null,
+            "status": "Yes",
+            "remark": null,
+            "accept": false
+          },
+          {
+            "number": 6,
+            "title": "Preference List Available on App?",
+            "description": "",
+            "showListButton": true,
+            "isLocked": true,
+            "premiumOnly": true,
+            "collegeName": "",
+            "branchCode": "",
+            "verdict": "",
+            "data": null,
+            "status": null,
+            "remark": null,
+            "accept": false
+          },
+          {
+            "number": 7,
+            "title": "Did you finalize your list?",
+            "description": "The list available in your app is final for you now?",
+            "showListButton": false,
+            "isLocked": true,
+            "premiumOnly": true,
+            "collegeName": "",
+            "branchCode": "",
+            "verdict": "",
+            "data": null,
+            "status": null,
+            "remark": null,
+            "accept": false
+          },
+          {
+            "number": 8,
+            "title": "Provisional Rank Declared By CET Cell",
+            "description": "",
+            "showListButton": false,
+            "isLocked": true,
+            "premiumOnly": true,
+            "collegeName": "",
+            "branchCode": "",
+            "verdict": "",
+            "data": null,
+            "status": null,
+            "remark": null,
+            "accept": false
+          },
+          {
+            "number": 9,
+            "title": "Final Rank Declared by CET CELL Your Rank?",
+            "description": "",
+            "showListButton": false,
+            "isLocked": false,
+            "premiumOnly": true,
+            "collegeName": "",
+            "branchCode": "",
+            "verdict": "",
+            "data": null,
+            "status": null,
+            "remark": null,
+            "accept": false
+          },
+          {
+            "number": 10,
+            "title": "Ready for CAP-1 Round?",
+            "description": "",
+            "showListButton": false,
+            "isLocked": true,
+            "premiumOnly": true,
+            "collegeName": "",
+            "branchCode": "",
+            "verdict": "",
+            "data": null,
+            "status": null,
+            "remark": null,
+            "accept": false
+          },
+          {
+            "number": 11,
+            "title": "Form Filling Done on CET Cell Website for CAP-1 by Team?",
+            "description": "Your form is submitted by team?",
+            "showListButton": false,
+            "isLocked": true,
+            "premiumOnly": true,
+            "collegeName": "",
+            "branchCode": "",
+            "verdict": "",
+            "data": null,
+            "status": null,
+            "remark": null,
+            "accept": false
+          },
+          {
+            "number": 12,
+            "title": "CAP-1 Allotment Declared Enter your College and Branch?",
+            "description": "",
+            "showListButton": false,
+            "isLocked": true,
+            "premiumOnly": true,
+            "isCapSpecific": true,
+            "isVerdict": false,
+            "cap": 1,
+            "isCapQuery": true,
+            "collegeName": "",
+            "branchCode": "",
+            "verdict": "",
+            "data": null,
+            "status": null,
+            "remark": null,
+            "accept": false
+          },
+          {
+            "number": 13,
+            "title": "Next Steps will available soon.",
+            "description": "",
+            "showListButton": false,
+            "isLocked": true,
+            "premiumOnly": true,
+            "collegeName": "",
+            "branchCode": "",
+            "verdict": "",
+            "data": null,
+            "status": null,
+            "remark": null,
+            "accept": false
+          }
+        ]
+      },
+      "lists": [
+        {
+          "id": "EeEjgi0ChW2CplrIT3kq_00fWiI3e8B0gPoqU1gv4_2025-07-22T21:18:22.380Z",
+          "originalListId": "EeEjgi0ChW2CplrIT3kq",
+          "title": "YASH BELOW 80 NO MECH",
+          "colleges": [
+            {
+              "id": "06273",
+              "instituteCode": "06273",
+              "instituteName": "Bansilal Ramnath Agarawal Charitable Trust's Vishwakarma Institute of Technology, Bibwewadi, Pune",
+              "city": "pune",
+              "uniqueId": "06273_0627337210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0627337210",
+              "category": "AI",
+              "originalIndex": 45
+            },
+            {
+              "id": "06175",
+              "instituteCode": "06175",
+              "instituteName": "Pimpri Chinchwad Education Trust, Pimpri Chinchwad College of Engineering, Pune",
+              "city": "pune",
+              "uniqueId": "06175_0617537210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0617537210",
+              "category": "AI",
+              "originalIndex": 67
+            },
+            {
+              "id": "06272",
+              "instituteCode": "06272",
+              "instituteName": "Dr. D. Y. Patil Pratishthan's D.Y.Patil College of Engineering Akurdi, Pune",
+              "city": "pune",
+              "uniqueId": "06272_0627237210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0627237210",
+              "category": "AI",
+              "originalIndex": 68
+            },
+            {
+              "id": "06141",
+              "instituteCode": "06141",
+              "instituteName": "Jaywant Shikshan Prasarak Mandal's,Rajarshi Shahu College of Engineering, Tathawade, Pune",
+              "city": "pune",
+              "uniqueId": "06141_0614137210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0614137210",
+              "category": "AI",
+              "originalIndex": 70
+            },
+            {
+              "id": "06282",
+              "instituteCode": "06282",
+              "instituteName": "All India Shri Shivaji Memorial Society's Institute of Information Technology,Pune",
+              "city": "pune",
+              "uniqueId": "06282_0628237210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0628237210",
+              "category": "AI",
+              "originalIndex": 71
+            },
+            {
+              "id": "06207",
+              "instituteCode": "06207",
+              "instituteName": "Dr. D. Y. Patil Unitech Society's Dr. D. Y. Patil Institute of Technology, Pimpri, Pune",
+              "city": "pune",
+              "uniqueId": "06207_0620737210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0620737210",
+              "category": "AI",
+              "originalIndex": 72
+            },
+            {
+              "id": "06278",
+              "instituteCode": "06278",
+              "instituteName": "All India Shri Shivaji Memorial Society's College of Engineering, Pune",
+              "city": "pune",
+              "uniqueId": "06278_0627837210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0627837210",
+              "category": "AI",
+              "originalIndex": 73
+            },
+            {
+              "id": "06146",
+              "instituteCode": "06146",
+              "instituteName": "MIT Academy of Engineering,Alandi, Pune",
+              "city": "pune",
+              "uniqueId": "06146_0614637210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0614637210",
+              "category": "AI",
+              "originalIndex": 74
+            },
+            {
+              "id": "06274",
+              "instituteCode": "06274",
+              "instituteName": "Pune Vidyarthi Griha's College of Engineering and Technology and G K Pate(Wani) Institute of Management, Pune",
+              "city": "pune",
+              "uniqueId": "06274_0627437210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0627437210",
+              "category": "AI",
+              "originalIndex": 75
+            },
+            {
+              "id": "06822",
+              "instituteCode": "06822",
+              "instituteName": "Pimpri Chinchwad Education Trust's Pimpri Chinchwad College Of Engineering And Research, Ravet",
+              "city": "pune",
+              "uniqueId": "06822_0682237210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0682237210",
+              "category": "AI",
+              "originalIndex": 76
+            },
+            {
+              "id": "06754",
+              "instituteCode": "06754",
+              "instituteName": "International Institute of Information Technology (I²IT), Pune.",
+              "city": "pune",
+              "uniqueId": "06754_0675437210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0675437210",
+              "category": "AI",
+              "originalIndex": 77
+            },
+            {
+              "id": "06278",
+              "instituteCode": "06278",
+              "instituteName": "All India Shri Shivaji Memorial Society's College of Engineering, Pune",
+              "city": "pune",
+              "uniqueId": "06278_0627837810",
+              "selectedBranch": "Electronics Engineering ( VLSI Design and Technology)",
+              "selectedBranchCode": "0627837810",
+              "category": "AI",
+              "originalIndex": 79
+            },
+            {
+              "id": "06139",
+              "instituteCode": "06139",
+              "instituteName": "Progressive Education Society's Modern College of Engineering, Pune",
+              "city": "pune",
+              "uniqueId": "06139_0613984410",
+              "selectedBranch": "Electronics and Computer Engineering",
+              "selectedBranchCode": "0613984410",
+              "category": "AI",
+              "originalIndex": 86
+            },
+            {
+              "id": "06177",
+              "instituteCode": "06177",
+              "instituteName": "Sinhgad College of Engineering, Vadgaon (BK), Pune",
+              "city": "pune",
+              "uniqueId": "06177_0617737210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0617737210",
+              "category": "AI",
+              "originalIndex": 87
+            },
+            {
+              "id": "06139",
+              "instituteCode": "06139",
+              "instituteName": "Progressive Education Society's Modern College of Engineering, Pune",
+              "city": "pune",
+              "uniqueId": "06139_0613937210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0613937210",
+              "category": "AI",
+              "originalIndex": 88
+            },
+            {
+              "id": "06156",
+              "instituteCode": "06156",
+              "instituteName": "Marathwada Mitra Mandal's College of Engineering, Karvenagar, Pune",
+              "city": "pune",
+              "uniqueId": "06156_0615637210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0615637210",
+              "category": "AI",
+              "originalIndex": 89
+            },
+            {
+              "id": "06178",
+              "instituteCode": "06178",
+              "instituteName": "Sinhgad Technical Education Society's Smt. Kashibai Navale College of Engineering,Vadgaon,Pune",
+              "city": "pune",
+              "uniqueId": "06178_0617837210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0617837210",
+              "category": "AI",
+              "originalIndex": 91
+            },
+            {
+              "id": "06145",
+              "instituteCode": "06145",
+              "instituteName": "JSPM'S Jaywantrao Sawant College of Engineering,Pune",
+              "city": "pune",
+              "uniqueId": "06145_0614537210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0614537210",
+              "category": "AI",
+              "originalIndex": 101
+            },
+            {
+              "id": "06755",
+              "instituteCode": "06755",
+              "instituteName": "JSPM Narhe Technical Campus, Pune.",
+              "city": "pune",
+              "uniqueId": "06755_0675537210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0675537210",
+              "category": "AI",
+              "originalIndex": 114
+            },
+            {
+              "id": "06281",
+              "instituteCode": "06281",
+              "instituteName": "Modern Education Society's College of Engineering, Pune",
+              "city": "pune",
+              "uniqueId": "06281_0628137210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0628137210",
+              "category": "AI",
+              "originalIndex": 115
+            },
+            {
+              "id": "06772",
+              "instituteCode": "06772",
+              "instituteName": "NBN Sinhgad Technical Institutes Campus, Pune",
+              "city": "pune",
+              "uniqueId": "06772_0677237210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0677237210",
+              "category": "AI",
+              "originalIndex": 116
+            },
+            {
+              "id": "06310",
+              "instituteCode": "06310",
+              "instituteName": "Nutan Maharashtra Vidya Prasarak Mandal, Nutan Maharashtra Institute of Engineering &Technology, Talegaon station, Pune",
+              "city": "pune",
+              "uniqueId": "06310_0631037210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0631037210",
+              "category": "AI",
+              "originalIndex": 117
+            },
+            {
+              "id": "06284",
+              "instituteCode": "06284",
+              "instituteName": "Vidya Pratishthan's Kamalnayan Bajaj Institute of Engineering & Technology, Baramati Dist.Pune",
+              "city": "pune",
+              "uniqueId": "06284_0628437210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0628437210",
+              "category": "AI",
+              "originalIndex": 124
+            },
+            {
+              "id": "06311",
+              "instituteCode": "06311",
+              "instituteName": "Jayawant Shikshan Prasarak Mandal, Bhivarabai Sawant Institute of Technology & Research, Wagholi",
+              "city": "pune",
+              "uniqueId": "06311_0631137210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0631137210",
+              "category": "AI",
+              "originalIndex": 125
+            },
+            {
+              "id": "06649",
+              "instituteCode": "06649",
+              "instituteName": "TSSM's Bhivarabai Sawant College of Engineering and Research, Narhe, Pune",
+              "city": "pune",
+              "uniqueId": "06649_0664937210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0664937210",
+              "category": "AI",
+              "originalIndex": 126
+            },
+            {
+              "id": "06122",
+              "instituteCode": "06122",
+              "instituteName": "TSSMS's Pd. Vasantdada Patil Institute of Technology, Bavdhan, Pune",
+              "city": "pune",
+              "uniqueId": "06122_0612237210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0612237210",
+              "category": "AI",
+              "originalIndex": 127
+            },
+            {
+              "id": "06187",
+              "instituteCode": "06187",
+              "instituteName": "Sinhgad Academy of Engineering, Kondhwa (BK) Kondhwa-Saswad Road, Pune",
+              "city": "pune",
+              "uniqueId": "06187_0618737210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0618737210",
+              "category": "AI",
+              "originalIndex": 128
+            },
+            {
+              "id": "06298",
+              "instituteCode": "06298",
+              "instituteName": "Zeal Education Society's Zeal College of Engineering & Reserch, Narhe, Pune",
+              "city": "pune",
+              "uniqueId": "06298_0629884410",
+              "selectedBranch": "Electronics and Computer Engineering",
+              "selectedBranchCode": "0629884410",
+              "category": "AI",
+              "originalIndex": 83
+            },
+            {
+              "id": "06138",
+              "instituteCode": "06138",
+              "instituteName": "Genba Sopanrao Moze Trust Parvatibai Genba Moze College of Engineering,Wagholi, Pune",
+              "city": "pune",
+              "uniqueId": "06138_0613837210",
+              "selectedBranch": "Electronics and Telecommunication Engg",
+              "selectedBranchCode": "0613837210",
+              "category": "AI",
+              "originalIndex": 85
+            },
+            {
+              "id": "06207",
+              "instituteCode": "06207",
+              "instituteName": "Dr. D. Y. Patil Unitech Society's Dr. D. Y. Patil Institute of Technology, Pimpri, Pune",
+              "city": "pune",
+              "uniqueId": "06207_0620761210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0620761210",
+              "category": "AI",
+              "originalIndex": 23
+            },
+            {
+              "id": "06272",
+              "instituteCode": "06272",
+              "instituteName": "Dr. D. Y. Patil Pratishthan's D.Y.Patil College of Engineering Akurdi, Pune",
+              "city": "pune",
+              "uniqueId": "06272_0627261210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0627261210",
+              "category": "AI",
+              "originalIndex": 24
+            },
+            {
+              "id": "06278",
+              "instituteCode": "06278",
+              "instituteName": "All India Shri Shivaji Memorial Society's College of Engineering, Pune",
+              "city": "pune",
+              "uniqueId": "06278_0627861210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0627861210",
+              "category": "AI",
+              "originalIndex": 25
+            },
+            {
+              "id": "06141",
+              "instituteCode": "06141",
+              "instituteName": "Jaywant Shikshan Prasarak Mandal's,Rajarshi Shahu College of Engineering, Tathawade, Pune",
+              "city": "pune",
+              "uniqueId": "06141_0614161210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0614161210",
+              "category": "AI",
+              "originalIndex": 26
+            },
+            {
+              "id": "06822",
+              "instituteCode": "06822",
+              "instituteName": "Pimpri Chinchwad Education Trust's Pimpri Chinchwad College Of Engineering And Research, Ravet",
+              "city": "pune",
+              "uniqueId": "06822_0682261210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0682261210",
+              "category": "AI",
+              "originalIndex": 27
+            },
+            {
+              "id": "06146",
+              "instituteCode": "06146",
+              "instituteName": "MIT Academy of Engineering,Alandi, Pune",
+              "city": "pune",
+              "uniqueId": "06146_0614661210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0614661210",
+              "category": "AI",
+              "originalIndex": 28
+            },
+            {
+              "id": "06139",
+              "instituteCode": "06139",
+              "instituteName": "Progressive Education Society's Modern College of Engineering, Pune",
+              "city": "pune",
+              "uniqueId": "06139_0613961210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0613961210",
+              "category": "AI",
+              "originalIndex": 29
+            },
+            {
+              "id": "06278",
+              "instituteCode": "06278",
+              "instituteName": "All India Shri Shivaji Memorial Society's College of Engineering, Pune",
+              "city": "pune",
+              "uniqueId": "06278_0627862510",
+              "selectedBranch": "Mechanical Engineering[Sandwich]",
+              "selectedBranchCode": "0627862510",
+              "category": "AI",
+              "originalIndex": 30
+            },
+            {
+              "id": "06177",
+              "instituteCode": "06177",
+              "instituteName": "Sinhgad College of Engineering, Vadgaon (BK), Pune",
+              "city": "pune",
+              "uniqueId": "06177_0617761210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0617761210",
+              "category": "AI",
+              "originalIndex": 35
+            },
+            {
+              "id": "06156",
+              "instituteCode": "06156",
+              "instituteName": "Marathwada Mitra Mandal's College of Engineering, Karvenagar, Pune",
+              "city": "pune",
+              "uniqueId": "06156_0615661210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0615661210",
+              "category": "AI",
+              "originalIndex": 36
+            },
+            {
+              "id": "06145",
+              "instituteCode": "06145",
+              "instituteName": "JSPM'S Jaywantrao Sawant College of Engineering,Pune",
+              "city": "pune",
+              "uniqueId": "06145_0614561210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0614561210",
+              "category": "AI",
+              "originalIndex": 37
+            },
+            {
+              "id": "06178",
+              "instituteCode": "06178",
+              "instituteName": "Sinhgad Technical Education Society's Smt. Kashibai Navale College of Engineering,Vadgaon,Pune",
+              "city": "pune",
+              "uniqueId": "06178_0617861210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0617861210",
+              "category": "AI",
+              "originalIndex": 39
+            },
+            {
+              "id": "06155",
+              "instituteCode": "06155",
+              "instituteName": "G.H.Raisoni College of Engineering & Management, Wagholi, Pune",
+              "city": "pune",
+              "uniqueId": "06155_0615561210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0615561210",
+              "category": "AI",
+              "originalIndex": 41
+            },
+            {
+              "id": "06772",
+              "instituteCode": "06772",
+              "instituteName": "NBN Sinhgad Technical Institutes Campus, Pune",
+              "city": "pune",
+              "uniqueId": "06772_0677261210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0677261210",
+              "category": "AI",
+              "originalIndex": 45
+            },
+            {
+              "id": "06755",
+              "instituteCode": "06755",
+              "instituteName": "JSPM Narhe Technical Campus, Pune.",
+              "city": "pune",
+              "uniqueId": "06755_0675561210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0675561210",
+              "category": "AI",
+              "originalIndex": 46
+            },
+            {
+              "id": "06281",
+              "instituteCode": "06281",
+              "instituteName": "Modern Education Society's College of Engineering, Pune",
+              "city": "pune",
+              "uniqueId": "06281_0628161210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0628161210",
+              "category": "AI",
+              "originalIndex": 47
+            },
+            {
+              "id": "06310",
+              "instituteCode": "06310",
+              "instituteName": "Nutan Maharashtra Vidya Prasarak Mandal, Nutan Maharashtra Institute of Engineering &Technology, Talegaon station, Pune",
+              "city": "pune",
+              "uniqueId": "06310_0631061210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0631061210",
+              "category": "AI",
+              "originalIndex": 48
+            },
+            {
+              "id": "06311",
+              "instituteCode": "06311",
+              "instituteName": "Jayawant Shikshan Prasarak Mandal, Bhivarabai Sawant Institute of Technology & Research, Wagholi",
+              "city": "pune",
+              "uniqueId": "06311_0631161210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0631161210",
+              "category": "AI",
+              "originalIndex": 49
+            },
+            {
+              "id": "06649",
+              "instituteCode": "06649",
+              "instituteName": "TSSM's Bhivarabai Sawant College of Engineering and Research, Narhe, Pune",
+              "city": "pune",
+              "uniqueId": "06649_0664961210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0664961210",
+              "category": "AI",
+              "originalIndex": 50
+            },
+            {
+              "id": "06122",
+              "instituteCode": "06122",
+              "instituteName": "TSSMS's Pd. Vasantdada Patil Institute of Technology, Bavdhan, Pune",
+              "city": "pune",
+              "uniqueId": "06122_0612261210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0612261210",
+              "category": "AI",
+              "originalIndex": 51
+            },
+            {
+              "id": "06187",
+              "instituteCode": "06187",
+              "instituteName": "Sinhgad Academy of Engineering, Kondhwa (BK) Kondhwa-Saswad Road, Pune",
+              "city": "pune",
+              "uniqueId": "06187_0618761210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0618761210",
+              "category": "AI",
+              "originalIndex": 52
+            },
+            {
+              "id": "06138",
+              "instituteCode": "06138",
+              "instituteName": "Genba Sopanrao Moze Trust Parvatibai Genba Moze College of Engineering,Wagholi, Pune",
+              "city": "pune",
+              "uniqueId": "06138_0613861210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0613861210",
+              "category": "AI",
+              "originalIndex": 53
+            },
+            {
+              "id": "06298",
+              "instituteCode": "06298",
+              "instituteName": "Zeal Education Society's Zeal College of Engineering & Reserch, Narhe, Pune",
+              "city": "pune",
+              "uniqueId": "06298_0629861210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0629861210",
+              "category": "AI",
+              "originalIndex": 55
+            },
+            {
+              "id": "06203",
+              "instituteCode": "06203",
+              "instituteName": "Marathwada Mitra Mandal's Institute of Technology, Lohgaon, Pune",
+              "city": "pune",
+              "uniqueId": "06203_0620361210",
+              "selectedBranch": "Mechanical Engineering",
+              "selectedBranchCode": "0620361210",
+              "category": "AI",
+              "originalIndex": 56
+            }
+          ],
+          "createdAt": "2025-07-22T21:18:22.380Z",
+          "updatedAt": "2025-07-22T21:18:59.465Z",
+          "customized": true,
+          "isCustomized": true,
+          "listId": "EeEjgi0ChW2CplrIT3kq",
+          "lastUpdatedBy": "yasharadhyeapp@gmail.com"
+        }
+      ],
+      "createdList": []
+    }
+  ]
+}

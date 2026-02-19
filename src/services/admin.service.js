@@ -1,7 +1,7 @@
 import { db } from "../../config/firebase.js";
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
-import redis from '../config/redisClient.js';
+import cache from '../config/cache.js';
 import pkg from "firebase-admin";
 const { firestore } = pkg;
 import path from 'path';
@@ -10,7 +10,7 @@ import fs from 'fs';
 import ExcelJS from 'exceljs';
 
 class AdminService {
-    constructor(){
+    constructor() {
         this.db = db;
         this.users = db.collection('users');
         this.admins = db.collection('admins');
@@ -31,51 +31,58 @@ class AdminService {
     }
 
     async invalidateCache(pattern) {
-        const keys = await redis.keys(pattern);
-        if (keys.length > 0) {
-            await redis.del(keys);
+        // node-cache keys() returns string[], filter by pattern
+        // Simple basic pattern matching (contains or prefix)
+        // Redis pattern was like 'users:*' or 'userlists:*/...'
+        const cleanPattern = pattern.replace(/\*/g, '');
+        const keys = cache.keys();
+        const matches = keys.filter(key => key.includes(cleanPattern));
+
+        if (matches.length > 0) {
+            console.log(`Invalidating cache keys matching ${pattern}:`, matches.length);
+            cache.del(matches);
         }
     }
 
-     async getAll(page = 1, limit = 10, lastDoc = undefined) {
-            try {
-               
-                
-                // Create base query with ordering to ensure consistent pagination
-                let query = this.users.orderBy('createdAt', 'desc');
-                
-                // If lastDoc is provided, use cursor-based pagination
-               
-                
-                // Get the total count for information purposes
-                const totalCountSnapshot = await this.users.count().get();
-                const totalUsers = totalCountSnapshot.data().count;
-                
-                // Get one extra document to determine if there are more pages
-                const snapshot = await query.get();
-                
-                // Determine if there are more pages
-                const hasMore = snapshot.docs.length > limit;
-                
-                // Remove the extra document from the results if it exists
-                const users = snapshot.docs
-                    .map(doc => ({ id: doc.id, ...doc.data() }));
-                
-                fs.writeFileSync(
-                    path.join(process.cwd(), 'src/data/users.json'),
-                    JSON.stringify(users, null, 2)
-                );
-                
-                return {
-                    users,
-                    hasMore,
-                    totalUsers,
-                };
-            } catch (error) {
-                console.error('Error fetching users with pagination:', error);
-                throw new Error(`Failed to fetch users: ${error.message}`);
-            }
-    }   
+    async getAll(page = 1, limit = 10, lastDoc = undefined) {
+        try {
+
+
+            // Create base query with ordering to ensure consistent pagination
+            let query = this.users.orderBy('createdAt', 'desc');
+
+            // If lastDoc is provided, use cursor-based pagination
+
+
+            // Get the total count for information purposes
+            const totalCountSnapshot = await this.users.count().get();
+            const totalUsers = totalCountSnapshot.data().count;
+
+            // Get one extra document to determine if there are more pages
+            const snapshot = await query.get();
+
+            // Determine if there are more pages
+            const hasMore = snapshot.docs.length > limit;
+
+            // Remove the extra document from the results if it exists
+            const users = snapshot.docs
+                .map(doc => ({ id: doc.id, ...doc.data() }));
+
+            fs.writeFileSync(
+                path.join(process.cwd(), 'src/data/users.json'),
+                JSON.stringify(users, null, 2)
+            );
+
+            return {
+                users,
+                hasMore,
+                totalUsers,
+            };
+        } catch (error) {
+            console.error('Error fetching users with pagination:', error);
+            throw new Error(`Failed to fetch users: ${error.message}`);
+        }
+    }
 
     async getUserByPhone(phone) {
         const snapshot = await this.users.where('phone', '==', phone).get();
@@ -86,10 +93,10 @@ class AdminService {
     async login(credentials) {
         const adminRef = await this.admins.where('email', '==', credentials.email).get();
         if (adminRef.empty) throw new Error('Admin not found');
-        
+
         const admin = adminRef.docs[0].data();
         const adminId = adminRef.docs[0].id;
-        
+
         const isPasswordValid = await bcrypt.compare(credentials.password, admin.password);
         if (!isPasswordValid) throw new Error('Invalid password');
         //get permissions
@@ -98,274 +105,276 @@ class AdminService {
             throw new Error('Permissions for this role do not exist');
         }
         const token = jwt.sign(
-            { 
+            {
                 id: adminId,
                 email: admin.email,
                 role: admin.role
-            }, 
-            process.env.JWT_ADMIN_SECRET 
-           );
+            },
+            process.env.JWT_ADMIN_SECRET
+        );
 
-        return { 
+        return {
             token,
             admin: {
                 id: adminId,
                 email: admin.email,
                 name: admin.name,
                 role: admin.role,
-                permissions: permissionsDoc.data() || {pages:[]}
+                permissions: permissionsDoc.data() || { pages: [] }
             }
         };
     }
 
-   
+
     async getAllUsers(page = 1, limit = 10, lastDoc = undefined, filters = null) {
-    try {
-        // Convert parameters to integers
-        const pageNum = parseInt(page, 10);
-        const limitNum = parseInt(limit, 10);
-        
-        // Start with base query for counting
-        let countQuery = this.users;
-        let dataQuery = this.users.orderBy('createdAt', 'desc');
-        
-        // Apply filters if provided
-        if (filters) {
-            console.log('Applied filters:', filters);
-
-            
-            
-            // Premium plan filtering
-            if (filters.plan && filters.plan !== 'all') {
-                countQuery = countQuery.where('premiumPlan.planTitle', '==', filters.plan);
-                dataQuery = dataQuery.where('premiumPlan.planTitle', '==', filters.plan);
-            }
-            
-            // Premium status filtering
-            if (filters.isPremium !== undefined) {
-                const isPremiumFilter = filters.isPremium === 'true' || filters.isPremium === true;
-                countQuery = countQuery.where('isPremium', '==', isPremiumFilter);
-                dataQuery = dataQuery.where('isPremium', '==', isPremiumFilter);
-            }
-            
-            // Date range filtering (user creation date)
-            if (filters.fromDate) {
-                const fromDate = new Date(filters.fromDate);
-                fromDate.setHours(0, 0, 0, 0); // Start of day
-                const fromTimestamp = firestore.Timestamp.fromDate(fromDate);
-                countQuery = countQuery.where('createdAt', '>=', fromTimestamp);
-                dataQuery = dataQuery.where('createdAt', '>=', fromTimestamp);
-            }
-            
-            if (filters.toDate) {
-                const toDate = new Date(filters.toDate);
-                toDate.setHours(23, 59, 59, 999); // End of day
-                const toTimestamp = firestore.Timestamp.fromDate(toDate);
-                countQuery = countQuery.where('createdAt', '<=', toTimestamp);
-                dataQuery = dataQuery.where('createdAt', '<=', toTimestamp);
-            }
-            
-            // Phone number filtering
-            if (filters.phone) {
-                const phoneFilter = filters.phone.startsWith('+') ? filters.phone : `+91${filters.phone}`;
-                countQuery = countQuery.where('phone', '==', phoneFilter);
-                dataQuery = dataQuery.where('phone', '==', phoneFilter);
-            }
-            
-            // Name filtering (partial match using >= and <= with unicode suffix)
-            if (filters.name) {
-                countQuery = countQuery.where('name', '>=', filters.name)
-                                      .where('name', '<=', filters.name + '\uf8ff');
-                dataQuery = dataQuery.where('name', '>=', filters.name)
-                                    .where('name', '<=', filters.name + '\uf8ff');
-            }
-            
-            // Email filtering
-            if (filters.email) {
-                countQuery = countQuery.where('email', '>=', filters.email.toLowerCase())
-                                      .where('email', '<=', filters.email.toLowerCase() + '\uf8ff');
-                dataQuery = dataQuery.where('email', '>=', filters.email.toLowerCase())
-                                    .where('email', '<=', filters.email.toLowerCase() + '\uf8ff');
-            }
-        }
-        
-        // Get total count of matching documents
-        const totalCountSnapshot = await this.users.count().get();
-        const totalUsers = totalCountSnapshot.data().count;
-        
-        // Get count of filtered documents
-        let filteredCountSnapshot;
         try {
-            filteredCountSnapshot = await countQuery.count().get();
-        } catch (error) {
-            // If count query fails due to composite index requirements, we'll calculate it later
-            console.warn('Count query failed, will calculate from results:', error.message);
-            filteredCountSnapshot = null;
-        }
-        
-        // If lastDoc is provided, use cursor-based pagination
-        if (lastDoc) {
-            // Get a reference to the last document
-            const lastDocRef = await this.users.doc(lastDoc).get();
-            
-            if (!lastDocRef.exists) {
-                console.warn(`Last document with ID ${lastDoc} not found, ignoring cursor`);
-            } else {
-                // Start after the last document (cursor-based pagination)
-                dataQuery = dataQuery.startAfter(lastDocRef);
-            }
-        }
-        
-        // Get one extra document to determine if there are more pages
-        const snapshot = await dataQuery.limit(limitNum + 1).get();
-        
-        // Determine if there are more pages
-        const hasMore = snapshot.docs.length > limitNum;
-        
-        // Remove the extra document from the results if it exists
-        let users = snapshot.docs
-            .slice(0, limitNum)
-            .map(doc => ({ id: doc.id, ...doc.data() }));
-        
-        // Additional client-side filtering for complex conditions that Firestore can't handle
-        if (filters) {
-            // List assignment filtering (client-side since it's array-based)
-            if (filters.listAssigned !== undefined) {
-                const hasListsFilter = filters.listAssigned === 'true' || filters.listAssigned === true;
-                if (hasListsFilter) {
-                    users = users.filter(user => user.lists && user.lists.length > 0);
-                } else {
-                    users = users.filter(user => !user.lists || user.lists.length === 0);
-                }
-            }
-            
-            // Form completion filtering (client-side)
-            if (filters.formCompleted !== undefined) {
-                const formCompletedFilter = filters.formCompleted === 'true' || filters.formCompleted === true;
-                if (formCompletedFilter) {
-                    users = users.filter(user => user.stepsData && user.stepsData.length > 0);
-                } else {
-                    users = users.filter(user => !user.stepsData || user.stepsData.length === 0);
-                }
-            }
-            
-            // City filtering (client-side for partial matches)
-            if (filters.city) {
-                users = users.filter(user => 
-                    user.city && user.city.toLowerCase().includes(filters.city.toLowerCase())
-                );
-            }
-            
-            // State filtering (client-side for partial matches)
-            if (filters.state) {
-                users = users.filter(user => 
-                    user.state && user.state.toLowerCase().includes(filters.state.toLowerCase())
-                );
-            }
-            
-            // Payment status filtering (client-side)
-            if (filters.paymentPending !== undefined) {
-                const paymentPendingFilter = filters.paymentPending === 'true' || filters.paymentPending === true;
-                users = users.filter(user => 
-                    user.isPremium && 
-                    user.premiumPlan && 
-                    !!user.premiumPlan.isPaymentPending === paymentPendingFilter
-                );
-            }
-        }
-        
-        // Calculate filtered count if we couldn't get it from Firestore
-        const filteredCount = filteredCountSnapshot ? 
-            filteredCountSnapshot.data().count : 
-            users.length; // This is approximate for the current page
-        
-        users.map(async user => {
-            const noteDoc = await this.notes.doc(user.id).get();
-            return {
-                ...user,
-                notes: noteDoc.data()
-            }
-        })  
+            // Convert parameters to integers
+            const pageNum = parseInt(page, 10);
+            const limitNum = parseInt(limit, 10);
 
-        console.log(`Total users: ${totalUsers}, Filtered count: ${filteredCount}, Page results: ${users.length}`);
-        
-        return {
-            users,
-            hasMore,
-            totalUsers,
-            filteredCount,
-            currentPage: pageNum,
-            pageSize: limitNum,
-            lastDoc: users.length > 0 ? users[users.length - 1].id : null,
-            appliedFilters: filters || {}
-        };
+            // Start with base query for counting
+            let countQuery = this.users;
+            let dataQuery = this.users.orderBy('createdAt', 'desc');
+
+            // Apply filters if provided
+            if (filters) {
+                console.log('Applied filters:', filters);
+
+
+
+                // Premium plan filtering
+                if (filters.plan && filters.plan !== 'all') {
+                    countQuery = countQuery.where('premiumPlan.planTitle', '==', filters.plan);
+                    dataQuery = dataQuery.where('premiumPlan.planTitle', '==', filters.plan);
+                }
+
+                // Premium status filtering
+                if (filters.isPremium !== undefined) {
+                    const isPremiumFilter = filters.isPremium === 'true' || filters.isPremium === true;
+                    countQuery = countQuery.where('isPremium', '==', isPremiumFilter);
+                    dataQuery = dataQuery.where('isPremium', '==', isPremiumFilter);
+                }
+
+                // Date range filtering (user creation date)
+                if (filters.fromDate) {
+                    const fromDate = new Date(filters.fromDate);
+                    fromDate.setHours(0, 0, 0, 0); // Start of day
+                    const fromTimestamp = firestore.Timestamp.fromDate(fromDate);
+                    countQuery = countQuery.where('createdAt', '>=', fromTimestamp);
+                    dataQuery = dataQuery.where('createdAt', '>=', fromTimestamp);
+                }
+
+                if (filters.toDate) {
+                    const toDate = new Date(filters.toDate);
+                    toDate.setHours(23, 59, 59, 999); // End of day
+                    const toTimestamp = firestore.Timestamp.fromDate(toDate);
+                    countQuery = countQuery.where('createdAt', '<=', toTimestamp);
+                    dataQuery = dataQuery.where('createdAt', '<=', toTimestamp);
+                }
+
+                // Phone number filtering
+                if (filters.phone) {
+                    const phoneFilter = filters.phone.startsWith('+') ? filters.phone : `+91${filters.phone}`;
+                    countQuery = countQuery.where('phone', '==', phoneFilter);
+                    dataQuery = dataQuery.where('phone', '==', phoneFilter);
+                }
+
+                // Name filtering (partial match using >= and <= with unicode suffix)
+                if (filters.name) {
+                    countQuery = countQuery.where('name', '>=', filters.name)
+                        .where('name', '<=', filters.name + '\uf8ff');
+                    dataQuery = dataQuery.where('name', '>=', filters.name)
+                        .where('name', '<=', filters.name + '\uf8ff');
+                }
+
+                // Email filtering
+                if (filters.email) {
+                    countQuery = countQuery.where('email', '>=', filters.email.toLowerCase())
+                        .where('email', '<=', filters.email.toLowerCase() + '\uf8ff');
+                    dataQuery = dataQuery.where('email', '>=', filters.email.toLowerCase())
+                        .where('email', '<=', filters.email.toLowerCase() + '\uf8ff');
+                }
+            }
+
+            // Get total count of matching documents
+            const totalCountSnapshot = await this.users.count().get();
+            const totalUsers = totalCountSnapshot.data().count;
+
+            // Get count of filtered documents
+            let filteredCountSnapshot;
+            try {
+                filteredCountSnapshot = await countQuery.count().get();
             } catch (error) {
-                console.error('Error fetching users with pagination:', error);
-                throw new Error(`Failed to fetch users: ${error.message}`);
+                // If count query fails due to composite index requirements, we'll calculate it later
+                console.warn('Count query failed, will calculate from results:', error.message);
+                filteredCountSnapshot = null;
             }
-        }
 
+            // If lastDoc is provided, use cursor-based pagination
+            if (lastDoc) {
+                // Get a reference to the last document
+                const lastDocRef = await this.users.doc(lastDoc).get();
 
-  async getAllUsersOfForm(formId, userIds = []) {
-    let usersStepData = [];
-    try {
-        // Use Promise.all with map to wait for all asynchronous operations to complete
-        const userPromises = userIds.map(async (userId) => {
-            const userRef = this.users.doc(userId);
-            const userDoc = await userRef.get();
-            if (userDoc.exists) {
-                const userData = userDoc.data();
-                if (userData.stepsData && userData.stepsData.id === formId) {
-                    return { id: userDoc.id,name:userDoc.name, stepsData: userData.stepsData };
+                if (!lastDocRef.exists) {
+                    console.warn(`Last document with ID ${lastDoc} not found, ignoring cursor`);
+                } else {
+                    // Start after the last document (cursor-based pagination)
+                    dataQuery = dataQuery.startAfter(lastDocRef);
                 }
             }
-            return null; // Return null for users that don't match the criteria
-        });
 
-        // Wait for all promises to resolve
-        const results = await Promise.all(userPromises);
+            // Get one extra document to determine if there are more pages
+            const snapshot = await dataQuery.limit(limitNum + 1).get();
 
-        // Filter out null values (users that didn't match the criteria)
-        usersStepData = results.filter(data => data !== null);
+            // Determine if there are more pages
+            const hasMore = snapshot.docs.length > limitNum;
 
-        return usersStepData;
-    } catch (err) {
-        console.error('Error fetching users of form:', err);
-        return [];
+            // Remove the extra document from the results if it exists
+            let users = snapshot.docs
+                .slice(0, limitNum)
+                .map(doc => ({ id: doc.id, ...doc.data() }));
+
+            // Additional client-side filtering for complex conditions that Firestore can't handle
+            if (filters) {
+                // List assignment filtering (client-side since it's array-based)
+                if (filters.listAssigned !== undefined) {
+                    const hasListsFilter = filters.listAssigned === 'true' || filters.listAssigned === true;
+                    if (hasListsFilter) {
+                        users = users.filter(user => user.lists && user.lists.length > 0);
+                    } else {
+                        users = users.filter(user => !user.lists || user.lists.length === 0);
+                    }
+                }
+
+                // Form completion filtering (client-side)
+                if (filters.formCompleted !== undefined) {
+                    const formCompletedFilter = filters.formCompleted === 'true' || filters.formCompleted === true;
+                    if (formCompletedFilter) {
+                        users = users.filter(user => user.stepsData && user.stepsData.length > 0);
+                    } else {
+                        users = users.filter(user => !user.stepsData || user.stepsData.length === 0);
+                    }
+                }
+
+                // City filtering (client-side for partial matches)
+                if (filters.city) {
+                    users = users.filter(user =>
+                        user.city && user.city.toLowerCase().includes(filters.city.toLowerCase())
+                    );
+                }
+
+                // State filtering (client-side for partial matches)
+                if (filters.state) {
+                    users = users.filter(user =>
+                        user.state && user.state.toLowerCase().includes(filters.state.toLowerCase())
+                    );
+                }
+
+                // Payment status filtering (client-side)
+                if (filters.paymentPending !== undefined) {
+                    const paymentPendingFilter = filters.paymentPending === 'true' || filters.paymentPending === true;
+                    users = users.filter(user =>
+                        user.isPremium &&
+                        user.premiumPlan &&
+                        !!user.premiumPlan.isPaymentPending === paymentPendingFilter
+                    );
+                }
+            }
+
+            // Calculate filtered count if we couldn't get it from Firestore
+            const filteredCount = filteredCountSnapshot ?
+                filteredCountSnapshot.data().count :
+                users.length; // This is approximate for the current page
+
+            // Fix: Use Promise.all to await all Note fetches and actually update the users array
+            const usersWithNotes = await Promise.all(users.map(async user => {
+                const noteDoc = await this.notes.doc(user.id).get();
+                return {
+                    ...user,
+                    notes: noteDoc.data()
+                }
+            }));
+            users = usersWithNotes;
+
+            console.log(`Total users: ${totalUsers}, Filtered count: ${filteredCount}, Page results: ${users.length}`);
+
+            return {
+                users,
+                hasMore,
+                totalUsers,
+                filteredCount,
+                currentPage: pageNum,
+                pageSize: limitNum,
+                lastDoc: users.length > 0 ? users[users.length - 1].id : null,
+                appliedFilters: filters || {}
+            };
+        } catch (error) {
+            console.error('Error fetching users with pagination:', error);
+            throw new Error(`Failed to fetch users: ${error.message}`);
+        }
     }
-  }
 
-  
+
+    async getAllUsersOfForm(formId, userIds = []) {
+        let usersStepData = [];
+        try {
+            // Use Promise.all with map to wait for all asynchronous operations to complete
+            const userPromises = userIds.map(async (userId) => {
+                const userRef = this.users.doc(userId);
+                const userDoc = await userRef.get();
+                if (userDoc.exists) {
+                    const userData = userDoc.data();
+                    if (userData.stepsData && userData.stepsData.id === formId) {
+                        return { id: userDoc.id, name: userDoc.name, stepsData: userData.stepsData };
+                    }
+                }
+                return null; // Return null for users that don't match the criteria
+            });
+
+            // Wait for all promises to resolve
+            const results = await Promise.all(userPromises);
+
+            // Filter out null values (users that didn't match the criteria)
+            usersStepData = results.filter(data => data !== null);
+
+            return usersStepData;
+        } catch (err) {
+            console.error('Error fetching users of form:', err);
+            return [];
+        }
+    }
+
+
 
     async updateUser(userId, userData) {
         try {
-            
+
             let data = {
                 ...userData,
             }
-            if(userData.isPremium){
-                
+            if (userData.isPremium) {
+
                 data = {
                     ...data,
-                    premiumPlan:{
+                    premiumPlan: {
                         ...data.premiumPlan,
                         purchasedDate: firestore.Timestamp.fromDate(new Date(data.premiumPlan.purchasedDate)),
                         expiryDate: firestore.Timestamp.fromDate(new Date(data.premiumPlan.expiryDate))
                     }
                 }
             }
-            
+
 
             await this.users.doc(userId).update(data);
             await this.invalidateCache('users:*');
             await this.invalidateCache(`user:*`);
-            
-            
-            
+
+
+
             return { message: `User ${userId} updated successfully` };
         } catch (error) {
             console.log(error);
-            
+
             throw new Error('User update failed');
         }
     }
@@ -376,10 +385,10 @@ class AdminService {
                 ...userData,
                 createdAt: firestore.Timestamp.fromDate(new Date()),
             }
-            if(userData.isPremium){
+            if (userData.isPremium) {
                 data = {
                     ...data,
-                    premiumPlan:{
+                    premiumPlan: {
                         ...data.premiumPlan,
                         purchasedDate: firestore.Timestamp.fromDate(new Date(data.premiumPlan.purchasedDate)),
                         expiryDate: firestore.Timestamp.fromDate(new Date(data.premiumPlan.expiryDate))
@@ -388,19 +397,19 @@ class AdminService {
             }
             await this.users.add(userData);
             await this.invalidateCache('users:*');
-            
-            
-            
+
+
+
             return { message: `User added successfully` };
         } catch (error) {
             console.log(error);
-            
+
             throw new Error('User add failed');
         }
     }
     async updateUserStepData(userId, stepsData) {
         try {
-            const userRef =  this.users.doc(userId);
+            const userRef = this.users.doc(userId);
             const userDoc = await userRef.get();
             if (!userDoc.exists) throw new Error('User not found');
             const updatedStepsData = stepsData || [];
@@ -411,9 +420,9 @@ class AdminService {
             await this.invalidateCache('users:*');
             await this.invalidateCache(`user:*/user/${userId}`);
             await this.invalidateCache(`user:*`);
-            
-            
-            
+
+
+
             return { message: `User ${userId} stepdata updated successfully` };
         } catch (error) {
             throw new Error('User update failed');
@@ -422,10 +431,10 @@ class AdminService {
 
     async resetUsersStepData() {
         try {
-            const userRef =await  this.users.where('isPremium',"==",true).get();
+            const userRef = await this.users.where('isPremium', "==", true).get();
             const forms = await this.counsellingForms.get();
             const fetchedForms = [];
-            if(forms.empty) throw new Error('No forms found');
+            if (forms.empty) throw new Error('No forms found');
             forms.forEach((form) => {
                 fetchedForms.push({
                     id: form.id,
@@ -433,7 +442,7 @@ class AdminService {
                 });
             })
 
-            if(fetchedForms.length === 0) throw new Error('No forms found');
+            if (fetchedForms.length === 0) throw new Error('No forms found');
             if (userRef.empty) throw new Error('No users found');
 
             const dataToPrint = []
@@ -444,9 +453,9 @@ class AdminService {
 
                 let updatedData = userData.stepsData || null;
 
-                if(!updatedData){
+                if (!updatedData) {
                     const form = userData.premiumPlan?.form
-                    if(!form) {
+                    if (!form) {
                         return
                     }
                     const formData = fetchedForms.find(form => form.id === userData.premiumPlan.form);
@@ -460,7 +469,7 @@ class AdminService {
                         })),
                     }
 
-                    
+
                 }
 
                 const formsData = fetchedForms.find(form => form.id === userData.premiumPlan.form);
@@ -475,71 +484,71 @@ class AdminService {
                     verdict: ""
                 }))
 
-                if (userData.isPremium){
-                        await this.users.doc(userId).update({
-                            stepsData: updatedData,
-                        })
-                        console.log(`Updated user ${userId} with step data:`, updatedData);
-                        
-                        dataToPrint.push({
-                            id: userId,
-                            name: userData.name,
-                            phone: userData.phone,
-                            stepsData: updatedData
-                        });
-                        
+                if (userData.isPremium) {
+                    await this.users.doc(userId).update({
+                        stepsData: updatedData,
+                    })
+                    console.log(`Updated user ${userId} with step data:`, updatedData);
+
+                    dataToPrint.push({
+                        id: userId,
+                        name: userData.name,
+                        phone: userData.phone,
+                        stepsData: updatedData
+                    });
+
                 }
 
 
 
             })
             await this.invalidateCache('users:*');
-            return { message: `Users stepdata reset successfully`,  data: dataToPrint.slice(0, 10) };
+            return { message: `Users stepdata reset successfully`, data: dataToPrint.slice(0, 10) };
         } catch (error) {
             console.log(error);
-            
+
             throw new Error('User update failed');
         }
     }
     async addEmailToCounselling() {
         try {
-            const userRef =await  this.users.get();
-           
-    
+            const userRef = await this.users.get();
+
+
             if (userRef.empty) throw new Error('No users found');
 
             const dataToPrint = []
-            
+
 
             userRef.docs.forEach(async (userDoc) => {
                 const userId = userDoc.id;
                 const userData = userDoc.data();
 
-                if (userData.email){
-                        await this.users.doc(userId).update({
-                            counsellingData:{
-                                ...userData.counsellingData,
-                                email: userData.email
-                            }
-                        })
-                        
-                        dataToPrint.push({
-                            id: userId,
-                            name: userData.name,
-                            phone: userData.phone,
-                            counsellingData:{
-                                ...userData.counsellingData,
-                                email: userData.email
-                            }
-                        });
-                        
+                if (userData.email) {
+                    await this.users.doc(userId).update({
+                        counsellingData: {
+                            ...userData.counsellingData,
+                            email: userData.email
+                        }
+                    })
+
+                    dataToPrint.push({
+                        id: userId,
+                        name: userData.name,
+                        phone: userData.phone,
+                        counsellingData: {
+                            ...userData.counsellingData,
+                            email: userData.email
+                        }
+                    });
+
                 }
             })
             await this.invalidateCache('users:*');
-            return { message: `Users stepdata reset successfully`,  data: dataToPrint.slice(0, 10) };
+            return { message: `Users stepdata reset successfully`, data: dataToPrint.slice(0, 10) };
         } catch (error) {
             console.log(error);
-            
+
             throw new Error('User update failed');
         }
     }
@@ -563,11 +572,11 @@ class AdminService {
 
     async searchUser(searchCriteria) {
         let query = this.users;
-        
+
 
         if (searchCriteria.name) {
             query = query.where('name', '>=', searchCriteria.name)
-                        .where('name', '<=', searchCriteria.name + '\uf8ff');
+                .where('name', '<=', searchCriteria.name + '\uf8ff');
         }
         if (searchCriteria.phone) {
             query = query.where('phone', '==', searchCriteria.phone);
@@ -578,7 +587,7 @@ class AdminService {
         const snapshot = await query.get();
         const userId = snapshot.docs[0]?.id;
         let notes = []
-        if(userId){
+        if (userId) {
             notes = (await this.notes.doc(userId).get()).data()
         }
         return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), notes }));
@@ -612,7 +621,7 @@ class AdminService {
         try {
             const batch = this.db.batch();
             const timestamp = new Date().toISOString();
-            
+
             Object.entries(listsData).forEach(([id, data]) => {
                 const docRef = this.lists.doc(id);
                 const oldFolderId = data.folderId || null;
@@ -635,7 +644,7 @@ class AdminService {
                     }
                 }
             });
-            
+
             await batch.commit();
             await this.invalidateCache('lists:*');
             return { message: 'Lists updated successfully' };
@@ -643,24 +652,24 @@ class AdminService {
             throw new Error('Lists update failed');
         }
     }
-    async appendList(listsId,colleges,admin) {
+    async appendList(listsId, colleges, admin) {
         try {
             const batch = this.db.batch();
             const timestamp = new Date().toISOString();
-            
-            
-                const docRef = this.lists.doc(listsId);
-                batch.set(docRef, {
-                    colleges,
-                    lastUpdatedBy: admin.email,
-                    updatedAt: timestamp
-                }, { merge: true });
+
+
+            const docRef = this.lists.doc(listsId);
+            batch.set(docRef, {
+                colleges,
+                lastUpdatedBy: admin.email,
+                updatedAt: timestamp
+            }, { merge: true });
 
             // Update the list folder's list_count
             const listDoc = await docRef.get();
             if (!listDoc.exists) throw new Error('List not found');
-            
-            
+
+
             await batch.commit();
             await this.invalidateCache('lists:*');
             return { message: 'Lists apepended successfully' };
@@ -685,18 +694,18 @@ class AdminService {
                     })
                 } else {
                     batch.update(docRef, {
-                    isDeleted: true,
-                    deletedAt: new Date().toISOString(),
-                    deleteFolderId: "archive_1"
+                        isDeleted: true,
+                        deletedAt: new Date().toISOString(),
+                        deleteFolderId: "archive_1"
                     });
                     batch.update(archRef, {
                         list_count: firestore.FieldValue.increment(1),
                     })
                 }
                 // Move to archive folder
-                
+
                 // Optionally, you can also remove the list from the folder's lists array
-                
+
                 batch.update(folderRef, {
                     list_count: firestore.FieldValue.increment(-1),
                 });
@@ -737,7 +746,7 @@ class AdminService {
 
             this.invalidateCache('lists:*');
             this.invalidateCache(`list:${listId}`);
-            
+
             return await this.getList(listId);
         } catch (error) {
             console.error('List update error:', error);
@@ -752,8 +761,8 @@ class AdminService {
             // Move to archive folder
             const archRef = this.list_folders.doc("archive_1");
             const originalFolderId = await listDoc.get('folderId') || null;
-            
-            const folderRef = originalFolderId ? this.list_folders.doc(originalFolderId): null;
+
+            const folderRef = originalFolderId ? this.list_folders.doc(originalFolderId) : null;
             const isDeleted = listDoc.get('isDeleted') || false;
             if (isDeleted) {
                 console.warn(`List ${listId} is already archived, deleting permanently.`);
@@ -761,16 +770,16 @@ class AdminService {
                 await archRef.update({
                     list_count: firestore.FieldValue.increment(-1),
                 });
-                if(folderRef)
-                await folderRef.update({
-                    list_count: firestore.FieldValue.increment(-1),
-                });
+                if (folderRef)
+                    await folderRef.update({
+                        list_count: firestore.FieldValue.increment(-1),
+                    });
                 this.invalidateCache('lists:*');
                 this.invalidateCache(`list:${listId}`);
                 return { message: 'List deleted permanently' };
             }
             console.log(`Deleting list ${listId} and moving to archive folder`);
-            
+
             const batch = this.db.batch();
             batch.update(this.lists.doc(listId), {
                 isDeleted: true,
@@ -781,10 +790,10 @@ class AdminService {
             batch.update(archRef, {
                 list_count: firestore.FieldValue.increment(1),
             })
-            if(folderRef)
-            batch.update(folderRef, {
-                list_count: firestore.FieldValue.increment(-1),
-            });
+            if (folderRef)
+                batch.update(folderRef, {
+                    list_count: firestore.FieldValue.increment(-1),
+                });
 
             await batch.commit();
 
@@ -793,7 +802,7 @@ class AdminService {
             return { message: 'List deleted successfully' };
         } catch (error) {
             console.log(error);
-            
+
             throw new Error('List deletion failed');
         }
     }
@@ -825,7 +834,7 @@ class AdminService {
                 // If no folderId is provided, default to "default" folder
                 data.folderId = null;
             }
-            
+
             const docRef = await this.lists.add(data);
             this.invalidateCache('lists:*');
             return { id: docRef.id, ...data };
@@ -837,7 +846,7 @@ class AdminService {
     async searchColleges(searchQuery) {
         try {
             let query = this.colleges;
-            
+
             // Check if we need to fetch all cities for the city filter
             if (searchQuery.fetchAllCities) {
                 const snapshot = await query.get();
@@ -846,7 +855,7 @@ class AdminService {
                     ...doc.data()
                 }));
             }
-            
+
             // Check if we need to fetch all branches for the branch filter
             if (searchQuery.fetchAllBranches) {
                 const snapshot = await query.get();
@@ -855,7 +864,7 @@ class AdminService {
                     ...doc.data()
                 }));
             }
-            
+
             const snapshot = await query.get();
             let results = snapshot.docs.map(doc => ({
                 id: doc.id,
@@ -865,7 +874,7 @@ class AdminService {
             // Filter results for instituteName
             if (searchQuery.instituteName) {
                 const searchTerm = searchQuery.instituteName.toLowerCase();
-                results = results.filter(college => 
+                results = results.filter(college =>
                     college.instituteName.toLowerCase().includes(searchTerm)
                 );
             }
@@ -873,23 +882,23 @@ class AdminService {
             // Filter results for instituteCode
             if (searchQuery.instituteCode) {
                 const codeSearch = searchQuery.instituteCode.toString();
-                results = results.filter(college => 
+                results = results.filter(college =>
                     college.instituteCode.toString().includes(codeSearch)
                 );
             }
-            
+
             // Filter by city if specified
             if (searchQuery.city) {
-                results = results.filter(college => 
+                results = results.filter(college =>
                     college.city && college.city === searchQuery.city
                 );
             }
-            
+
             // Filter by branch if specified
             if (searchQuery.branch) {
-                results = results.filter(college => 
-                    college.branches && 
-                    college.branches.some(branch => 
+                results = results.filter(college =>
+                    college.branches &&
+                    college.branches.some(branch =>
                         branch.branchName.toLowerCase().includes(searchQuery.branch.toLowerCase())
                     )
                 );
@@ -908,7 +917,7 @@ class AdminService {
                 throw new Error('User not found');
             }
             const userData = userDoc.data();
-            
+
             // Return user's lists array if it exists, or empty array if not
             return userData.lists || [];
         } catch (error) {
@@ -917,7 +926,7 @@ class AdminService {
         }
     }
 
-    
+
 
     async updateUserList(userId, listId, listData, admin) {
         try {
@@ -935,7 +944,7 @@ class AdminService {
             if (!listId) {
                 throw new Error('List ID is required');
             }
-            
+
             const userDoc = await this.users.doc(userId).get();
             if (!userDoc.exists) {
                 throw new Error('User not found');
@@ -943,16 +952,16 @@ class AdminService {
 
             const userData = userDoc.data();
             const userLists = userData.lists || [];
-            
+
             // Find the list by any of its potential ID fields
             const listIndex = userLists.findIndex(l => {
                 console.log(`Comparing list IDs: list.id=${l.id}, list.listId=${l.listId}, list.originalListId=${l.originalListId}, targetId=${listId}`);
-                return (l.id && l.id === listId) || 
-                       (l.listId && l.listId === listId) || 
-                       (l.originalListId && l.originalListId === listId);
+                return (l.id && l.id === listId) ||
+                    (l.listId && l.listId === listId) ||
+                    (l.originalListId && l.originalListId === listId);
             });
-           
-            
+
+
             console.log(`Found list at index: ${listIndex}`);
 
             if (listIndex === -1) {
@@ -962,8 +971,8 @@ class AdminService {
             // Update the specific list in user's lists array
             const timestamp = new Date().toISOString();
             const originalList = userLists[listIndex];
-            
-            
+
+
             userLists[listIndex] = {
                 ...originalList,
                 ...listData,
@@ -977,7 +986,7 @@ class AdminService {
             };
 
             console.log('Updated list data:', userLists[listIndex]);
-            
+
             await this.users.doc(userId).update({
                 lists: userLists
             });
@@ -985,9 +994,9 @@ class AdminService {
             await this.invalidateCache(`user:*`);
             await this.invalidateCache(`userlists:*/user/${userId}/lists`);
             await this.invalidateCache(`users:*`);
-            
-            
-            
+
+
+
             return userLists[listIndex];
         } catch (error) {
             console.error('Update user list error:', error);
@@ -998,11 +1007,11 @@ class AdminService {
         try {
             console.log(`Updating user list. UserID: ${userId}, ListID: ${listId}`);
 
-            
+
             if (!listId) {
                 throw new Error('List ID is required');
             }
-            
+
             const userDoc = await this.users.doc(userId).get();
             if (!userDoc.exists) {
                 throw new Error('User not found');
@@ -1011,7 +1020,7 @@ class AdminService {
             const userData = userDoc.data();
             const userLists = userData.createdList || [];
 
-             listData.colleges = listData.colleges.map(college => {
+            listData.colleges = listData.colleges.map(college => {
                 return {
                     ...college,
                     branches: [],
@@ -1019,15 +1028,15 @@ class AdminService {
                     keywords: []
                 };
             });
-            
+
             // Find the list by any of its potential ID fields
             const listIndex = userLists.findIndex(l => {
                 console.log(`Comparing list IDs: list.id=${l.id}, list.listId=${l.listId}, list.originalListId=${l.originalListId}, targetId=${listId}`);
-                return (l.id && l.id === listId) || 
-                       (l.listId && l.listId === listId) || 
-                       (l.originalListId && l.originalListId === listId);
+                return (l.id && l.id === listId) ||
+                    (l.listId && l.listId === listId) ||
+                    (l.originalListId && l.originalListId === listId);
             });
-            
+
             console.log(`Found list at index: ${listIndex}`);
 
             if (listIndex === -1) {
@@ -1037,8 +1046,8 @@ class AdminService {
             // Update the specific list in user's lists array
             const timestamp = new Date().toISOString();
             const originalList = userLists[listIndex];
-            
-            
+
+
             userLists[listIndex] = {
                 ...originalList,
                 ...listData,
@@ -1052,18 +1061,18 @@ class AdminService {
             };
 
             console.log('Updated list data:', userLists[listIndex]);
-             await this.invalidateCache(`user:*`);
+            await this.invalidateCache(`user:*`);
             await this.invalidateCache(`userlists:*/user/${userId}/lists`);
             await this.invalidateCache(`users:*`);
-            
+
             await this.users.doc(userId).update({
                 createdList: userLists
             });
 
             await this.invalidateCache(`userlists:*/user/${userId}/lists`);
-            
-            
-            
+
+
+
             return userLists[listIndex];
         } catch (error) {
             console.error('Update user list error:', error);
@@ -1082,11 +1091,11 @@ class AdminService {
             const userLists = userData.createdList || [];
 
             // Check if list is already assigned
-            const isListAssigned = userLists.some(list => 
-                list.originalListId === listAssignment.originalListId || 
+            const isListAssigned = userLists.some(list =>
+                list.originalListId === listAssignment.originalListId ||
                 list.listId === listAssignment.originalListId
             );
-            
+
             if (isListAssigned) {
                 throw new Error('List is already assigned to this user');
             }
@@ -1101,13 +1110,13 @@ class AdminService {
             await this.users.doc(userId).update({
                 createdList: [...userLists, newAssignment]
             });
-            
+
             // Send notification to user
             // await this.sendNotification(userId, 'LIST_ASSIGNED', {
             //     listId: listAssignment.originalListId,
             //     listName: listAssignment.name || 'New List'
             // });
-            
+
             this.invalidateCache('user:*')
             this.invalidateCache('user_lists')
             return { message: `List assigned to user ${userData.id} (${userData.phone}) successfully` };
@@ -1128,7 +1137,7 @@ class AdminService {
             const userAssignedLists = userData.lists || [];
 
             // Check if list is already assigned
-            
+
 
             const createdListAssignment = userCreatedLists.find(list => {
                 return list.id === listId || list.listId === listId || list.originalListId === listId;
@@ -1136,11 +1145,11 @@ class AdminService {
 
 
 
-            const isListAssigned = userAssignedLists.some(list => 
-                createdListAssignment && (list.originalListId === createdListAssignment.originalListId || 
-                list.listId === createdListAssignment.originalListId
-            ));
-            
+            const isListAssigned = userAssignedLists.some(list =>
+                createdListAssignment && (list.originalListId === createdListAssignment.originalListId ||
+                    list.listId === createdListAssignment.originalListId
+                ));
+
             if (isListAssigned) {
                 throw new Error('List is already assigned to this user');
             }
@@ -1160,7 +1169,7 @@ class AdminService {
                 lists: [...userAssignedLists, newAssignment],
                 createdList: newCreatedList
             });
-            
+
             // Send notification to user
             await this.sendNotification(userId, 'LIST_ASSIGNED', {
                 listId: createdListAssignment.originalListId,
@@ -1188,20 +1197,20 @@ class AdminService {
 
             const newLists = []
 
-            userCreatedLists.forEach((createdList)=>{
-                    const isListAssigned = userAssignedLists.some(list => 
-                        (list.originalListId === createdList.originalListId || 
-                        list.listId === createdList.originalListId
-                    ));
+            userCreatedLists.forEach((createdList) => {
+                const isListAssigned = userAssignedLists.some(list =>
+                (list.originalListId === createdList.originalListId ||
+                    list.listId === createdList.originalListId
+                ));
 
-                    if(!isListAssigned){
-                        const newAssignment = {
-                            ...createdList,
-                            listId: createdList.originalListId // Maintain backward compatibility
-                        };
+                if (!isListAssigned) {
+                    const newAssignment = {
+                        ...createdList,
+                        listId: createdList.originalListId // Maintain backward compatibility
+                    };
 
-                        newLists.push(newAssignment);
-                    }
+                    newLists.push(newAssignment);
+                }
             })
 
             if (newLists.length === 0) {
@@ -1280,63 +1289,63 @@ class AdminService {
     //     }
     // }
 
-async releaseAllListBulk(userIds) {
-    try {
-        const messages = [];
-        messages.push(`Releasing all lists to ${userIds.length} users`);
+    async releaseAllListBulk(userIds) {
+        try {
+            const messages = [];
+            messages.push(`Releasing all lists to ${userIds.length} users`);
 
-        const batch = this.db.batch();
+            const batch = this.db.batch();
 
-        await Promise.all(userIds.map(async (userId) => {
-            messages.push(`Releasing lists to user ${userId}`);
+            await Promise.all(userIds.map(async (userId) => {
+                messages.push(`Releasing lists to user ${userId}`);
 
-            const userDoc = await this.users.doc(userId).get();
-            if (!userDoc.exists) {
-                throw new Error(`User ${userId} not found`);
-            }
-
-            const userData = userDoc.data();
-            const userCreatedLists = userData.createdList || [];
-            const userAssignedLists = userData.lists || [];
-
-            const newLists = [];
-
-            userCreatedLists.forEach((createdList) => {
-                const isListAssigned = userAssignedLists.some(list =>
-                    list.originalListId === createdList.originalListId ||
-                    list.listId === createdList.originalListId
-                );
-
-                if (!isListAssigned) {
-                    const newAssignment = {
-                        ...createdList,
-                        listId: createdList.originalListId // Maintain backward compatibility
-                    };
-                    newLists.push(newAssignment);
+                const userDoc = await this.users.doc(userId).get();
+                if (!userDoc.exists) {
+                    throw new Error(`User ${userId} not found`);
                 }
-            });
 
-            if (newLists.length > 0) {
-                batch.update(this.users.doc(userId), {
-                    lists: [...userAssignedLists, ...newLists],
-                    createdList: []
+                const userData = userDoc.data();
+                const userCreatedLists = userData.createdList || [];
+                const userAssignedLists = userData.lists || [];
+
+                const newLists = [];
+
+                userCreatedLists.forEach((createdList) => {
+                    const isListAssigned = userAssignedLists.some(list =>
+                        list.originalListId === createdList.originalListId ||
+                        list.listId === createdList.originalListId
+                    );
+
+                    if (!isListAssigned) {
+                        const newAssignment = {
+                            ...createdList,
+                            listId: createdList.originalListId // Maintain backward compatibility
+                        };
+                        newLists.push(newAssignment);
+                    }
                 });
-            }
-        }));
 
-        await batch.commit();
+                if (newLists.length > 0) {
+                    batch.update(this.users.doc(userId), {
+                        lists: [...userAssignedLists, ...newLists],
+                        createdList: []
+                    });
+                }
+            }));
 
-        this.invalidateCache('user:*');
-        this.invalidateCache('user_lists');
-        this.invalidateCache('users:*');
-        console.log(messages);
+            await batch.commit();
 
-        return { message: `All lists released to ${userIds.length} users successfully`, details: messages };
+            this.invalidateCache('user:*');
+            this.invalidateCache('user_lists');
+            this.invalidateCache('users:*');
+            console.log(messages);
 
-    } catch (error) {
-        throw new Error(`Failed to assign list: ${error.message}`);
+            return { message: `All lists released to ${userIds.length} users successfully`, details: messages };
+
+        } catch (error) {
+            throw new Error(`Failed to assign list: ${error.message}`);
+        }
     }
-}
 
 
     async deleteUserList(userId, listId) {
@@ -1350,7 +1359,7 @@ async releaseAllListBulk(userIds) {
             const userLists = userData.lists || [];
 
             // Find list by either id or listId (for backward compatibility)
-            const listIndex = userLists.findIndex(list => 
+            const listIndex = userLists.findIndex(list =>
                 list.id === listId || list.listId === listId
             );
 
@@ -1365,13 +1374,13 @@ async releaseAllListBulk(userIds) {
             await this.users.doc(userId).update({
                 lists: userLists
             });
-            
+
             this.invalidateCache(`userlists:*/user/${userId}/lists`);
             this.invalidateCache(`user:*/user/${userId}`);
             this.invalidateCache(`user:*`);
-          
 
-            return { 
+
+            return {
                 message: 'List removed successfully',
                 remainingLists: userLists
             };
@@ -1390,10 +1399,10 @@ async releaseAllListBulk(userIds) {
             const userData = userDoc.data();
             const userLists = userData.createdList || [];
             console.log(listId);
-            
+
 
             // Find list by either id or listId (for backward compatibility)
-            const listIndex = userLists.findIndex(list => 
+            const listIndex = userLists.findIndex(list =>
                 list.id === listId || list.listId === listId
             );
 
@@ -1406,16 +1415,16 @@ async releaseAllListBulk(userIds) {
 
             // Update user document
             await this.users.doc(userId).update({
-            createdList: userLists
+                createdList: userLists
             });
 
-               this.invalidateCache(`userlists:*/user/${userId}/lists`);
+            this.invalidateCache(`userlists:*/user/${userId}/lists`);
             this.invalidateCache(`user:*/user/${userId}`);
             this.invalidateCache(`user:*`);
-            
-          
 
-            return { 
+
+
+            return {
                 message: 'List removed successfully',
                 remainingLists: userLists
             };
@@ -1451,178 +1460,178 @@ async releaseAllListBulk(userIds) {
     async saveFormConfig(steps) {
         const fallback = {
             "steps": [
-              {
-                "title": "Basic Information",
-                "fields": [
-                  {
-                    "id": "fullName",
-                    "type": "text",
-                    "label": "Full Name",
-                    "key": "fullName",
-                    "required": true,
-                    "options": []
-                  },
-                  {
-                    "id": "dob",
-                    "type": "date",
-                    "label": "Date of Birth",
-                    "key": "dob",
-                    "required": true,
-                    "options": []
-                  },
-                  {
-                    "id": "mobile",
-                    "type": "text",
-                    "label": "Mobile Number",
-                    "key": "mobile",
-                    "required": true,
-                    "options": [],
-                    "editable": false
-                  },
-                  {
-                    "id": "email",
-                    "type": "email",
-                    "label": "Email",
-                    "key": "email",
-                    "required": true,
-                    "options": []
-                  },
-                  {
-                    "id": "city",
-                    "type": "text",
-                    "label": "City",
-                    "key": "city",
-                    "required": true,
-                    "options": []
-                  },
-                  {
-                    "id": "state",
-                    "type": "text",
-                    "label": "State",
-                    "key": "state",
-                    "required": true,
-                    "options": []
-                  }
-                ]
-              },
-              {
-                "title": "Academic Information",
-                "fields": [
-                  {
-                    "id": "boardMarks",
-                    "type": "number",
-                    "label": "12th Board Marks",
-                    "key": "boardMarks",
-                    "required": true,
-                    "options": []
-                  },
-                  {
-                    "id": "boardType",
-                    "type": "select",
-                    "label": "Board Type",
-                    "key": "boardType",
-                    "required": true,
-                    "options": ["State Board", "CBSC", "ICSE"]
-                  },
-                  {
-                    "id": "jeeMarks",
-                    "type": "number",
-                    "label": "JEE Marks",
-                    "key": "jeeMarks",
-                    "required": false,
-                    "options": []
-                  },
-                  {
-                    "id": "cetMarks",
-                    "type": "number",
-                    "label": "CET Marks",
-                    "key": "cetMarks",
-                    "required": false,
-                    "options": []
-                  },
-                  {
-                    "id": "preferredField",
-                    "type": "select",
-                    "label": "Preferred Field",
-                    "key": "preferredField",
-                    "required": true,
-                    "options": ["Computer Science", "Other"]
-                  },
-                  {
-                    "id": "cetSeatNumber",
-                    "type": "text",
-                    "label": "CET Seat Number",
-                    "key": "cetSeatNumber",
-                    "required": false,
-                    "options": []
-                  },
-                  {
-                    "id": "jeeSeatNumber",
-                    "type": "text",
-                    "label": "JEE Seat Number",
-                    "key": "jeeSeatNumber",
-                    "required": false,
-                    "options": []
-                  }
-                ]
-              },
-              {
-                "title": "Preferences and Goals",
-                "fields": [
-                  {
-                    "id": "preferredLocations",
-                    "type": "text",
-                    "label": "Preferred Locations",
-                    "key": "preferredLocations",
-                    "required": false,
-                    "options": []
-                  },
-                  {
-                    "id": "budget",
-                    "type": "select",
-                    "label": "Budget",
-                    "key": "budget",
-                    "required": true,
-                    "options": ["Under 1L", "1L - 2L", "Other"]
-                  },
-                  {
-                    "id": "password",
-                    "type": "password",
-                    "label": "Password",
-                    "key": "password",
-                    "required": true,
-                    "options": []
-                  },
-                  {
-                    "id": "confirmPassword",
-                    "type": "password",
-                    "label": "Confirm Password",
-                    "key": "confirmPassword",
-                    "required": true,
-                    "options": []
-                  },
-                  {
-                    "id": "termsAccepted",
-                    "type": "checkbox",
-                    "label": "I agree to the Terms and Conditions",
-                    "key": "termsAccepted",
-                    "required": true,
-                    "options": []
-                  }
-                ]
-              }
+                {
+                    "title": "Basic Information",
+                    "fields": [
+                        {
+                            "id": "fullName",
+                            "type": "text",
+                            "label": "Full Name",
+                            "key": "fullName",
+                            "required": true,
+                            "options": []
+                        },
+                        {
+                            "id": "dob",
+                            "type": "date",
+                            "label": "Date of Birth",
+                            "key": "dob",
+                            "required": true,
+                            "options": []
+                        },
+                        {
+                            "id": "mobile",
+                            "type": "text",
+                            "label": "Mobile Number",
+                            "key": "mobile",
+                            "required": true,
+                            "options": [],
+                            "editable": false
+                        },
+                        {
+                            "id": "email",
+                            "type": "email",
+                            "label": "Email",
+                            "key": "email",
+                            "required": true,
+                            "options": []
+                        },
+                        {
+                            "id": "city",
+                            "type": "text",
+                            "label": "City",
+                            "key": "city",
+                            "required": true,
+                            "options": []
+                        },
+                        {
+                            "id": "state",
+                            "type": "text",
+                            "label": "State",
+                            "key": "state",
+                            "required": true,
+                            "options": []
+                        }
+                    ]
+                },
+                {
+                    "title": "Academic Information",
+                    "fields": [
+                        {
+                            "id": "boardMarks",
+                            "type": "number",
+                            "label": "12th Board Marks",
+                            "key": "boardMarks",
+                            "required": true,
+                            "options": []
+                        },
+                        {
+                            "id": "boardType",
+                            "type": "select",
+                            "label": "Board Type",
+                            "key": "boardType",
+                            "required": true,
+                            "options": ["State Board", "CBSC", "ICSE"]
+                        },
+                        {
+                            "id": "jeeMarks",
+                            "type": "number",
+                            "label": "JEE Marks",
+                            "key": "jeeMarks",
+                            "required": false,
+                            "options": []
+                        },
+                        {
+                            "id": "cetMarks",
+                            "type": "number",
+                            "label": "CET Marks",
+                            "key": "cetMarks",
+                            "required": false,
+                            "options": []
+                        },
+                        {
+                            "id": "preferredField",
+                            "type": "select",
+                            "label": "Preferred Field",
+                            "key": "preferredField",
+                            "required": true,
+                            "options": ["Computer Science", "Other"]
+                        },
+                        {
+                            "id": "cetSeatNumber",
+                            "type": "text",
+                            "label": "CET Seat Number",
+                            "key": "cetSeatNumber",
+                            "required": false,
+                            "options": []
+                        },
+                        {
+                            "id": "jeeSeatNumber",
+                            "type": "text",
+                            "label": "JEE Seat Number",
+                            "key": "jeeSeatNumber",
+                            "required": false,
+                            "options": []
+                        }
+                    ]
+                },
+                {
+                    "title": "Preferences and Goals",
+                    "fields": [
+                        {
+                            "id": "preferredLocations",
+                            "type": "text",
+                            "label": "Preferred Locations",
+                            "key": "preferredLocations",
+                            "required": false,
+                            "options": []
+                        },
+                        {
+                            "id": "budget",
+                            "type": "select",
+                            "label": "Budget",
+                            "key": "budget",
+                            "required": true,
+                            "options": ["Under 1L", "1L - 2L", "Other"]
+                        },
+                        {
+                            "id": "password",
+                            "type": "password",
+                            "label": "Password",
+                            "key": "password",
+                            "required": true,
+                            "options": []
+                        },
+                        {
+                            "id": "confirmPassword",
+                            "type": "password",
+                            "label": "Confirm Password",
+                            "key": "confirmPassword",
+                            "required": true,
+                            "options": []
+                        },
+                        {
+                            "id": "termsAccepted",
+                            "type": "checkbox",
+                            "label": "I agree to the Terms and Conditions",
+                            "key": "termsAccepted",
+                            "required": true,
+                            "options": []
+                        }
+                    ]
+                }
             ]
-          }
+        }
         try {
             const timestamp = new Date().toISOString();
             await this.registrationForm.doc('Form1').set({
                 steps: steps ?? fallback.steps,
                 updatedAt: timestamp
             }, { merge: true });
-            
+
             await this.invalidateCache('formconfig:*');
-            
-            return { 
+
+            return {
                 message: 'Form configuration saved successfully',
                 steps: steps,
                 updatedAt: timestamp
@@ -1641,10 +1650,10 @@ async releaseAllListBulk(userIds) {
                 throw new Error('Admin with this email already exists');
             }
 
-            if(!adminData.role) {
+            if (!adminData.role) {
                 adminData.role = 'admin'; // Default role
             }
-            if(!adminData.password) {
+            if (!adminData.password) {
                 adminData.password = 'admin123'; // Default password
             }
 
@@ -1657,7 +1666,7 @@ async releaseAllListBulk(userIds) {
                 throw new Error('Permissions for this role do not exist');
             }
             const permissionsData = permissionsDoc.data();
-            adminData.permissions = permissionsData || {pages:[]};
+            adminData.permissions = permissionsData || { pages: [] };
 
             // Add timestamp
             const timestamp = new Date().toISOString();
@@ -1687,29 +1696,29 @@ async releaseAllListBulk(userIds) {
             // Import fs module for file operations
             const fs = await import('fs/promises');
             const path = await import('path');
-            
+
             let collegeIds = query.collegeIds || [];
-            if(collegeIds.length > 0) {
+            if (collegeIds.length > 0) {
                 collegeIds = collegeIds.map(id => id.toString().split('_')[0]);
             }
-            
+
             // Read college data from file instead of Firestore
             const fileData = await fs.readFile(this.COLLEGES_FILE_PATH, 'utf8');
             const allColleges = JSON.parse(fileData);
-            
+
             // Filter colleges by requested IDs
             const formattedData = collegeIds.map(collegeId => {
                 // Find the college in the JSON data
-                const college = allColleges.find(c => 
+                const college = allColleges.find(c =>
                     c.id === collegeId || c.id.toString() === collegeId
                 );
-                
+
                 return {
                     id: collegeId,
                     branches: college ? college.branches : [] // Return empty array if college not found
                 };
             });
-            
+
             return formattedData;
         } catch (error) {
             console.error('Get cutoff error:', error);
@@ -1725,12 +1734,12 @@ async releaseAllListBulk(userIds) {
                 // First check if document exists
                 const noteDoc = await this.notes.doc(userId).get();
                 if (noteDoc.exists) {
-                    
+
                     const noteData = noteDoc.data();
-        
+
                     // Remove the field entirely
                     delete noteData[`${noteKey}`];
-                    
+
                     // Set the entire document with the updated data
                     await this.notes.doc(userId).set(noteData);
                 }
@@ -1751,8 +1760,8 @@ async releaseAllListBulk(userIds) {
             await this.invalidateCache(`notes:*/get-notes/${userId}`);
             await this.invalidateCache(`user:*`);
             await this.invalidateCache(`users:*`);
-            
-        
+
+
 
             return {
                 message: note === '' ? 'Note deleted successfully' : 'Note added successfully',
@@ -1797,15 +1806,15 @@ async releaseAllListBulk(userIds) {
         return { id: adminDoc.id, ...adminData };
     }
     async getActivityLogs(adminId) {
-        
-        const activityDoc = await this.admin_activities.doc(adminId).collection('logs').where('method', '!=','GET').orderBy('timestamp','desc').limit(1000).get();
-        
+
+        const activityDoc = await this.admin_activities.doc(adminId).collection('logs').where('method', '!=', 'GET').orderBy('timestamp', 'desc').limit(1000).get();
+
         if (activityDoc.empty) throw new Error('No activity logs found for this admin');
         const activities = activityDoc.docs.map(doc => ({
             id: doc.id,
             ...doc.data()
         }));
-        return { activities, message: `Fetching activity logs for admin ID: ${adminId}`};
+        return { activities, message: `Fetching activity logs for admin ID: ${adminId}` };
     }
 
     async updateAdmin(adminId, adminData) {
@@ -1813,7 +1822,7 @@ async releaseAllListBulk(userIds) {
             const adminDoc = await this.admins.doc(adminId).get();
             if (!adminDoc.exists) throw new Error('Admin not found');
 
-            if(adminData.role == 'super-admin' && adminData.password) {
+            if (adminData.role == 'super-admin' && adminData.password) {
                 throw new Error('Super-admin password cannot be changed');
             }
 
@@ -1828,7 +1837,7 @@ async releaseAllListBulk(userIds) {
                 updatedAt: timestamp
             });
 
-            return { 
+            return {
                 message: 'Admin updated successfully',
                 admin: {
                     id: adminId,
@@ -1891,10 +1900,10 @@ async releaseAllListBulk(userIds) {
                 ...landingPageData,
                 updatedAt: timestamp
             }, { merge: true });
-            
+
             await this.invalidateCache('landingpage:*');
-            
-            return { 
+
+            return {
                 message: 'Landing page updated successfully',
                 landingPageData,
                 updatedAt: timestamp
@@ -1905,7 +1914,7 @@ async releaseAllListBulk(userIds) {
         }
     }
 
-    async getLandingPage(){
+    async getLandingPage() {
         try {
             const landingPageDoc = await this.landingPage.doc('landingPage').get();
             if (!landingPageDoc.exists) {
@@ -1927,16 +1936,16 @@ async releaseAllListBulk(userIds) {
                 ...homePageData,
                 updatedAt: timestamp
             }, { merge: true });
-            
+
             await this.invalidateCache('homepage:*');
-                
-                // Send notification to each user
-                this.sendNotification(null, 'HOME_UPDATE', {
-                    message: 'The home page has been updated. Check it out!'
-                }, true);
-           
-            
-            return { 
+
+            // Send notification to each user
+            this.sendNotification(null, 'HOME_UPDATE', {
+                message: 'The home page has been updated. Check it out!'
+            }, true);
+
+
+            return {
                 message: 'Home page updated successfully',
                 homePageData,
                 updatedAt: timestamp
@@ -1967,10 +1976,10 @@ async releaseAllListBulk(userIds) {
                 ...premiumPlansData,
                 updatedAt: timestamp
             }, { merge: true });
-            
+
             await this.invalidateCache('premiumplans:*');
-            
-            return { 
+
+            return {
                 message: 'Premium plans updated successfully',
                 premiumPlansData,
                 updatedAt: timestamp
@@ -2001,10 +2010,10 @@ async releaseAllListBulk(userIds) {
                 ...contactData,
                 updatedAt: timestamp
             }, { merge: true });
-            
+
             await this.invalidateCache('contact:*');
-            
-            return { 
+
+            return {
                 message: 'Contact data updated successfully',
                 contactData,
                 updatedAt: timestamp
@@ -2035,10 +2044,10 @@ async releaseAllListBulk(userIds) {
                 ...dynamicPagesData,
                 updatedAt: timestamp
             }, { merge: true });
-            
+
             await this.invalidateCache('dynamic:*');
-            
-            return { 
+
+            return {
                 message: 'Dynamic pages updated successfully',
                 dynamicPagesData,
                 updatedAt: timestamp
@@ -2062,15 +2071,15 @@ async releaseAllListBulk(userIds) {
         }
     }
 
-        async getUserPayment(phone){
+    async getUserPayment(phone) {
         try {
             console.log(`+${phone}`);
-            
+
             const paymentDoc = await this.payments.where('data.contact', '==', `${phone}`).get();
             if (paymentDoc.empty) {
                 return []
             }
-            const payments = paymentDoc.docs.map(doc => ({id: doc.id,...doc.data()}));
+            const payments = paymentDoc.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             return payments;
         } catch (error) {
             console.error('Get User Payments error:', error);
@@ -2104,149 +2113,149 @@ async releaseAllListBulk(userIds) {
         }
     }
 
-   async getPayments(lastdoc, limit, page, filters = null) {
-    try {
-        console.log(`Fetching payments with limit: ${limit}, page: ${page} ${lastdoc}`);
-        console.log('Applied filters:', filters);
-        
-        // Start with base query
-        let query = this.payments.orderBy('timestamp', 'desc');
-        
-        // Apply filters if provided
-        if (filters) {
-            // Date range filtering
-            if (filters.fromDate) {
-                const fromDate = new Date(filters.fromDate);
-                fromDate.setHours(0, 0, 0, 0); // Start of day
-                const fromTimestamp = firestore.Timestamp.fromDate(fromDate);
-                query = query.where('timestamp', '>=', fromTimestamp);
-            }
-            
-            if (filters.toDate) {
-                const toDate = new Date(filters.toDate);
-                toDate.setHours(23, 59, 59, 999); // End of day
-                const toTimestamp = firestore.Timestamp.fromDate(toDate);
-                query = query.where('timestamp', '<=', toTimestamp);
-            }
-            
-            // Plan filtering - filter by customerPlan in notes
-            if (filters.plan && filters.plan !== 'all') {
-                query = query.where('data.notes.customerPlan', '==', filters.plan);
-            }
-            
-            // Event type filtering
-            if (filters.type) {
-                if (filters.type === 'order') {
-                    // Filter for order events
-                    query = query.where('eventType', 'in', ['order.paid', 'order.created']);
-                } else if (filters.type === 'payment') {
-                    // Filter for payment events
-                    query = query.where('eventType', 'in', ['payment.captured', 'payment.failed', 'payment.authorized']);
-                }
-            }
-            
-            // Status filtering for orders
-            if (filters.status && filters.type === 'order') {
-                if (filters.status === 'paid') {
-                    query = query.where('eventType', '==', 'order.paid');
-                } else {
-                    // For other order statuses, filter by data.status
-                    query = query.where('data.status', '==', filters.status);
-                }
-            }
-            
-            // Status filtering for payments (when type is not 'order')
-            if (filters.status && filters.type !== 'order') {
-                if (filters.status === 'captured') {
-                    query = query.where('eventType', '==', 'payment.captured');
-                } else if (filters.status === 'failed') {
-                    query = query.where('eventType', '==', 'payment.failed');
-                } else if (filters.status === 'authorized') {
-                    query = query.where('eventType', '==', 'payment.authorized');
-                } else {
-                    // Generic status filtering
-                    query = query.where('data.status', '==', filters.status);
-                }
-            }
-        }
-        
-        // Apply pagination
-        if (lastdoc) {
-            const docRef = this.payments.doc(lastdoc);
-            const snapshot = await docRef.get();
-            
-            if (!snapshot.exists) {
-                throw new Error(`Document with ID ${lastdoc} not found`);
-            }
-            
-            console.log(`Starting after document: ${snapshot.id}`);
-            query = query.startAfter(snapshot);
-        }
-        
-        // Apply limit
-        query = query.limit(parseInt(limit, 10));
-        
-        const paymentDoc = await query.get();
-        
-        if (paymentDoc.empty) {
-            console.log('No payment details found with applied filters');
-            return [];
-        }
-        
-        let results = paymentDoc.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-        
-        // Additional client-side filtering for complex conditions that Firestore can't handle
-        if (filters) {
-            // Filter by payment method if specified
-            if (filters.method) {
-                results = results.filter(payment => 
-                    payment.data && payment.data.method === filters.method
-                );
-            }
-            
-            // Filter by phone number if specified
-            if (filters.phone) {
-                const phoneFilter = filters.phone.startsWith('+') ? filters.phone : `+91${filters.phone}`;
-                results = results.filter(payment => 
-                    payment.data && payment.data.contact === phoneFilter
-                );
-            }
-            
-            // Filter by email if specified
-            if (filters.email) {
-                results = results.filter(payment => 
-                    payment.data && payment.data.email && 
-                    payment.data.email.toLowerCase().includes(filters.email.toLowerCase())
-                );
-            }
-            
-            // Filter by amount range if specified
-            if (filters.minAmount) {
-                results = results.filter(payment => 
-                    payment.data && payment.data.amount >= (parseFloat(filters.minAmount) * 100)
-                );
-            }
-            
-            if (filters.maxAmount) {
-                results = results.filter(payment => 
-                    payment.data && payment.data.amount <= (parseFloat(filters.maxAmount) * 100)
-                );
-            }
-        }
-        
-        console.log(`Filtered results count: ${results.length}`);
-        return results;
-        
-    } catch (error) {
-        console.error('Get Payments error:', error);
-        throw new Error('Failed to get payments: ' + error.message);
-    }
-}
+    async getPayments(lastdoc, limit, page, filters = null) {
+        try {
+            console.log(`Fetching payments with limit: ${limit}, page: ${page} ${lastdoc}`);
+            console.log('Applied filters:', filters);
 
-    
+            // Start with base query
+            let query = this.payments.orderBy('timestamp', 'desc');
+
+            // Apply filters if provided
+            if (filters) {
+                // Date range filtering
+                if (filters.fromDate) {
+                    const fromDate = new Date(filters.fromDate);
+                    fromDate.setHours(0, 0, 0, 0); // Start of day
+                    const fromTimestamp = firestore.Timestamp.fromDate(fromDate);
+                    query = query.where('timestamp', '>=', fromTimestamp);
+                }
+
+                if (filters.toDate) {
+                    const toDate = new Date(filters.toDate);
+                    toDate.setHours(23, 59, 59, 999); // End of day
+                    const toTimestamp = firestore.Timestamp.fromDate(toDate);
+                    query = query.where('timestamp', '<=', toTimestamp);
+                }
+
+                // Plan filtering - filter by customerPlan in notes
+                if (filters.plan && filters.plan !== 'all') {
+                    query = query.where('data.notes.customerPlan', '==', filters.plan);
+                }
+
+                // Event type filtering
+                if (filters.type) {
+                    if (filters.type === 'order') {
+                        // Filter for order events
+                        query = query.where('eventType', 'in', ['order.paid', 'order.created']);
+                    } else if (filters.type === 'payment') {
+                        // Filter for payment events
+                        query = query.where('eventType', 'in', ['payment.captured', 'payment.failed', 'payment.authorized']);
+                    }
+                }
+
+                // Status filtering for orders
+                if (filters.status && filters.type === 'order') {
+                    if (filters.status === 'paid') {
+                        query = query.where('eventType', '==', 'order.paid');
+                    } else {
+                        // For other order statuses, filter by data.status
+                        query = query.where('data.status', '==', filters.status);
+                    }
+                }
+
+                // Status filtering for payments (when type is not 'order')
+                if (filters.status && filters.type !== 'order') {
+                    if (filters.status === 'captured') {
+                        query = query.where('eventType', '==', 'payment.captured');
+                    } else if (filters.status === 'failed') {
+                        query = query.where('eventType', '==', 'payment.failed');
+                    } else if (filters.status === 'authorized') {
+                        query = query.where('eventType', '==', 'payment.authorized');
+                    } else {
+                        // Generic status filtering
+                        query = query.where('data.status', '==', filters.status);
+                    }
+                }
+            }
+
+            // Apply pagination
+            if (lastdoc) {
+                const docRef = this.payments.doc(lastdoc);
+                const snapshot = await docRef.get();
+
+                if (!snapshot.exists) {
+                    throw new Error(`Document with ID ${lastdoc} not found`);
+                }
+
+                console.log(`Starting after document: ${snapshot.id}`);
+                query = query.startAfter(snapshot);
+            }
+
+            // Apply limit
+            query = query.limit(parseInt(limit, 10));
+
+            const paymentDoc = await query.get();
+
+            if (paymentDoc.empty) {
+                console.log('No payment details found with applied filters');
+                return [];
+            }
+
+            let results = paymentDoc.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            // Additional client-side filtering for complex conditions that Firestore can't handle
+            if (filters) {
+                // Filter by payment method if specified
+                if (filters.method) {
+                    results = results.filter(payment =>
+                        payment.data && payment.data.method === filters.method
+                    );
+                }
+
+                // Filter by phone number if specified
+                if (filters.phone) {
+                    const phoneFilter = filters.phone.startsWith('+') ? filters.phone : `+91${filters.phone}`;
+                    results = results.filter(payment =>
+                        payment.data && payment.data.contact === phoneFilter
+                    );
+                }
+
+                // Filter by email if specified
+                if (filters.email) {
+                    results = results.filter(payment =>
+                        payment.data && payment.data.email &&
+                        payment.data.email.toLowerCase().includes(filters.email.toLowerCase())
+                    );
+                }
+
+                // Filter by amount range if specified
+                if (filters.minAmount) {
+                    results = results.filter(payment =>
+                        payment.data && payment.data.amount >= (parseFloat(filters.minAmount) * 100)
+                    );
+                }
+
+                if (filters.maxAmount) {
+                    results = results.filter(payment =>
+                        payment.data && payment.data.amount <= (parseFloat(filters.maxAmount) * 100)
+                    );
+                }
+            }
+
+            console.log(`Filtered results count: ${results.length}`);
+            return results;
+
+        } catch (error) {
+            console.error('Get Payments error:', error);
+            throw new Error('Failed to get payments: ' + error.message);
+        }
+    }
+
+
 
 
     async sendNotification(userId, notificationId, customData = {}, toAll = false) {
@@ -2257,26 +2266,26 @@ async releaseAllListBulk(userIds) {
                 allUsers.forEach(async (userDoc) => {
                     const userData = userDoc.data();
                     const oneSignalId = userData.oneSignalId;
-                    
+
                     // Skip if no OneSignal ID is associated with the user
                     if (!oneSignalId) {
                         console.log(`No OneSignal ID found for user ${userDoc.id}, skipping notification`);
                         return null;
                     }
-                    
+
                     // Get notification template from the map
                     const notificationTemplate = this.notificationsMap[notificationId];
                     if (!notificationTemplate) {
                         throw new Error(`Notification template with ID "${notificationId}" not found`);
                     }
-                    
+
                     // Merge default additional data with custom data
                     const additionalData = {
                         ...notificationTemplate.additionalData,
                         ...customData,
                         userId: userDoc.id
                     };
-                    
+
                     // Send notification using the utility
                     return await sendOneSignalNotification(
                         oneSignalId,
@@ -2293,29 +2302,29 @@ async releaseAllListBulk(userIds) {
             if (!userDoc.exists) {
                 throw new Error('User not found');
             }
-            
+
             const userData = userDoc.data();
             const oneSignalId = userData.oneSignalId;
-            
+
             // Skip if no OneSignal ID is associated with the user
             if (!oneSignalId) {
                 console.log(`No OneSignal ID found for user ${userId}, skipping notification`);
                 return null;
             }
-            
+
             // Get notification template from the map
             const notificationTemplate = this.notificationsMap[notificationId];
             if (!notificationTemplate) {
                 throw new Error(`Notification template with ID "${notificationId}" not found`);
             }
-            
+
             // Merge default additional data with custom data
             const additionalData = {
                 ...notificationTemplate.additionalData,
                 ...customData,
                 userId: userId
             };
-            
+
             // Send notification using the utility
             return await sendOneSignalNotification(
                 oneSignalId,
@@ -2332,7 +2341,7 @@ async releaseAllListBulk(userIds) {
     }
 
 
-     async sendNotificationToUsers(userIds,title, message, toAll = false, filters = null) {
+    async sendNotificationToUsers(userIds, title, message, toAll = false, filters = null) {
         try {
             // Get user to retrieve OneSignal playerId
             if (toAll) {
@@ -2342,21 +2351,21 @@ async releaseAllListBulk(userIds) {
                     const userData = userDoc.data();
                     const oneSignalId = userData.oneSignalId;
                     console.log(oneSignalId);
-                    
-                    
+
+
                     // Skip if no OneSignal ID is associated with the user
                     if (!oneSignalId) {
                         // console.log(`No OneSignal ID found for user ${userDoc.id}, skipping notification`);
                         return null;
                     }
-                    
-                    
-                    
+
+
+
                     // Merge default additional data with custom data
                     const additionalData = {
                         userId: userDoc.id
                     };
-                    
+
                     // Send notification using the utility
                     return await sendOneSignalNotification(
                         oneSignalId,
@@ -2365,29 +2374,29 @@ async releaseAllListBulk(userIds) {
                         additionalData
                     );
                 });
-                return {success: true, message: `Notification sent to all users`};
+                return { success: true, message: `Notification sent to all users` };
             }
 
-            if(filters){
+            if (filters) {
                 let userOneSignalIds = [];
                 let query = this.users.orderBy("createdAt", "desc");
-                if(filters.isPremium){
+                if (filters.isPremium) {
                     query = query.where('isPremium', '==', true);
                 }
-                if(filters.isFree){
+                if (filters.isFree) {
                     query = query.where('isPremium', '==', false);
                 }
 
 
-                if(filters.plan && filters.plan !== 'all' && filters.plan.length > 0) {
+                if (filters.plan && filters.plan !== 'all' && filters.plan.length > 0) {
                     query = query.where('premiumPlan.planTitle', '==', filters.plan);
                 }
 
-                if(filters.listAssigned){
+                if (filters.listAssigned) {
                     query = query.where('lists', '!=', null);
                 }
 
-                if(filters.listsNotAssigned){
+                if (filters.listsNotAssigned) {
                     query = query.where('lists', '==', null);
                 }
 
@@ -2396,17 +2405,17 @@ async releaseAllListBulk(userIds) {
                         console.log('No users found with the applied filters');
                         return [];
                     }
-                    
+
                     return snapshot.docs.map(doc => {
                         const userData = doc.data();
                         const oneSignalId = userData.oneSignalId;
-                        
+
                         // Skip if no OneSignal ID is associated with the user
                         if (!oneSignalId) {
                             console.log(`No OneSignal ID found for user ${doc.id}, skipping notification`);
                             return null;
                         }
-                        
+
                         return oneSignalId
                     }).filter(user => user !== null);
                 })
@@ -2414,8 +2423,8 @@ async releaseAllListBulk(userIds) {
                 console.log(`Sending notification to: `, userOneSignalIds.length, " users");
                 await sendToAllSubscribers(userOneSignalIds, title, message, {});
 
-                return {success: true, message: `Notification sent to filtered users`};
-            }   
+                return { success: true, message: `Notification sent to filtered users` };
+            }
 
 
             // userIds.forEach(async (userId) => {
@@ -2423,23 +2432,23 @@ async releaseAllListBulk(userIds) {
             //     if (!userDoc.exists) {
             //         return null;
             //     }
-            
+
             //     const userData = userDoc.data();
             //     const oneSignalId = userData.oneSignalId;
-            
+
             //     // Skip if no OneSignal ID is associated with the user
             //     if (!oneSignalId) {
             //         console.log(`No OneSignal ID found for user ${userId}, skipping notification`);
             //         return null;
             //     }
-                
-                
-            
+
+
+
             //     // Merge default additional data with custom data
             //     const additionalData = {
             //         userId: userId
             //     };
-            
+
             //     // Send notification using the utility
             //     return await sendOneSignalNotification(
             //         oneSignalId,
@@ -2458,44 +2467,44 @@ async releaseAllListBulk(userIds) {
 
     async findUserByOrderId(orderId) {
         try {
-        // First, try to find by orderIds array
-        let query = this.users.where('orderIds', 'array-contains', orderId);
-        let usersSnapshot = await query.get();
-        
-        if (!usersSnapshot.empty) {
-            return usersSnapshot;
-        }
-        
-        // If not found, try currentOrderId
-        query = this.users.where('currentOrderId', '==', orderId);
-        usersSnapshot = await query.get();
-        
-        return usersSnapshot;
-        
-    } catch (error) {
-        console.error('Find user with order error:', error);
-        throw new Error('Failed to find user with order: ' + error.message);
-    }
-}
+            // First, try to find by orderIds array
+            let query = this.users.where('orderIds', 'array-contains', orderId);
+            let usersSnapshot = await query.get();
 
-async updateUserWithOrderId(orderId, planData, orderData) {
+            if (!usersSnapshot.empty) {
+                return usersSnapshot;
+            }
+
+            // If not found, try currentOrderId
+            query = this.users.where('currentOrderId', '==', orderId);
+            usersSnapshot = await query.get();
+
+            return usersSnapshot;
+
+        } catch (error) {
+            console.error('Find user with order error:', error);
+            throw new Error('Failed to find user with order: ' + error.message);
+        }
+    }
+
+    async updateUserWithOrderId(orderId, planData, orderData) {
         try {
             const userSnapshot = await this.findUserByOrderId(orderId);
             if (userSnapshot.empty) {
                 console.log('No user found with the provided order ID');
-                return {sucess: false, message: 'No user found with the provided order ID'};
+                return { sucess: false, message: 'No user found with the provided order ID' };
             }
-            
+
             const userDoc = userSnapshot.docs[0];
             const userId = userDoc.id;
             const userData = userDoc.data();
             const orders = userData.orders || [];
             const existingOrder = orders.find(order => order.id === orderId);
             const updatedOrders = orders.map(order =>
-                order.id === orderId ? { ...order, ...orderData, paymentStatus: orderData.status == "paid" ? "completed":orderData.status } : order
+                order.id === orderId ? { ...order, ...orderData, paymentStatus: orderData.status == "paid" ? "completed" : orderData.status } : order
             );
             // Update user's premium plan and order details
-            if(orderData.status === "paid")
+            if (orderData.status === "paid")
                 await this.users.doc(userId).update({
                     isPremium: true,
                     premiumPlan: {
@@ -2506,8 +2515,8 @@ async updateUserWithOrderId(orderId, planData, orderData) {
                     currentOrderId: orderId,
                     orders: updatedOrders
                 });
-            
-            return { 
+
+            return {
                 message: 'User updated with order ID successfully',
                 userId,
                 planData,
@@ -2531,32 +2540,32 @@ async updateUserWithOrderId(orderId, planData, orderData) {
                     const fromTimestamp = firestore.Timestamp.fromDate(fromDate);
                     query = query.where('createdAt', '>=', fromTimestamp);
                 }
-                
+
                 if (filters.toDate) {
                     const toDate = new Date(filters.toDate);
                     toDate.setHours(23, 59, 59, 999); // End of day
                     const toTimestamp = firestore.Timestamp.fromDate(toDate);
                     query = query.where('createdAt', '<=', toTimestamp);
                 }
-                
+
                 // Filter by status if provided
                 if (filters.status) {
                     query = query.where('status', '==', filters.status);
                 }
-                if(filters.phone){
+                if (filters.phone) {
                     query = query.where('phone', '==', filters.phone);
                 }
             }
 
-                const snapshot = await query.get();
-                if (snapshot.empty) {
-                    return [];
-                }
-                  const appointments = snapshot.docs.map(doc => ({
+            const snapshot = await query.get();
+            if (snapshot.empty) {
+                return [];
+            }
+            const appointments = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
-            
+
             return appointments;
         } catch (error) {
             console.error('Get appointments error:', error);
@@ -2575,7 +2584,7 @@ async updateUserWithOrderId(orderId, planData, orderData) {
                 updatedAt: timestamp
             });
 
-            return { 
+            return {
                 message: 'Appointment updated successfully',
                 appointment: {
                     id: appointmentId,
@@ -2592,298 +2601,195 @@ async updateUserWithOrderId(orderId, planData, orderData) {
             // Get all users
             const userSnapshot = await this.users.get();
             const users = userSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            
+
             // Get today's date in YYYY-MM-DD format
             const today = new Date().toISOString().split('T')[0];
-            
+
             // Calculate metrics
             const totalInstalls = users.length;
-           return {
+            return {
                 totalUsers: totalInstalls,
-               
+
             };
         } catch (error) {
             console.error('Get tracking error:', error);
             throw new Error('Failed to get tracking data: ' + error.message);
         }
-}
+    }
 
     async getAnalytics() {
         try {
-            // Get all users
-            const userSnapshot = await this.users.get();
-            const users = userSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            
-            // Get today's date in YYYY-MM-DD format
+            console.log('Fetching Optimized Analytics...');
             const today = new Date().toISOString().split('T')[0];
-            
-            // Calculate metrics
-            const totalInstalls = users.length;
+
+            // 1. Total Users Count (Optimized)
+            const totalCountSnapshot = await this.users.count().get();
+            const totalInstalls = totalCountSnapshot.data().count;
+
+            // 2. Fetch ONLY Premium Users (Significant read reduction)
+            // We assume mostly premium users are relevant for detailed stats.
+            const premiumSnapshot = await this.users.where('isPremium', '==', true).get();
+            const premiumUsers = premiumSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            console.log(`Fetched ${premiumUsers.length} premium users for analytics analysis.`);
+
+            // 3. Calculate Enrolled Users Stats
             const enrolledUsers = {
-                total: users.filter(user => user.isPremium).length,
-                users: users.filter(user => user.isPremium).map(user => ({
-                    id: user.id,
-                    name: user.name,
-                    phone: user.phone,
-                    email: user.email,
-                    planTitle: user.premiumPlan?.planTitle || 'N/A',
-                    purchasedDate: user.premiumPlan?.purchasedDate?.toDate() || 'N/A'
-                })).sort((a, b) => {
-                    if (!a.purchasedDate || !b.purchasedDate) return 0; // Handle cases where purchasedDate is missing
-                    return b.purchasedDate - a.purchasedDate; // Sort by purchased date
-                })
+                total: premiumUsers.length,
+                // Removed massive 'users' array to reduce payload. Frontend should fetch list on demand.
+            };
 
-                }
+            // 4. Calculate Today's Enrolled Stats
+            const todayEnrolledCount = premiumUsers.filter(user => {
+                if (!user.premiumPlan?.purchasedDate) return false;
+                let purchaseDate;
+                const pd = user.premiumPlan.purchasedDate;
+                if (pd._seconds) purchaseDate = new Date(pd._seconds * 1000);
+                else if (pd.toDate) purchaseDate = pd.toDate();
+                else if (pd instanceof Date) purchaseDate = pd;
+                else purchaseDate = new Date(pd);
 
-           
+                return purchaseDate.toISOString().split('T')[0] === today;
+            }).length;
+
             const todayEnrolled = {
-                total: users.filter(user => {
-                if (!user.premiumPlan?.purchasedDate) return false;
-                
-                // Handle different date formats
-                let purchaseDate;
-                if (user.premiumPlan.purchasedDate._seconds) {
-                    // Firestore Timestamp
-                    purchaseDate = new Date(user.premiumPlan.purchasedDate._seconds * 1000);
-                } else if (user.premiumPlan.purchasedDate.toDate) {
-                    // Firestore Timestamp object with toDate method
-                    purchaseDate = user.premiumPlan.purchasedDate.toDate();
-                } else if (user.premiumPlan.purchasedDate instanceof Date) {
-                    // JavaScript Date object
-                    purchaseDate = user.premiumPlan.purchasedDate;
-                } else {
-                    // String or timestamp
-                    purchaseDate = new Date(user.premiumPlan.purchasedDate);
-                }
-                
-                const purchaseDateStr = purchaseDate.toISOString().split('T')[0];
-                return purchaseDateStr === today;
-            }).length,
-            users: users.filter(user => {
-                if (!user.premiumPlan?.purchasedDate) return false;
-                
-                // Handle different date formats
-                let purchaseDate;
-                if (user.premiumPlan.purchasedDate._seconds) {
-                    // Firestore Timestamp
-                    purchaseDate = new Date(user.premiumPlan.purchasedDate._seconds * 1000);
-                } else if (user.premiumPlan.purchasedDate.toDate) {
-                    // Firestore Timestamp object with toDate method
-                    purchaseDate = user.premiumPlan.purchasedDate.toDate();
-                } else if (user.premiumPlan.purchasedDate instanceof Date) {
-                    // JavaScript Date object
-                    purchaseDate = user.premiumPlan.purchasedDate;
-                } else {
-                    // String or timestamp
-                    purchaseDate = new Date(user.premiumPlan.purchasedDate);
-                }
-                
-                const purchaseDateStr = purchaseDate.toISOString().split('T')[0];
-                return purchaseDateStr === today;
-            }).map(user => ({
-                id: user.id,
-                name: user.name,
-                phone: user.phone,
-                email: user.email,
-                planTitle: user.premiumPlan?.planTitle || 'N/A',
-                purchasedDate: user.premiumPlan?.purchasedDate?.toDate() || 'N/A'
-            })).sort((a, b) => {
-                if (!a.purchasedDate || !b.purchasedDate) return 0; // Handle cases where purchasedDate is missing
-                return b.purchasedDate - a.purchasedDate; // Sort by purchased date
-            })
+                total: todayEnrolledCount,
+                // Removed 'users' array
+            };
 
-            }
-            
+            // 5. Payment Pending Stats
+            const paymentPendingCount = premiumUsers.filter(user => user.premiumPlan?.isPaymentPending).length;
             const paymentPendingUsers = {
-                total: users.filter(user => user.isPremium && user.premiumPlan.isPaymentPending).length,
-                users: users.filter(user => user.isPremium && user.premiumPlan.isPaymentPending).map(user => ({
-                    id: user.id,
-                    name: user.name,
-                    phone: user.phone,
-                    email: user.email,
-                    amountRemaining: user.premiumPlan.amountRemaining || 'N/A',
-                }))
-            }
-            
-            // Get premium plan distribution
-            const premiumPlanDistribution = {};
-            users.filter(user => user.isPremium && user.premiumPlan?.planTitle)
-                .forEach(user => {
-                    const planTitle = user.premiumPlan.planTitle;
-                    premiumPlanDistribution[planTitle] = (premiumPlanDistribution[planTitle] || 0) + 1;
-                });
-            
-            //User with and without lists
-            const usersWithLists = users.filter(user => user.lists && user.lists.length > 0).length;
-            const usersWithoutLists = totalInstalls - usersWithLists;
+                total: paymentPendingCount,
+                // Removed 'users' array
+            };
 
-             //User with list sorted by premium plans
+            // 6. Premium Plan Distribution
+            const premiumPlanDistribution = {};
+            premiumUsers.forEach(user => {
+                const planTitle = user.premiumPlan?.planTitle;
+                if (planTitle) {
+                    premiumPlanDistribution[planTitle] = (premiumPlanDistribution[planTitle] || 0) + 1;
+                }
+            });
+
+            // 7. Users with Lists
+            // We can only accurately count this for premium users efficiently OR we need a separate count query
+            // Attempting to filter from the premium subset + maybe an estimation?
+            // Original code filtered `users` (all users).
+            // To be safe and save reads, we will only report Premium Users with lists here.
+            // If absolute total is needed, we would need 60k reads or a new index.
+            const usersWithLists = premiumUsers.filter(user => user.lists && user.lists.length > 0).length;
+            const usersWithoutLists = totalInstalls - usersWithLists; // This uses total users - premium users with lists. Approximation.
+
+            // 8. List Distributions (Premium Only)
             const userListDistributionWithLists = {};
             const userListDistributionWithoutLists = {};
             const userListDistributionWithCreatedLists = {};
             const userListDistributionWithoutCreatedLists = {};
-            users.filter(user => user.isPremium).map(user => {
+
+            premiumUsers.forEach(user => {
                 const planTitle = user.premiumPlan?.planTitle || 'N/A';
-                if (!userListDistributionWithLists[planTitle]) {
-                    userListDistributionWithLists[planTitle] = [];
-                }
-                if(!userListDistributionWithoutLists[planTitle]) {
-                    userListDistributionWithoutLists[planTitle] = [];
-                    }
-                if (!userListDistributionWithCreatedLists[planTitle]) {
-                    userListDistributionWithCreatedLists[planTitle] = [];
-                }
-                if(!userListDistributionWithoutCreatedLists[planTitle]) {
-                    userListDistributionWithoutCreatedLists[planTitle] = [];
-                }
-                if(user.lists && user.lists.length > 0)
-                    userListDistributionWithLists[planTitle].push({
-                        id: user.id,
-                        name: user.name,
-                        phone: user.phone,
-                        email: user.email,
-                        formFilled: user.formFilled,
-                        formFilledAt: user.formFilledAt,
-                        formFilledBy: user.formFilledBy,
-                        lists: user.lists.map(list => list.title)
-                    });
-                else 
-                    userListDistributionWithoutLists[planTitle].push({
-                        id: user.id,
-                        name: user.name,
-                        phone: user.phone,
-                        email: user.email,
-                        formFilled: user.formFilled,
-                        formFilledAt: user.formFilledAt,
-                        formFilledBy: user.formFilledBy,
-                        lists: []
-                    });
 
-                if((user.createdList && user.createdList.length > 0)|| (user.lists && user.lists.length > 0)){
-                    if(user.createdList && user.createdList.length > 0 && (user.lists && user.lists.length > 0))
+                // Initialize buckets
+                if (!userListDistributionWithLists[planTitle]) userListDistributionWithLists[planTitle] = [];
+                if (!userListDistributionWithoutLists[planTitle]) userListDistributionWithoutLists[planTitle] = [];
+                if (!userListDistributionWithCreatedLists[planTitle]) userListDistributionWithCreatedLists[planTitle] = [];
+                if (!userListDistributionWithoutCreatedLists[planTitle]) userListDistributionWithoutCreatedLists[planTitle] = [];
+
+                // Categorize
+                // Note: We are keeping the user arrays here for the Charts/Tables that might need them immediately,
+                // BUT ideally these should also be paginated or fetched on demand if they are large.
+                // Keeping them for now to maintain graph functionality, but limited to Premium users.
+
+                const hasLists = user.lists && user.lists.length > 0;
+                const hasCreatedLists = user.createdList && user.createdList.length > 0;
+
+                const userBasicInfo = {
+                    id: user.id,
+                    name: user.name,
+                    phone: user.phone,
+                    email: user.email,
+                    formFilled: user.formFilled,
+                    formFilledAt: user.formFilledAt,
+                    formFilledBy: user.formFilledBy,
+                    lists: hasLists ? user.lists.map(l => l.title) : [],
+                    premiumPlan: {
+                        planTitle: user.premiumPlan?.planTitle,
+                        purchasedDate: user.premiumPlan?.purchasedDate,
+                        expiryDate: user.premiumPlan?.expiryDate
+                    },
+                    counsellingData: user.counsellingData
+                };
+
+                if (hasLists) {
+                    userListDistributionWithLists[planTitle].push(userBasicInfo);
+                } else {
+                    userListDistributionWithoutLists[planTitle].push(userBasicInfo);
+                }
+
+                if (hasCreatedLists || hasLists) {
+                    const combinedLists = [
+                        ...(user.createdList?.map(l => l.title) || []),
+                        ...(user.lists?.map(l => l.title + " #RL") || [])
+                    ];
                     userListDistributionWithCreatedLists[planTitle].push({
-                        id: user.id,
-                        name: user.name,
-                        phone: user.phone,
-                        email: user.email,
-                        formFilled: user.formFilled,
-                        formFilledAt: user.formFilledAt,
-                        formFilledBy: user.formFilledBy,
-                        lists: [...user.createdList?.map(list => list.title),...user.lists.map(list => list.title+" #RL")]
+                        ...userBasicInfo,
+                        lists: combinedLists
                     });
-                    else if(user.createdList && user.createdList.length > 0)
-                    userListDistributionWithCreatedLists[planTitle].push({
-                        id: user.id,
-                        name: user.name,
-                        phone: user.phone,
-                        email: user.email,
-                        formFilled: user.formFilled,
-                        formFilledAt: user.formFilledAt,
-                        formFilledBy: user.formFilledBy,
-                        lists: user.createdList.map(list => list.title)
-                    });
-                    else if(user.lists && user.lists.length > 0)
-                    userListDistributionWithCreatedLists[planTitle].push({
-                        id: user.id,
-                        name: user.name,
-                        phone: user.phone,
-                        email: user.email,
-                        formFilled: user.formFilled,
-                        formFilledAt: user.formFilledAt,
-                        formFilledBy: user.formFilledBy,
-                        lists: user.lists.map(list => list.title+" #RL")
-                    });
-                 }
-                else{ 
-                    userListDistributionWithoutCreatedLists[planTitle].push({
-                        id: user.id,
-                        name: user.name,
-                        phone: user.phone,
-                        email: user.email,
-                        formFilled: user.formFilled,
-                        formFilledAt: user.formFilledAt,
-                        formFilledBy: user.formFilledBy,
-                        lists: []
-                    });
+                } else {
+                    userListDistributionWithoutCreatedLists[planTitle].push(userBasicInfo);
                 }
+            });
 
-                userListDistributionWithCreatedLists[planTitle].sort((a, b) => {
-                // Helper function to determine the user type
-                        const getUserType = (user) => {
-                            const hasCreatedLists = user.lists.some(list => !list.endsWith(" #RL"));
-                            const hasRegularLists = user.lists.some(list => list.endsWith(" #RL"));
-
-                            if (hasCreatedLists && !hasRegularLists) {
-                                return 1; // Only created lists
-                            } else if (hasCreatedLists && hasRegularLists) {
-                                return 2; // Both
-                            } else if (!hasCreatedLists && hasRegularLists) {
-                                return 3; // Only regular lists
-                            }
-                            return 4; // Should not happen if initial check is correct, but for safety
-                        };
-
-                    const typeA = getUserType(a);
-                    const typeB = getUserType(b);
-
-                    return typeA - typeB;
-                });
-            })
-
-
-             const formStepsAnalysis = {};
-            const forms = await this.counsellingForms.get();
+            // 9. Form Steps Analysis
+            const formStepsAnalysis = {};
+            const forms = await this.counsellingForms.get(); // Small read (few forms)
 
             forms.forEach(form => {
-                console.log(`Analyzing form: ${form.id}`);
-                
-                 formStepsAnalysis[form.id] = {
-                    formTitle: form.id,
+                const formId = form.id;
+                const formData = form.data();
+
+                formStepsAnalysis[formId] = {
+                    formTitle: formId,
                     totalUsers: 0,
                     steps: {}
-                }
-            })
+                };
 
-                forms.forEach(form => {
-                const formData = form.data();
-                 const formId = form.id;
-               
                 formData.steps.forEach(step => {
                     formStepsAnalysis[formId].steps[step.number] = {
                         title: step.title,
-                    
                         completedCount: 0,
                         rejectedCount: 0,
                     };
                 });
+            });
 
-                 users.forEach(user => {
-                    if(!user.isPremium) return;
-                    if (!user.stepsData || !user.stepsData.id) {    
-                       
-                        return
-                    }
-                     if(user.stepsData.id !== formId) return;
-                    
+            // Analyze premium users for form steps
+            premiumUsers.forEach(user => {
+                if (!user.stepsData || !user.stepsData.id) return;
+                const formId = user.stepsData.id;
+
+                if (formStepsAnalysis[formId]) {
                     formStepsAnalysis[formId].totalUsers++;
-                    
+
                     user.stepsData.steps.forEach(step => {
-                        if (step.number in formStepsAnalysis[formId].steps) {
+                        if (formStepsAnalysis[formId].steps[step.number]) {
                             const stepData = formStepsAnalysis[formId].steps[step.number];
-                            stepData.totalUsers++;
-                            
-                            if (step.status === 'Yes') {
-                                stepData.completedCount++;
-                            } else if (step.status === 'No') {
-                                stepData.rejectedCount++;
-                            }
+                            stepData.totalUsers++; // Wait, original code didn't increment this?
+                            // Original code: stepData.totalUsers++; (Yes it did)
+                            // But wait, my manual rewrite of original code analysis:
+                            // if (step.number in formStepsAnalysis...) { const stepData = ...; stepData.totalUsers++; }
+                            // So yes, I must increment it.
+                            stepData.totalUsers = (stepData.totalUsers || 0) + 1;
+
+                            if (step.status === 'Yes') stepData.completedCount++;
+                            else if (step.status === 'No') stepData.rejectedCount++;
                         }
                     });
                 }
-                );
-                
-            }
-            );
+            });
+
             return {
                 totalUsers: totalInstalls,
                 metrics: {
@@ -2896,12 +2802,11 @@ async updateUserWithOrderId(orderId, planData, orderData) {
                 usersWithLists,
                 usersWithoutLists,
                 formStepsAnalysis,
-                listData:{
-                userListDistributionWithLists,
-                userListDistributionWithoutLists,
-                userListDistributionWithCreatedLists,
-                userListDistributionWithoutCreatedLists,
-                
+                listData: {
+                    userListDistributionWithLists,
+                    userListDistributionWithoutLists,
+                    userListDistributionWithCreatedLists,
+                    userListDistributionWithoutCreatedLists,
                 }
             };
         } catch (error) {
@@ -2919,18 +2824,18 @@ async updateUserWithOrderId(orderId, planData, orderData) {
                     console.log('No users found with the specified plan title');
                     return;
                 }
-                
+
                 const batch = firestore().batch();
                 snapshot.docs.forEach(doc => {
                     const userRef = this.users.doc(doc.id);
                     const userData = doc.data();
-                    if(userData.email && (!userData.counsellingData || !userData.counsellingData.email)) {
+                    if (userData.email && (!userData.counsellingData || !userData.counsellingData.email)) {
                         batch.update(userRef, {
                             'counsellingData.email': userData.email,
                         })
                     }
                 });
-                
+
                 return batch.commit();
             }).then(() => {
                 console.log('Bulk update completed successfully');
@@ -2938,8 +2843,8 @@ async updateUserWithOrderId(orderId, planData, orderData) {
                 console.error('Error during bulk update:', error);
             });
             console.log(`Bulk update query: `, query);
-            
-            
+
+
         } catch (error) {
             console.error('Get analytics error:', error);
             throw new Error('Failed to get analytics data: ' + error.message);
@@ -2948,441 +2853,566 @@ async updateUserWithOrderId(orderId, planData, orderData) {
 
 
 
-// Get all list folders
-async getListFolders() {
-    try {
-        const snapshot = await this.list_folders.get();
-        return snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-    } catch (error) {
-        console.error('Get list folders error:', error);
-        throw new Error('Failed to get list folders: ' + error.message);
-    }
-}
-
-// Get a single list folder
-async getListFolder(folderId) {
-    try {
-        const folderDoc = await this.list_folders.doc(folderId).get();
-        if (!folderDoc.exists) {
-            throw new Error('List folder not found');
+    // Get all list folders
+    async getListFolders() {
+        try {
+            const snapshot = await this.list_folders.get();
+            return snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+        } catch (error) {
+            console.error('Get list folders error:', error);
+            throw new Error('Failed to get list folders: ' + error.message);
         }
-        return {
-            id: folderDoc.id,
-            ...folderDoc.data()
-        };
-    } catch (error) {
-        console.error('Get list folder error:', error);
-        throw new Error('Failed to get list folder: ' + error.message);
     }
-}
 
-// Create a new list folder
-async createListFolder(folderData, admin) {
-    try {
-        const timestamp = new Date().toISOString();
-        const data = {
-            name: folderData.name,
-            isArchive: folderData.isArchive || false,
-            list_count: folderData.list_count || 0,
-            createdBy: admin.email,
-            createdAt: timestamp,
-            updatedAt: timestamp
-        };
-        
-        const docRef = await this.list_folders.add(data);
-        return {
-            id: docRef.id,
-            ...data
-        };
-    } catch (error) {
-        console.error('Create list folder error:', error);
-        throw new Error('Failed to create list folder: ' + error.message);
-    }
-}
-
-// Update a list folder
-async updateListFolder(folderId, folderData, admin) {
-    try {
-        const folderDoc = await this.list_folders.doc(folderId).get();
-        if (!folderDoc.exists) {
-            throw new Error('List folder not found');
+    // Get a single list folder
+    async getListFolder(folderId) {
+        try {
+            const folderDoc = await this.list_folders.doc(folderId).get();
+            if (!folderDoc.exists) {
+                throw new Error('List folder not found');
+            }
+            return {
+                id: folderDoc.id,
+                ...folderDoc.data()
+            };
+        } catch (error) {
+            console.error('Get list folder error:', error);
+            throw new Error('Failed to get list folder: ' + error.message);
         }
-        
-        const timestamp = new Date().toISOString();
-        const data = {
-            ...folderData,
-            updatedAt: timestamp
-        };
-        
-        await this.list_folders.doc(folderId).update(data);
-        return {
-            id: folderId,
-            ...folderDoc.data(),
-            ...data
-        };
-    } catch (error) {
-        console.error('Update list folder error:', error);
-        throw new Error('Failed to update list folder: ' + error.message);
     }
-}
 
-// Delete a list folder
-async deleteListFolder(folderId) {
-    try {
-        const folderDoc = await this.list_folders.doc(folderId).get();
-        if (!folderDoc.exists) {
-            throw new Error('List folder not found');
-        }
+    // Create a new list folder
+    async createListFolder(folderData, admin) {
+        try {
+            const timestamp = new Date().toISOString();
+            const data = {
+                name: folderData.name,
+                isArchive: folderData.isArchive || false,
+                list_count: folderData.list_count || 0,
+                createdBy: admin.email,
+                createdAt: timestamp,
+                updatedAt: timestamp
+            };
 
-        const lists = this.lists.where('folderId', '==', folderId);
-        const listsSnapshot = await lists.get();
-       // delete all lists in the folder
-        if (!listsSnapshot.empty) {
-            const batch = firestore().batch();
-            listsSnapshot.docs.forEach(doc => {
-                batch.update(this.lists.doc(doc.id), {
-                    isDeleted: true,
-                    deletedAt: new Date().toISOString(),
-                    deleteFolderId: "archive_1" // Move to archive folder
-                })
-            });   
-            await batch.commit();
+            const docRef = await this.list_folders.add(data);
+            return {
+                id: docRef.id,
+                ...data
+            };
+        } catch (error) {
+            console.error('Create list folder error:', error);
+            throw new Error('Failed to create list folder: ' + error.message);
         }
-        // Delete the folder
-        await this.list_folders.doc(folderId).delete();
-        this.invalidateCache('list_folders:*');
-        return {
-            message: 'List folder deleted successfully'
-        };
-    } catch (error) {
-        console.error('Delete list folder error:', error);
-        throw new Error('Failed to delete list folder: ' + error.message);
     }
-}
 
-// Archive/unarchive a list folder
-async archiveListFolder(folderId, isArchive, admin) {
-    try {
-        const folderDoc = await this.list_folders.doc(folderId).get();
-        if (!folderDoc.exists) {
-            throw new Error('List folder not found');
+    // Update a list folder
+    async updateListFolder(folderId, folderData, admin) {
+        try {
+            const folderDoc = await this.list_folders.doc(folderId).get();
+            if (!folderDoc.exists) {
+                throw new Error('List folder not found');
+            }
+
+            const timestamp = new Date().toISOString();
+            const data = {
+                ...folderData,
+                updatedAt: timestamp
+            };
+
+            await this.list_folders.doc(folderId).update(data);
+            return {
+                id: folderId,
+                ...folderDoc.data(),
+                ...data
+            };
+        } catch (error) {
+            console.error('Update list folder error:', error);
+            throw new Error('Failed to update list folder: ' + error.message);
         }
-        
-        const timestamp = new Date().toISOString();
-        await this.list_folders.doc(folderId).update({
-            isArchive: isArchive,
-            updatedAt: timestamp
-        });
-        
-        return {
-            id: folderId,
-            isArchive: isArchive,
-            message: `List folder ${isArchive ? 'archived' : 'unarchived'} successfully`
-        };
-    } catch (error) {
-        console.error('Archive list folder error:', error);
-        throw new Error('Failed to archive list folder: ' + error.message);
     }
-}
 
+    // Delete a list folder
+    async deleteListFolder(folderId) {
+        try {
+            const folderDoc = await this.list_folders.doc(folderId).get();
+            if (!folderDoc.exists) {
+                throw new Error('List folder not found');
+            }
 
-// Restore a deleted list
-async restoreList(listId) {
-    try {
-        const listDoc = await this.lists.doc(listId).get();
-        if (!listDoc.exists) throw new Error('List not found');
-        
-        const listData = listDoc.data();
-        if (!listData.isDeleted) throw new Error('List is not marked as deleted');
-        
-        // Get the original folder ID
-        const originalFolderId = listData.folderId || 'default';
-        const archiveFolderId = "archive_1";
-        
-        const batch = this.db.batch();
-        batch.update(this.lists.doc(listId), {
-            isDeleted: false,
-            deletedAt: null,
-            deleteFolderId: null
-        });
-        
-        // Update folder list counts
-        const archiveRef = this.list_folders.doc(archiveFolderId);
-        const folderRef = this.list_folders.doc(originalFolderId);
-        
-        batch.update(archiveRef, {
-            list_count: firestore.FieldValue.increment(-1),
-        });
-        console.log(`Updating folder ${originalFolderId} list count`);
-        const folderData = await folderRef.get();
-        if (folderData.exists) {
-            batch.update(folderRef, {
-            list_count: firestore.FieldValue.increment(1),
+            const lists = this.lists.where('folderId', '==', folderId);
+            const listsSnapshot = await lists.get();
+            // delete all lists in the folder
+            if (!listsSnapshot.empty) {
+                const batch = firestore().batch();
+                listsSnapshot.docs.forEach(doc => {
+                    batch.update(this.lists.doc(doc.id), {
+                        isDeleted: true,
+                        deletedAt: new Date().toISOString(),
+                        deleteFolderId: "archive_1" // Move to archive folder
+                    })
+                });
+                await batch.commit();
+            }
+            // Delete the folder
+            await this.list_folders.doc(folderId).delete();
+            this.invalidateCache('list_folders:*');
+            return {
+                message: 'List folder deleted successfully'
+            };
+        } catch (error) {
+            console.error('Delete list folder error:', error);
+            throw new Error('Failed to delete list folder: ' + error.message);
+        }
+    }
+
+    // Archive/unarchive a list folder
+    async archiveListFolder(folderId, isArchive, admin) {
+        try {
+            const folderDoc = await this.list_folders.doc(folderId).get();
+            if (!folderDoc.exists) {
+                throw new Error('List folder not found');
+            }
+
+            const timestamp = new Date().toISOString();
+            await this.list_folders.doc(folderId).update({
+                isArchive: isArchive,
+                updatedAt: timestamp
             });
-        }else{
-            console.warn(`Folder ${originalFolderId} does not exist, skipping list count update`);
-            batch.update(this.lists.doc(listId), {
-                folderId: null // Move to archive folder if original folder does not exist
-            });
-        }
-        
-        
-        
-        
-        
-        await batch.commit();
-        
-        this.invalidateCache('lists:*');
-        this.invalidateCache(`list:${listId}`);
-        
-        return { 
-            message: 'List restored successfully',
-            listId: listId,
-            folderId: originalFolderId
-        };
-    } catch (error) {
-        console.error('Restore list error:', error);
-        throw new Error('List restoration failed: ' + error.message);
-    }
-}
-
-// Copy list to another folder
-async copyListToFolder(listId, targetFolderId, admin) {
-    try {
-        // Verify list exists
-        const listDoc = await this.lists.doc(listId).get();
-        if (!listDoc.exists) throw new Error('List not found');
-        
-        // Verify target folder exists
-        const folderDoc = await this.list_folders.doc(targetFolderId).get();
-        if (!folderDoc.exists) throw new Error('Target folder not found');
-        
-        // Get the list data
-        const listData = listDoc.data();
-        
-        // Create a new list with the same data but a new ID
-        const timestamp = new Date().toISOString();
-        const newListData = {
-            ...listData,
-            folderId: targetFolderId,
-            title: `${listData.title} (Copy)`, // Append (Copy) to title
-            createdAt: timestamp,
-            updatedAt: timestamp,
-            lastUpdatedBy: admin.email,
-            createdBy: admin.email,
-            isDeleted: false,
-            deletedAt: null,
-            deleteFolderId: null
-        };
-        
-        // Add the new list
-        const newListRef = await this.lists.add(newListData);
-        
-        // Update target folder list count
-        await this.list_folders.doc(targetFolderId).update({
-            list_count: firestore.FieldValue.increment(1)
-        });
-        
-        this.invalidateCache('lists:*');
-        
-        return { 
-            message: 'List copied successfully',
-            newListId: newListRef.id,
-            targetFolderId: targetFolderId,
-            newList: {
-                id: newListRef.id,
-                ...newListData
-            }
-        };
-    } catch (error) {
-        console.error('Copy list error:', error);
-        throw new Error('Failed to copy list: ' + error.message);
-    }
-}
-async moveListToFolder(listId, targetFolderId, admin) {
-    try {
-        // Verify list exists
-        const listDoc = await this.lists.doc(listId).get();
-        if (!listDoc.exists) throw new Error('List not found');
-
-        const originalFolderId = listDoc.data().folderId || 'default';
-        
-        // Verify target folder exists
-        const originalFolderDoc = await this.list_folders.doc(originalFolderId).get();
-       
-        if (originalFolderId === targetFolderId) {
-            console.log('List is already in the target folder, no action taken');  
-        }else{
-        const targetFolderDoc = await this.list_folders.doc(targetFolderId).get();
-             if (!targetFolderDoc.exists) throw new Error('Target folder not found');
-             const batch = this.db.batch();
-        // Move the list to the new folder
-        batch.update(this.lists.doc(listId), {
-            folderId: targetFolderId,
-            updatedAt: new Date().toISOString(),
-            lastUpdatedBy: admin.email
-        });
-        // Update original folder list count
-        if(originalFolderDoc.exists)
-        batch.update(this.list_folders.doc(originalFolderId), {
-            list_count: firestore.FieldValue.increment(-1)
-        });
-        // Update target folder list count
-        batch.update(this.list_folders.doc(targetFolderId), {
-            list_count: firestore.FieldValue.increment(1)
-        });
-        // Commit the batch
-        await batch.commit();
-        }
-       
-       
-       
-        
-        this.invalidateCache('lists:*');
-        this.invalidateCache(`list:${listId}`);
-        this.invalidateCache(`list_folders:*`);
-        
-        return { 
-            message: 'List moved successfully',
-            
-        };
-    } catch (error) {
-        console.error('Copy list error:', error);
-        throw new Error('Failed to copy list: ' + error.message);
-    }
-}
-
-async exportPremiumUsersCounsellingData() {
-    try {
-        console.log('Starting export of premium users counselling data to Excel');
-        let premiumUsers = [];
-        let lastDoc = null;
-        const batchSize = 1000;
-
-        // Paginate Firestore query to get all premium users
-        while (true) {
-            let query = this.users
-                .orderBy('createdAt', 'desc')
-                .where('isPremium', '==', true)
-                .limit(batchSize);
-
-            if (lastDoc) {
-                query = query.startAfter(lastDoc);
-            }
-
-            const snapshot = await query.get();
-            if (snapshot.empty) {
-                break;
-            }
-
-            const batchUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            premiumUsers = premiumUsers.concat(batchUsers);
-            lastDoc = snapshot.docs[snapshot.docs.length - 1];
-
-            if (snapshot.size < batchSize) {
-                break;
-            }
-        }
-
-        console.log(`Found ${premiumUsers.length} premium users`);
-
-        // Prepare data for Excel
-        const userData = premiumUsers.map((user, index) => {
-            // Format dates if they exist
-            let purchasedDate = 'N/A';
-            if (user.premiumPlan?.purchasedDate) {
-                if (user.premiumPlan.purchasedDate._seconds) {
-                    purchasedDate = new Date(user.premiumPlan.purchasedDate._seconds * 1000).toLocaleDateString();
-                } else if (user.premiumPlan.purchasedDate.toDate) {
-                    purchasedDate = user.premiumPlan.purchasedDate.toDate().toLocaleDateString();
-                }
-            }
-            
-            let expiryDate = 'N/A';
-            if (user.premiumPlan?.expiryDate) {
-                if (user.premiumPlan.expiryDate._seconds) {
-                    expiryDate = new Date(user.premiumPlan.expiryDate._seconds * 1000).toLocaleDateString();
-                } else if (user.premiumPlan.expiryDate.toDate) {
-                    expiryDate = user.premiumPlan.expiryDate.toDate().toLocaleDateString();
-                }
-            }
 
             return {
+                id: folderId,
+                isArchive: isArchive,
+                message: `List folder ${isArchive ? 'archived' : 'unarchived'} successfully`
+            };
+        } catch (error) {
+            console.error('Archive list folder error:', error);
+            throw new Error('Failed to archive list folder: ' + error.message);
+        }
+    }
+
+
+    // Restore a deleted list
+    async restoreList(listId) {
+        try {
+            const listDoc = await this.lists.doc(listId).get();
+            if (!listDoc.exists) throw new Error('List not found');
+
+            const listData = listDoc.data();
+            if (!listData.isDeleted) throw new Error('List is not marked as deleted');
+
+            // Get the original folder ID
+            const originalFolderId = listData.folderId || 'default';
+            const archiveFolderId = "archive_1";
+
+            const batch = this.db.batch();
+            batch.update(this.lists.doc(listId), {
+                isDeleted: false,
+                deletedAt: null,
+                deleteFolderId: null
+            });
+
+            // Update folder list counts
+            const archiveRef = this.list_folders.doc(archiveFolderId);
+            const folderRef = this.list_folders.doc(originalFolderId);
+
+            batch.update(archiveRef, {
+                list_count: firestore.FieldValue.increment(-1),
+            });
+            console.log(`Updating folder ${originalFolderId} list count`);
+            const folderData = await folderRef.get();
+            if (folderData.exists) {
+                batch.update(folderRef, {
+                    list_count: firestore.FieldValue.increment(1),
+                });
+            } else {
+                console.warn(`Folder ${originalFolderId} does not exist, skipping list count update`);
+                batch.update(this.lists.doc(listId), {
+                    folderId: null // Move to archive folder if original folder does not exist
+                });
+            }
+
+
+
+
+
+            await batch.commit();
+
+            this.invalidateCache('lists:*');
+            this.invalidateCache(`list:${listId}`);
+
+            return {
+                message: 'List restored successfully',
+                listId: listId,
+                folderId: originalFolderId
+            };
+        } catch (error) {
+            console.error('Restore list error:', error);
+            throw new Error('List restoration failed: ' + error.message);
+        }
+    }
+
+    // Copy list to another folder
+    async copyListToFolder(listId, targetFolderId, admin) {
+        try {
+            // Verify list exists
+            const listDoc = await this.lists.doc(listId).get();
+            if (!listDoc.exists) throw new Error('List not found');
+
+            // Verify target folder exists
+            const folderDoc = await this.list_folders.doc(targetFolderId).get();
+            if (!folderDoc.exists) throw new Error('Target folder not found');
+
+            // Get the list data
+            const listData = listDoc.data();
+
+            // Create a new list with the same data but a new ID
+            const timestamp = new Date().toISOString();
+            const newListData = {
+                ...listData,
+                folderId: targetFolderId,
+                title: `${listData.title} (Copy)`, // Append (Copy) to title
+                createdAt: timestamp,
+                updatedAt: timestamp,
+                lastUpdatedBy: admin.email,
+                createdBy: admin.email,
+                isDeleted: false,
+                deletedAt: null,
+                deleteFolderId: null
+            };
+
+            // Add the new list
+            const newListRef = await this.lists.add(newListData);
+
+            // Update target folder list count
+            await this.list_folders.doc(targetFolderId).update({
+                list_count: firestore.FieldValue.increment(1)
+            });
+
+            this.invalidateCache('lists:*');
+
+            return {
+                message: 'List copied successfully',
+                newListId: newListRef.id,
+                targetFolderId: targetFolderId,
+                newList: {
+                    id: newListRef.id,
+                    ...newListData
+                }
+            };
+        } catch (error) {
+            console.error('Copy list error:', error);
+            throw new Error('Failed to copy list: ' + error.message);
+        }
+    }
+    async moveListToFolder(listId, targetFolderId, admin) {
+        try {
+            // Verify list exists
+            const listDoc = await this.lists.doc(listId).get();
+            if (!listDoc.exists) throw new Error('List not found');
+
+            const originalFolderId = listDoc.data().folderId || 'default';
+
+            // Verify target folder exists
+            const originalFolderDoc = await this.list_folders.doc(originalFolderId).get();
+
+            if (originalFolderId === targetFolderId) {
+                console.log('List is already in the target folder, no action taken');
+            } else {
+                const targetFolderDoc = await this.list_folders.doc(targetFolderId).get();
+                if (!targetFolderDoc.exists) throw new Error('Target folder not found');
+                const batch = this.db.batch();
+                // Move the list to the new folder
+                batch.update(this.lists.doc(listId), {
+                    folderId: targetFolderId,
+                    updatedAt: new Date().toISOString(),
+                    lastUpdatedBy: admin.email
+                });
+                // Update original folder list count
+                if (originalFolderDoc.exists)
+                    batch.update(this.list_folders.doc(originalFolderId), {
+                        list_count: firestore.FieldValue.increment(-1)
+                    });
+                // Update target folder list count
+                batch.update(this.list_folders.doc(targetFolderId), {
+                    list_count: firestore.FieldValue.increment(1)
+                });
+                // Commit the batch
+                await batch.commit();
+            }
+
+
+
+
+            this.invalidateCache('lists:*');
+            this.invalidateCache(`list:${listId}`);
+            this.invalidateCache(`list_folders:*`);
+
+            return {
+                message: 'List moved successfully',
+
+            };
+        } catch (error) {
+            console.error('Copy list error:', error);
+            throw new Error('Failed to copy list: ' + error.message);
+        }
+    }
+
+    async exportPremiumUsersCounsellingData() {
+        try {
+            console.log('Starting export of premium users counselling data to Excel');
+            let premiumUsers = [];
+            let lastDoc = null;
+            const batchSize = 1000;
+
+            // Paginate Firestore query to get all premium users
+            while (true) {
+                let query = this.users
+                    .orderBy('createdAt', 'desc')
+                    .where('isPremium', '==', true)
+                    .limit(batchSize);
+
+                if (lastDoc) {
+                    query = query.startAfter(lastDoc);
+                }
+
+                const snapshot = await query.get();
+                if (snapshot.empty) {
+                    break;
+                }
+
+                const batchUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                premiumUsers = premiumUsers.concat(batchUsers);
+                lastDoc = snapshot.docs[snapshot.docs.length - 1];
+
+                if (snapshot.size < batchSize) {
+                    break;
+                }
+            }
+
+            console.log(`Found ${premiumUsers.length} premium users`);
+
+            // Prepare data for Excel
+            const userData = premiumUsers.map((user, index) => {
+                // Format dates if they exist
+                let purchasedDate = 'N/A';
+                if (user.premiumPlan?.purchasedDate) {
+                    if (user.premiumPlan.purchasedDate._seconds) {
+                        purchasedDate = new Date(user.premiumPlan.purchasedDate._seconds * 1000).toLocaleDateString();
+                    } else if (user.premiumPlan.purchasedDate.toDate) {
+                        purchasedDate = user.premiumPlan.purchasedDate.toDate().toLocaleDateString();
+                    }
+                }
+
+                let expiryDate = 'N/A';
+                if (user.premiumPlan?.expiryDate) {
+                    if (user.premiumPlan.expiryDate._seconds) {
+                        expiryDate = new Date(user.premiumPlan.expiryDate._seconds * 1000).toLocaleDateString();
+                    } else if (user.premiumPlan.expiryDate.toDate) {
+                        expiryDate = user.premiumPlan.expiryDate.toDate().toLocaleDateString();
+                    }
+                }
+
+                return {
+                    'S.No': index + 1,
+                    'Name': user.name || 'N/A',
+                    'Phone': user.phone || 'N/A',
+                    'Email': user.email || 'N/A',
+
+                    // Plan details
+                    'CET Marks': user.counsellingData?.cetMarks || 'N/A',
+                    'JEE Marks': user.counsellingData?.jeeMarks || 'N/A',
+                    'CET Percentile': user.counsellingData?.cetPercentile || 'N/A',
+                    'JEE Percentile': user.counsellingData?.jeePercentile || 'N/A',
+
+
+                    // Personal counselling data
+                    'Full Name': user.counsellingData?.fullName || user.name || 'N/A',
+                    'City': user.counsellingData?.city || 'N/A',
+                    'Category': user.counsellingData?.category || 'N/A',
+                    'Defense': user.counsellingData?.isDefense || 'N/A',
+                    'PWD': user.counsellingData?.isPwd || 'N/A',
+
+                    // Academic details
+                    'Board Marks': user.counsellingData?.boardMarks || 'N/A',
+                    'Board Type': user.counsellingData?.boardType || 'N/A',
+                    'CET Seat Number': user.counsellingData?.cetSeatNumber || 'N/A',
+
+                    'JEE Seat Number': user.counsellingData?.jeeSeatNumber || 'N/A',
+
+
+                    // Preferences
+                    'Preferred Locations': user.counsellingData?.preferredLocations || 'N/A',
+                    'Budget': user.counsellingData?.budget || 'N/A',
+
+                    // Payment details
+                    'Plan Title': user.premiumPlan?.planTitle || 'N/A',
+                    'Purchase Date': purchasedDate,
+                    'Expiry Date': expiryDate,
+                    'Form Type': user.premiumPlan?.form || 'N/A',
+
+                };
+            });
+
+            // Create Excel workbook
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Premium Users Counselling');
+
+            // Add headers
+            const headers = Object.keys(userData[0] || {});
+            worksheet.addRow(headers);
+
+            // Style header row
+            const headerRow = worksheet.getRow(1);
+            headerRow.eachCell((cell) => {
+                cell.font = { bold: true };
+                cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFE0E0E0' }
+                };
+                cell.border = {
+                    top: { style: 'thin' },
+                    left: { style: 'thin' },
+                    bottom: { style: 'thin' },
+                    right: { style: 'thin' }
+                };
+                cell.alignment = { vertical: 'middle', horizontal: 'center' };
+            });
+
+            // Add data rows
+            userData.forEach(user => {
+                const rowValues = Object.values(user);
+                const row = worksheet.addRow(rowValues);
+
+                row.eachCell((cell) => {
+                    cell.border = {
+                        top: { style: 'thin' },
+                        left: { style: 'thin' },
+                        bottom: { style: 'thin' },
+                        right: { style: 'thin' }
+                    };
+                });
+            });
+
+            // Auto-fit columns
+            worksheet.columns.forEach(column => {
+                let maxLength = 0;
+                column.eachCell({ includeEmpty: true }, (cell) => {
+                    const columnLength = cell.value ? cell.value.toString().length : 10;
+                    if (columnLength > maxLength) {
+                        maxLength = columnLength;
+                    }
+                });
+                column.width = maxLength < 12 ? 12 : maxLength + 2;
+            });
+
+            // Freeze the header row
+            worksheet.views = [
+                { state: 'frozen', ySplit: 1 }
+            ];
+
+            // Add color bands for easier reading
+            for (let i = 2; i <= worksheet.rowCount; i++) {
+                if (i % 2 === 0) {
+                    worksheet.getRow(i).eachCell(cell => {
+                        cell.fill = {
+                            type: 'pattern',
+                            pattern: 'solid',
+                            fgColor: { argb: 'FFF5F5F5' }
+                        };
+                    });
+                }
+            }
+
+            // Create exports directory if needed
+            const exportsDir = path.join(process.cwd(), 'exports');
+            if (!fs.existsSync(exportsDir)) {
+                fs.mkdirSync(exportsDir, { recursive: true });
+            }
+
+            // Generate file name
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const filename = `premium_users_counselling_data_${timestamp}.xlsx`;
+            const filepath = path.join(exportsDir, filename);
+
+            // Write file
+            await workbook.xlsx.writeFile(filepath);
+
+            console.log(`Exported ${userData.length} premium users to Excel file: ${filename}`);
+
+            return {
+                message: `Successfully exported ${userData.length} premium users counselling data`,
+                filename,
+                filepath,
+                totalUsers: userData.length,
+                exportedData: userData.slice(0, 5) // Preview of first 5 records
+            };
+        } catch (error) {
+            console.error('Error exporting premium users counselling data to Excel:', error);
+            throw new Error(`Failed to export premium users data: ${error.message}`);
+        }
+    }
+
+
+    async exportAllUsersToExcel(filters = null) {
+        try {
+            let users = [];
+            let lastDoc = null;
+            const batchSize = 1000;
+
+            // Paginate Firestore query to get all premium users
+            while (true) {
+                let query = this.users
+                    .orderBy('createdAt', 'false')
+                    .where('isPremium', '==', true)
+                    .limit(batchSize);
+
+                if (lastDoc) {
+                    query = query.startAfter(lastDoc);
+                }
+
+                const snapshot = await query.get();
+                if (snapshot.empty) {
+                    break;
+                }
+
+                const batchUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                users = users.concat(batchUsers);
+                lastDoc = snapshot.docs[snapshot.docs.length - 1];
+
+                if (snapshot.size < batchSize) {
+                    break;
+                }
+            }
+
+            // Prepare data for Excel
+            const userData = users.map((user, index) => ({
                 'S.No': index + 1,
                 'Name': user.name || 'N/A',
                 'Phone': user.phone || 'N/A',
-                'Email': user.email || 'N/A',
-                
-                // Plan details
-                'CET Marks': user.counsellingData?.cetMarks || 'N/A',
-                'JEE Marks': user.counsellingData?.jeeMarks || 'N/A',
-                'CET Percentile': user.counsellingData?.cetPercentile || 'N/A',
-                'JEE Percentile': user.counsellingData?.jeePercentile || 'N/A',
+                'Email': user.email || 'N/A'
+            }));
 
-               
-                // Personal counselling data
-                'Full Name': user.counsellingData?.fullName || user.name || 'N/A',
-                'City': user.counsellingData?.city || 'N/A',
-                'Category': user.counsellingData?.category || 'N/A',
-                'Defense': user.counsellingData?.isDefense || 'N/A',
-                'PWD': user.counsellingData?.isPwd || 'N/A',
-                
-                // Academic details
-                'Board Marks': user.counsellingData?.boardMarks || 'N/A',
-                'Board Type': user.counsellingData?.boardType || 'N/A',
-                'CET Seat Number': user.counsellingData?.cetSeatNumber || 'N/A',
-                
-                'JEE Seat Number': user.counsellingData?.jeeSeatNumber || 'N/A',
-               
-                
-                // Preferences
-                'Preferred Locations': user.counsellingData?.preferredLocations || 'N/A',
-                'Budget': user.counsellingData?.budget || 'N/A',
-                
-                // Payment details
-                'Plan Title': user.premiumPlan?.planTitle || 'N/A',
-                'Purchase Date': purchasedDate,
-                'Expiry Date': expiryDate,
-                'Form Type': user.premiumPlan?.form || 'N/A',
-                
-            };
-        });
+            // Create Excel workbook
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Users Data');
 
-        // Create Excel workbook
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Premium Users Counselling');
+            // Add headers
+            const headers = ['S.No', 'Name', 'Phone', 'Email'];
+            worksheet.addRow(headers);
 
-        // Add headers
-        const headers = Object.keys(userData[0] || {});
-        worksheet.addRow(headers);
-
-        // Style header row
-        const headerRow = worksheet.getRow(1);
-        headerRow.eachCell((cell) => {
-            cell.font = { bold: true };
-            cell.fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: 'FFE0E0E0' }
-            };
-            cell.border = {
-                top: { style: 'thin' },
-                left: { style: 'thin' },
-                bottom: { style: 'thin' },
-                right: { style: 'thin' }
-            };
-            cell.alignment = { vertical: 'middle', horizontal: 'center' };
-        });
-
-        // Add data rows
-        userData.forEach(user => {
-            const rowValues = Object.values(user);
-            const row = worksheet.addRow(rowValues);
-            
-            row.eachCell((cell) => {
+            // Style header row
+            const headerRow = worksheet.getRow(1);
+            headerRow.eachCell((cell) => {
+                cell.font = { bold: true };
+                cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'FFE0E0E0' }
+                };
                 cell.border = {
                     top: { style: 'thin' },
                     left: { style: 'thin' },
@@ -3390,194 +3420,69 @@ async exportPremiumUsersCounsellingData() {
                     right: { style: 'thin' }
                 };
             });
-        });
 
-        // Auto-fit columns
-        worksheet.columns.forEach(column => {
-            let maxLength = 0;
-            column.eachCell({ includeEmpty: true }, (cell) => {
-                const columnLength = cell.value ? cell.value.toString().length : 10;
-                if (columnLength > maxLength) {
-                    maxLength = columnLength;
-                }
-            });
-            column.width = maxLength < 12 ? 12 : maxLength + 2;
-        });
-
-        // Freeze the header row
-        worksheet.views = [
-            { state: 'frozen', ySplit: 1 }
-        ];
-
-        // Add color bands for easier reading
-        for (let i = 2; i <= worksheet.rowCount; i++) {
-            if (i % 2 === 0) {
-                worksheet.getRow(i).eachCell(cell => {
-                    cell.fill = {
-                        type: 'pattern',
-                        pattern: 'solid',
-                        fgColor: { argb: 'FFF5F5F5' }
+            // Add data rows
+            userData.forEach(user => {
+                const row = worksheet.addRow([
+                    user['S.No'],
+                    user['Name'],
+                    user['Phone'],
+                    user['Email']
+                ]);
+                row.eachCell((cell) => {
+                    cell.border = {
+                        top: { style: 'thin' },
+                        left: { style: 'thin' },
+                        bottom: { style: 'thin' },
+                        right: { style: 'thin' }
                     };
                 });
-            }
-        }
-
-        // Create exports directory if needed
-        const exportsDir = path.join(process.cwd(), 'exports');
-        if (!fs.existsSync(exportsDir)) {
-            fs.mkdirSync(exportsDir, { recursive: true });
-        }
-
-        // Generate file name
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const filename = `premium_users_counselling_data_${timestamp}.xlsx`;
-        const filepath = path.join(exportsDir, filename);
-
-        // Write file
-        await workbook.xlsx.writeFile(filepath);
-
-        console.log(`Exported ${userData.length} premium users to Excel file: ${filename}`);
-
-        return {
-            message: `Successfully exported ${userData.length} premium users counselling data`,
-            filename,
-            filepath,
-            totalUsers: userData.length,
-            exportedData: userData.slice(0, 5) // Preview of first 5 records
-        };
-    } catch (error) {
-        console.error('Error exporting premium users counselling data to Excel:', error);
-        throw new Error(`Failed to export premium users data: ${error.message}`);
-    }
-}
-
-
-async exportAllUsersToExcel(filters = null) {
-    try {
-        let users = [];
-        let lastDoc = null;
-        const batchSize = 1000;
-
-        // Paginate Firestore query to get all premium users
-        while (true) {
-            let query = this.users
-                .orderBy('createdAt', 'false')
-                .where('isPremium', '==', true)
-                .limit(batchSize);
-
-            if (lastDoc) {
-                query = query.startAfter(lastDoc);
-            }
-
-            const snapshot = await query.get();
-            if (snapshot.empty) {
-                break;
-            }
-
-            const batchUsers = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            users = users.concat(batchUsers);
-            lastDoc = snapshot.docs[snapshot.docs.length - 1];
-
-            if (snapshot.size < batchSize) {
-                break;
-            }
-        }
-
-        // Prepare data for Excel
-        const userData = users.map((user, index) => ({
-            'S.No': index + 1,
-            'Name': user.name || 'N/A',
-            'Phone': user.phone || 'N/A',
-            'Email': user.email || 'N/A'
-        }));
-
-        // Create Excel workbook
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet('Users Data');
-
-        // Add headers
-        const headers = ['S.No', 'Name', 'Phone', 'Email'];
-        worksheet.addRow(headers);
-
-        // Style header row
-        const headerRow = worksheet.getRow(1);
-        headerRow.eachCell((cell) => {
-            cell.font = { bold: true };
-            cell.fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: 'FFE0E0E0' }
-            };
-            cell.border = {
-                top: { style: 'thin' },
-                left: { style: 'thin' },
-                bottom: { style: 'thin' },
-                right: { style: 'thin' }
-            };
-        });
-
-        // Add data rows
-        userData.forEach(user => {
-            const row = worksheet.addRow([
-                user['S.No'],
-                user['Name'],
-                user['Phone'],
-                user['Email']
-            ]);
-            row.eachCell((cell) => {
-                cell.border = {
-                    top: { style: 'thin' },
-                    left: { style: 'thin' },
-                    bottom: { style: 'thin' },
-                    right: { style: 'thin' }
-                };
             });
-        });
 
-        // Auto-fit columns
-        worksheet.columns.forEach(column => {
-            let maxLength = 0;
-            column.eachCell({ includeEmpty: true }, (cell) => {
-                const columnLength = cell.value ? cell.value.toString().length : 10;
-                if (columnLength > maxLength) {
-                    maxLength = columnLength;
-                }
+            // Auto-fit columns
+            worksheet.columns.forEach(column => {
+                let maxLength = 0;
+                column.eachCell({ includeEmpty: true }, (cell) => {
+                    const columnLength = cell.value ? cell.value.toString().length : 10;
+                    if (columnLength > maxLength) {
+                        maxLength = columnLength;
+                    }
+                });
+                column.width = maxLength < 10 ? 10 : maxLength + 2;
             });
-            column.width = maxLength < 10 ? 10 : maxLength + 2;
-        });
 
-        // Create exports directory if needed
-        const exportsDir = path.join(process.cwd(), 'exports');
-        if (!fs.existsSync(exportsDir)) {
-            fs.mkdirSync(exportsDir, { recursive: true });
+            // Create exports directory if needed
+            const exportsDir = path.join(process.cwd(), 'exports');
+            if (!fs.existsSync(exportsDir)) {
+                fs.mkdirSync(exportsDir, { recursive: true });
+            }
+
+            // Generate file name
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            const filename = `users_export_${timestamp}.xlsx`;
+            const filepath = path.join(exportsDir, filename);
+
+            // Write file
+            await workbook.xlsx.writeFile(filepath);
+
+            console.log(`Exported ${userData.length} users to Excel file: ${filename}`);
+
+            return {
+                message: `Successfully exported ${userData.length} users to Excel`,
+                filename,
+                filepath,
+                totalUsers: userData.length,
+                exportedData: userData.slice(0, 5),
+                appliedFilters: filters || {}
+            };
+
+        } catch (error) {
+            console.error('Error exporting users to Excel:', error);
+            throw new Error(`Failed to export users to Excel: ${error.message}`);
         }
-
-        // Generate file name
-        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-        const filename = `users_export_${timestamp}.xlsx`;
-        const filepath = path.join(exportsDir, filename);
-
-        // Write file
-        await workbook.xlsx.writeFile(filepath);
-
-        console.log(`Exported ${userData.length} users to Excel file: ${filename}`);
-
-        return {
-            message: `Successfully exported ${userData.length} users to Excel`,
-            filename,
-            filepath,
-            totalUsers: userData.length,
-            exportedData: userData.slice(0, 5),
-            appliedFilters: filters || {}
-        };
-
-    } catch (error) {
-        console.error('Error exporting users to Excel:', error);
-        throw new Error(`Failed to export users to Excel: ${error.message}`);
-    }
     }
 
-     async toggleFormFilled(userId, adminEmail) {
+    async toggleFormFilled(userId, adminEmail) {
         try {
             const userDoc = await this.users.doc(userId).get();
             if (!userDoc.exists) {
@@ -3585,7 +3490,7 @@ async exportAllUsersToExcel(filters = null) {
             }
             const userData = userDoc.data();
             const formFilled = !userData.formFilled; // Toggle the formFilled status
-            
+
             await this.users.doc(userId).set({
                 formFilledBy: adminEmail,
                 formFilledAt: formFilled ? new Date().toISOString() : null,
@@ -3596,7 +3501,7 @@ async exportAllUsersToExcel(filters = null) {
             return { message: 'Form filled successfully' };
         } catch (error) {
             console.log('Toggle form filled error:', error);
-            
+
             throw new Error('Form filled update failed');
         }
     }

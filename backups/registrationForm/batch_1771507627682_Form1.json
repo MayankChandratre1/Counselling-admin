@@ -1,0 +1,258 @@
+[
+  {
+    "updatedAt": "2025-05-07T14:46:06.372Z",
+    "steps": [
+      {
+        "fields": [
+          {
+            "id": "fullName",
+            "options": [],
+            "label": "Full Name",
+            "key": "fullName",
+            "additionalRemarks": "Enter like Name Father's Name Surname",
+            "required": true,
+            "type": "text"
+          },
+          {
+            "required": true,
+            "type": "date",
+            "id": "dob",
+            "options": [],
+            "key": "dob",
+            "label": "Date of Birth"
+          },
+          {
+            "id": "city",
+            "required": true,
+            "label": "City",
+            "type": "select",
+            "key": "city",
+            "options": [
+              "AHMEDNAGAR",
+              "AKOLA",
+              "AMRAVATI",
+              "BEED",
+              "BHANDARA",
+              "BULDHANA",
+              "CHANDRAPUR",
+              "CHHATRAPATI SAMBHAJINAGAR",
+              "DHARASHIV",
+              "DHULE",
+              "DIST",
+              "DISTRICT",
+              "JALGAON",
+              "JALNA",
+              "KARJAT",
+              "KOLHAPUR",
+              "LATUR",
+              "MALWADI-BOTA",
+              "MUMBAI",
+              "MUMBAI CITY",
+              "MUMBAI SUBURBAN",
+              "NADURBAR",
+              "NAGPUR",
+              "NANDED",
+              "NANDURBAR",
+              "NASHIK",
+              "PALGHAR",
+              "PANIV",
+              "PARBHANI",
+              "PUNE",
+              "RAIGAD",
+              "RATNAGIRI",
+              "SAKOLI",
+              "SANGLI",
+              "SATARA",
+              "SHEVGAON",
+              "SHIRPUR",
+              "SINDHUDURG",
+              "SOLAPUR",
+              "THANE",
+              "WARDHA",
+              "WASHIM",
+              "YAVATMAL",
+              "YELUR"
+            ]
+          },
+          {
+            "label": "Category",
+            "id": "field_1746598766047",
+            "type": "select",
+            "additionalRemarks": "",
+            "required": true,
+            "options": [
+              "OBC",
+              "OPEN",
+              "SC",
+              "SEBC",
+              "ST",
+              "VJ",
+              "NT1",
+              "NT2",
+              "NT3",
+              "ORPHAN",
+              "EWS",
+              "TFWS"
+            ],
+            "key": "category"
+          },
+          {
+            "label": "Is your Parent/Guardian in defense ?",
+            "additionalRemarks": "",
+            "key": "isDefense",
+            "id": "field_1746628756334",
+            "type": "select",
+            "required": true,
+            "options": [
+              "YES",
+              "NO"
+            ]
+          },
+          {
+            "type": "select",
+            "required": true,
+            "additionalRemarks": "",
+            "id": "field_1746628932112",
+            "options": [
+              "YES",
+              "NO"
+            ],
+            "label": "Do you have any physical disability ?",
+            "key": "isPwd"
+          }
+        ],
+        "title": "Basic Information"
+      },
+      {
+        "fields": [
+          {
+            "id": "boardMarks",
+            "options": [],
+            "type": "number",
+            "required": true,
+            "key": "boardMarks",
+            "label": "12th Board Marks"
+          },
+          {
+            "id": "boardType",
+            "options": [
+              "State Board",
+              "CBSC",
+              "ICSE"
+            ],
+            "type": "select",
+            "required": true,
+            "label": "Board Type",
+            "key": "boardType"
+          },
+          {
+            "label": "CET Seat Number",
+            "type": "text",
+            "additionalRemarks": "",
+            "id": "field_1746599096432",
+            "required": true,
+            "options": [],
+            "key": "cetSeatNumber"
+          },
+          {
+            "required": false,
+            "id": "field_1746599112319",
+            "type": "number",
+            "additionalRemarks": "If results not declared yet fill this with the expected marks.",
+            "label": "CET Marks (out of 200)",
+            "key": "cetMarks",
+            "options": []
+          },
+          {
+            "id": "field_1746599128280",
+            "label": "CET Percentile",
+            "additionalRemarks": "If results not declared yet fill this with the expected percentile.",
+            "type": "number",
+            "required": false,
+            "options": [],
+            "key": "cetPercentile",
+            "isLocked": false
+          },
+          {
+            "required": false,
+            "id": "field_1746599196533",
+            "key": "jeeSeatNumber",
+            "type": "text",
+            "options": [],
+            "additionalRemarks": "",
+            "label": "JEE Seat Number"
+          },
+          {
+            "key": "jeeMarks",
+            "required": false,
+            "id": "field_1746599212984",
+            "label": "JEE Marks",
+            "additionalRemarks": "If results not declared yet fill this with the expected marks.",
+            "options": [],
+            "type": "number"
+          },
+          {
+            "label": "JEE Percentile",
+            "required": false,
+            "options": [],
+            "type": "number",
+            "key": "jeePercentile",
+            "id": "field_1746599235982",
+            "additionalRemarks": "If results not declared yet fill this with the expected percentile."
+          }
+        ],
+        "title": "Academic Information"
+      },
+      {
+        "fields": [
+          {
+            "options": [],
+            "key": "preferredLocations",
+            "type": "text",
+            "label": "Preferred Locations",
+            "id": "preferredLocations",
+            "required": false
+          },
+          {
+            "type": "select",
+            "key": "budget",
+            "id": "budget",
+            "required": true,
+            "label": "Budget",
+            "options": [
+              "Under 1L",
+              "1L - 2L",
+              "Other"
+            ]
+          },
+          {
+            "id": "password",
+            "key": "password",
+            "type": "password",
+            "required": true,
+            "label": "Password",
+            "options": []
+          },
+          {
+            "required": true,
+            "type": "password",
+            "key": "confirmPassword",
+            "id": "confirmPassword",
+            "options": [],
+            "label": "Confirm Password"
+          },
+          {
+            "options": [],
+            "required": true,
+            "label": "I agree to the Terms and Conditions",
+            "type": "checkbox",
+            "key": "termsAccepted",
+            "id": "termsAccepted"
+          }
+        ],
+        "title": "Preferences and Goals"
+      }
+    ],
+    "id": "Form1"
+  }
+]

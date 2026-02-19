@@ -1,0 +1,339 @@
+[
+  {
+    "id": "63e53",
+    "lastUpdatedBy": "prathmeshgangurde333@gmail.com",
+    "steps": [
+      {
+        "number": 1,
+        "title": "Your Number is added to Exclusive WhatsApp Group for Saarthi Plus?",
+        "description": "You are Part of Exclusive WhatsApp group?",
+        "showListButton": false,
+        "isLocked": false,
+        "premiumOnly": true,
+        "isCapSpecific": false,
+        "cap": 1,
+        "isVerdict": false,
+        "isCapQuery": false
+      },
+      {
+        "number": 2,
+        "title": "Documents verified by Team on Google Meet.",
+        "description": "Special session will be conducted to verify your documents if they are completed or not?",
+        "showListButton": false,
+        "isLocked": false,
+        "premiumOnly": true,
+        "isCapSpecific": false,
+        "cap": 1,
+        "isVerdict": false,
+        "isCapQuery": false
+      },
+      {
+        "title": "REGISTRATION Done by Team on CET Cell website.",
+        "number": 3,
+        "description": "Did team complete your Registration? ",
+        "isLocked": false,
+        "premiumOnly": true,
+        "showListButton": false
+      },
+      {
+        "number": 4,
+        "title": "Document Verified by CET Cell and form Confirmed.",
+        "isLocked": false,
+        "premiumOnly": true
+      },
+      {
+        "number": 5,
+        "title": "Attended Session with Team or Yash Dada Regarding List Making?",
+        "isLocked": false,
+        "premiumOnly": true
+      },
+      {
+        "number": 6,
+        "title": "Preference List Available on App?",
+        "description": "",
+        "showListButton": true,
+        "isLocked": true,
+        "premiumOnly": true
+      },
+      {
+        "number": 7,
+        "title": "Did you finalize your list?",
+        "description": "The list available in your app is final for you now?",
+        "showListButton": false,
+        "isLocked": true,
+        "premiumOnly": true
+      },
+      {
+        "number": 8,
+        "title": "Provisional Rank Declared By CET Cell",
+        "description": "",
+        "showListButton": false,
+        "isLocked": true,
+        "premiumOnly": true
+      },
+      {
+        "number": 9,
+        "title": "Final Rank Declared by CET CELL Your Rank?",
+        "description": "",
+        "showListButton": false,
+        "isLocked": false,
+        "premiumOnly": true
+      },
+      {
+        "number": 10,
+        "title": "Ready for CAP-1 Round?",
+        "description": "",
+        "showListButton": false,
+        "isLocked": true,
+        "premiumOnly": true
+      },
+      {
+        "number": 11,
+        "title": "Form Filling Done on CET Cell Website for CAP-1 by Team?",
+        "description": "Your form is submitted by team?",
+        "showListButton": false,
+        "isLocked": true,
+        "premiumOnly": true
+      },
+      {
+        "number": 12,
+        "title": "CAP-1 Allotment Declared Enter your College and Branch?",
+        "description": "",
+        "showListButton": false,
+        "isLocked": true,
+        "premiumOnly": true,
+        "isCapSpecific": true,
+        "isVerdict": false,
+        "cap": 1,
+        "isCapQuery": true
+      },
+      {
+        "number": 13,
+        "title": "Next Steps will available soon.",
+        "description": "",
+        "showListButton": false,
+        "isLocked": true,
+        "premiumOnly": true
+      }
+    ],
+    "updatedAt": "2025-07-08T04:27:56.118Z"
+  },
+  {
+    "id": "Sarathi-Online",
+    "lastUpdatedBy": "prathmeshgangurde333@gmail.com",
+    "steps": [
+      {
+        "description": "",
+        "title": "Your Number is added to Exclusive WhatsApp Group for Saarthi",
+        "number": 1,
+        "isVerdict": false,
+        "isCapSpecific": false,
+        "cap": 1,
+        "isCapQuery": false,
+        "premiumOnly": true,
+        "isLocked": false
+      },
+      {
+        "number": 2,
+        "title": "Documents Ready?",
+        "description": "Are all of your Documents Ready? As per your Category?\nThe category wise List of Documents is posted on Exclusive WhatsApp Group Kindly verify and Answer Yes/No",
+        "showListButton": false,
+        "isLocked": false,
+        "premiumOnly": true,
+        "isCapSpecific": false,
+        "cap": 1,
+        "isVerdict": false,
+        "isCapQuery": false
+      },
+      {
+        "number": 3,
+        "title": "REGISTRATION on CET Cell website.",
+        "description": "",
+        "showListButton": false,
+        "isLocked": false,
+        "premiumOnly": true,
+        "isCapSpecific": false,
+        "cap": 1,
+        "isVerdict": false,
+        "isCapQuery": false
+      },
+      {
+        "number": 4,
+        "title": "Document Verified by CET Cell and form Confirmed.",
+        "description": "",
+        "showListButton": false,
+        "isLocked": false,
+        "premiumOnly": true,
+        "isCapSpecific": false,
+        "cap": 1,
+        "isVerdict": false,
+        "isCapQuery": false
+      },
+      {
+        "number": 5,
+        "title": "Attended Session with Team or Yash Dada Regarding List Making? ",
+        "description": "You had the list making session with team?",
+        "showListButton": false,
+        "isLocked": false,
+        "premiumOnly": true,
+        "isCapSpecific": false,
+        "cap": 1,
+        "isVerdict": false,
+        "isCapQuery": false
+      },
+      {
+        "number": 6,
+        "title": "Personalized  College Preference List Available on App?",
+        "description": "Your Personalized college list is available on the app?",
+        "showListButton": true,
+        "isLocked": false,
+        "premiumOnly": true,
+        "isCapSpecific": false,
+        "cap": 1,
+        "isVerdict": false,
+        "isCapQuery": false
+      },
+      {
+        "number": 7,
+        "title": "Provisional Rank Declared By CET Cell?",
+        "description": "Updated in your Profile?",
+        "showListButton": false,
+        "isLocked": false,
+        "premiumOnly": true,
+        "isCapSpecific": false,
+        "cap": 1,
+        "isVerdict": false,
+        "isCapQuery": false
+      },
+      {
+        "number": 8,
+        "title": "Final Rank Declared By CET Cell?",
+        "description": "",
+        "showListButton": false,
+        "isLocked": false,
+        "premiumOnly": true,
+        "isCapSpecific": false,
+        "cap": 1,
+        "isVerdict": false,
+        "isCapQuery": false
+      },
+      {
+        "number": 9,
+        "title": "CAP Round 1 Form Filling Done?",
+        "description": "Filled & Submitted the CAP-1 Form?",
+        "showListButton": false,
+        "isLocked": false,
+        "premiumOnly": true,
+        "isCapSpecific": false,
+        "cap": 1,
+        "isVerdict": false,
+        "isCapQuery": false
+      },
+      {
+        "number": 10,
+        "title": "CAP 1 Results Declared",
+        "description": "Enter the Allotted College Name/ Branch Name ?",
+        "showListButton": false,
+        "isLocked": false,
+        "premiumOnly": true,
+        "isCapSpecific": true,
+        "cap": 1,
+        "isVerdict": false,
+        "isCapQuery": true
+      },
+      {
+        "number": 11,
+        "title": "CAP Round 2 College List Ready & confirmed By Yash Dada",
+        "description": "",
+        "showListButton": false,
+        "isLocked": false,
+        "premiumOnly": true,
+        "isCapSpecific": false,
+        "cap": 1,
+        "isVerdict": false,
+        "isCapQuery": false
+      },
+      {
+        "number": 12,
+        "title": "Next Steps will available soon.",
+        "description": "",
+        "showListButton": false,
+        "isLocked": true,
+        "premiumOnly": true,
+        "isCapSpecific": false,
+        "cap": 1,
+        "isVerdict": false,
+        "isCapQuery": false
+      }
+    ],
+    "updatedAt": "2025-08-03T19:07:08.236Z"
+  },
+  {
+    "id": "Test",
+    "lastUpdatedBy": "yasharadhyeapp@gmail.com",
+    "steps": [
+      {
+        "number": 1,
+        "title": "New Step 1",
+        "description": "",
+        "showListButton": false,
+        "isLocked": false,
+        "premiumOnly": true,
+        "isCapSpecific": false,
+        "cap": 1,
+        "isVerdict": false,
+        "isCapQuery": false
+      }
+    ],
+    "updatedAt": "2025-06-16T13:04:10.791Z"
+  },
+  {
+    "steps": [
+      {
+        "title": "Complete Profile",
+        "number": 1,
+        "isLocked": false,
+        "showListButton": false,
+        "description": "You should complete your profile from Registration Tab.",
+        "isCapSpecific": false,
+        "isVerdict": false,
+        "premiumOnly": false
+      },
+      {
+        "title": "CAP Registrations",
+        "number": 2
+      },
+      {
+        "number": 3,
+        "title": "CAP List release",
+        "showListButton": true
+      },
+      {
+        "isVerdict": true,
+        "title": "New Step 4",
+        "number": 4
+      },
+      {
+        "title": "CAP I Result Query",
+        "description": "What College did you get allotted to?",
+        "isCapQuery": true,
+        "number": 5
+      },
+      {
+        "number": 6,
+        "title": "Testing",
+        "description": "This is a test step",
+        "showListButton": true,
+        "isLocked": false,
+        "premiumOnly": false,
+        "isCapSpecific": true,
+        "cap": 1,
+        "isVerdict": true,
+        "isCapQuery": false
+      }
+    ],
+    "lastUpdatedBy": "mayankmchandratre@gmail.com",
+    "updatedAt": "2025-04-21T17:44:30.895Z",
+    "id": "elite-1234567"
+  }
+]

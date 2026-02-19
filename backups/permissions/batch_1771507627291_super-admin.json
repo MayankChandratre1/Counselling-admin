@@ -1,0 +1,31 @@
+[
+  {
+    "pages": [
+      "users",
+      "appointments"
+    ],
+    "id": "admin"
+  },
+  {
+    "pages": [
+      "home",
+      "users",
+      "colleges",
+      "lists",
+      "change-password",
+      "forms",
+      "registrationform",
+      "add-user",
+      "cutoff",
+      "admin-settings",
+      "landing-page",
+      "premium-plans",
+      "payment-logs",
+      "add-users",
+      "edit-user-list",
+      "appointments",
+      "edit-users"
+    ],
+    "id": "super-admin"
+  }
+]

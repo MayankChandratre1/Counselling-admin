@@ -1,0 +1,140 @@
+[
+  {
+    "email": "form@gmail.com",
+    "password": "$2b$12$76t54MZdg3Oy/Ia82j..ses5pBu9BNbLd5PDFtyWzd2PLA40cFNQC",
+    "role": "admin",
+    "permissions": {
+      "pages": [
+        "users",
+        "appointments"
+      ]
+    },
+    "createdAt": "2025-08-07T13:20:22.685Z",
+    "updatedAt": "2025-08-07T13:20:22.685Z",
+    "id": "30kJ6CSxa2fivhv8VRML"
+  },
+  {
+    "email": "omghodke02@gmail.com",
+    "password": "$2b$12$ewVETELF6fHcSzkLx7JSnOdN37czcM2fGv2buK77UEWJw7m.m2hke",
+    "role": "super-admin",
+    "permissions": {
+      "pages": [
+        "home",
+        "users",
+        "colleges",
+        "lists",
+        "change-password",
+        "forms",
+        "registrationform",
+        "add-user",
+        "cutoff",
+        "admin-settings",
+        "landing-page",
+        "premium-plans",
+        "payment-logs",
+        "add-users",
+        "edit-user-list",
+        "appointments",
+        "edit-users"
+      ]
+    },
+    "createdAt": "2025-07-07T09:53:56.955Z",
+    "updatedAt": "2025-07-07T09:53:56.955Z",
+    "id": "GHeKYVBcFy046AhhTTLX"
+  },
+  {
+    "email": "yasharadhyeapp@gmail.com",
+    "role": "super-admin",
+    "permissions": {
+      "pages": [
+        "home",
+        "users",
+        "colleges",
+        "lists",
+        "change-password",
+        "forms",
+        "registrationform",
+        "add-user",
+        "cutoff",
+        "admin-settings"
+      ]
+    },
+    "createdAt": "2025-04-14T09:37:06.154Z",
+    "password": "$2b$12$U9Xc70RcprgIbzW6jgxx7Ou1YplJ/6RAMOB2JMFKTAumhganyhs0a",
+    "updatedAt": "2025-04-15T11:29:15.510Z",
+    "id": "VkBLPLUPrtdnwPHwBqon"
+  },
+  {
+    "email": "mayankmchandratre@gmail.com",
+    "password": "$2b$12$61SkwbueZYOji4Ujvi6BoOVqwbECVBN1P3hhd224cEdMiF5m3T7kG",
+    "role": "super-admin",
+    "permissions": {
+      "pages": [
+        "home",
+        "users",
+        "colleges",
+        "lists",
+        "change-password",
+        "forms",
+        "registrationform",
+        "add-user",
+        "cutoff",
+        "admin-settings"
+      ]
+    },
+    "createdAt": "2025-04-21T06:54:31.604Z",
+    "updatedAt": "2025-04-21T06:54:31.604Z",
+    "id": "WmgdOEPIlUiVrYfgCGyV"
+  },
+  {
+    "email": "test@admin.com",
+    "password": "$2b$12$5S6m62m.e8XukcYs30l34u0mLYI/afhMyvlgBYlXaKju/mf0sRY/G",
+    "role": "admin",
+    "permissions": {
+      "pages": [
+        "home",
+        "users",
+        "colleges",
+        "lists"
+      ]
+    },
+    "createdAt": "2025-04-21T06:54:46.175Z",
+    "updatedAt": "2025-04-21T06:54:46.175Z",
+    "id": "nvD11Luf04LHNKcx1Iso"
+  },
+  {
+    "email": "adityachawale14@gmail.com",
+    "password": "$2b$10$QBFUD5RrryfA4hKeat.efuZLgIGa7Q/WsC58mlWrIzjjaonOjrUl2",
+    "role": "super-admin",
+    "id": "qayweCt1PjdPenh4TzY9"
+  },
+  {
+    "email": "prathmeshgangurde333@gmail.com",
+    "password": "$2b$12$W7f.O36ssgAvH0OxHV1ynepgp1j8BpwnF4xlyfTO3qF1nRWFfjtba",
+    "role": "super-admin",
+    "permissions": {
+      "pages": [
+        "home",
+        "users",
+        "colleges",
+        "lists",
+        "change-password",
+        "forms",
+        "registrationform",
+        "add-user",
+        "cutoff",
+        "admin-settings",
+        "landing-page",
+        "premium-plans",
+        "payment-logs",
+        "add-users",
+        "edit-user-list",
+        "appointments",
+        "edit-users"
+      ]
+    },
+    "createdAt": "2025-07-07T06:39:21.953Z",
+    "updatedAt": "2025-07-07T06:39:21.953Z",
+    "id": "uLSbmZP1MYdfFsOa2Xfh"
+  }
+]
