@@ -1,4 +1,5 @@
 import AdminService from '../services/admin.service.js';
+import { Admin } from '../models/admin.model.js';
 import nodemailer from 'nodemailer';
 import bcrypt from 'bcryptjs';
 
@@ -7,7 +8,7 @@ class AdminController {
         this.adminService = new AdminService();
         // Add OTP store
         this.otpStore = {};
-        
+
         // Configure nodemailer transporter
         this.transporter = nodemailer.createTransport({
             host: 'smtp.gmail.com',
@@ -18,7 +19,7 @@ class AdminController {
                 pass: process.env.EMAIL_PASSWORD
             }
         });
-        
+
     }
 
     async dummyController(req, res) {
@@ -35,22 +36,22 @@ class AdminController {
     async requestOTP(req, res) {
         try {
             const { email } = req.body;
-            
-            // Verify admin exists
-            const adminRef = await this.adminService.admins.where('email', '==', email).get();
-            if (adminRef.empty) {
+
+            // Verify admin exists (Mongoose — was Firestore)
+            const adminDoc = await Admin.findOne({ email });
+            if (!adminDoc) {
                 return res.status(404).json({ error: 'Admin not found' });
             }
-            
+
             // Generate a 6-digit OTP
             const otp = Math.floor(100000 + Math.random() * 900000).toString();
-            
+
             // Store OTP with expiration (10 minutes)
             this.otpStore[email] = {
                 otp: otp,
                 expiresAt: Date.now() + 10 * 60 * 1000
             };
-            
+
             // Send email with OTP
             const mailOptions = {
                 from: process.env.EMAIL_USER,
@@ -68,76 +69,75 @@ class AdminController {
                     </div>
                 `
             };
-            
+
             await this.transporter.sendMail(mailOptions);
-            
+
             res.status(200).json({ message: 'OTP sent successfully' });
         } catch (error) {
             console.error('Request OTP error:', error);
             res.status(500).json({ error: 'Failed to send OTP' });
         }
     }
-    
+
     async verifyOTP(req, res) {
         try {
             const { email, otp } = req.body;
-            
+
             // Check if OTP exists and is valid
             if (!this.otpStore[email] || this.otpStore[email].otp !== otp) {
                 return res.status(400).json({ error: 'Invalid OTP' });
             }
-            
+
             // Check if OTP has expired
             if (Date.now() > this.otpStore[email].expiresAt) {
                 delete this.otpStore[email];
                 return res.status(400).json({ error: 'OTP has expired' });
             }
-            
+
             res.status(200).json({ message: 'OTP verified successfully' });
         } catch (error) {
             console.error('Verify OTP error:', error);
             res.status(500).json({ error: 'Failed to verify OTP' });
         }
     }
-    
+
     async changePassword(req, res) {
         try {
             const { email, otp, newPassword } = req.body;
-            
+
             // Verify OTP again
             if (!this.otpStore[email] || this.otpStore[email].otp !== otp) {
                 return res.status(400).json({ error: 'Invalid OTP' });
             }
-            
+
             // Check if OTP has expired
             if (Date.now() > this.otpStore[email].expiresAt) {
                 delete this.otpStore[email];
                 return res.status(400).json({ error: 'OTP has expired' });
             }
-            
+
             // Hash the new password
             const saltRounds = 10;
             const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
-            
-            // Get admin document
-            const adminRef = await this.adminService.admins.where('email', '==', email).get();
-            const adminDoc = adminRef.docs[0];
-            
-            // Update the password
-            await adminDoc.ref.update({
-                password: hashedPassword
-            });
-            
+
+            // Get admin document and update password (Mongoose — was Firestore)
+            const adminResult = await Admin.findOneAndUpdate(
+                { email },
+                { $set: { password: hashedPassword } },
+                { new: true }
+            );
+            if (!adminResult) return res.status(404).json({ error: 'Admin not found' });
+
             // Clear the OTP
             delete this.otpStore[email];
-            
+
             res.status(200).json({ message: 'Password changed successfully' });
         } catch (error) {
             console.error('Change password error:', error);
             res.status(500).json({ error: 'Failed to change password' });
         }
     }
-    
+
     async sendOTPEmail(email, otp) {
         // Configure your email service
         const transporter = nodemailer.createTransport({
@@ -147,7 +147,7 @@ class AdminController {
                 pass: process.env.EMAIL_PASSWORD
             }
         });
-        
+
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: email,
@@ -167,7 +167,7 @@ class AdminController {
                 </div>
             `
         };
-        
+
         return transporter.sendMail(mailOptions);
     }
 
@@ -207,7 +207,7 @@ class AdminController {
             res.status(201).json(user);
         } catch (error) {
             console.log('Add user error:', error);
-            
+
             res.status(400).json({ error: error.message });
         }
     }
@@ -352,7 +352,7 @@ class AdminController {
         try {
             const userId = req.params.userId;
             console.log('Getting lists for user:', userId);
-            
+
             const userLists = await this.adminService.getUserLists(userId);
             res.status(200).json(userLists);
         } catch (error) {
@@ -365,11 +365,11 @@ class AdminController {
         try {
             console.log('Create user list request for user:', req.params.userId);
             console.log('Request body:', req.body);
-            
+
             if (!req.body.colleges || !Array.isArray(req.body.colleges)) {
                 return res.status(400).json({ error: 'Invalid colleges data - must be an array' });
             }
-            
+
             const userList = await this.adminService.createUserList(req.params.userId, req.body);
             res.status(201).json(userList);
         } catch (error) {
@@ -383,11 +383,11 @@ class AdminController {
             console.log('Update user list request for user:', req.params.userId);
             console.log('List ID:', req.params.listId);
             console.log('Request body:', req.body);
-            
+
             if (!req.body.colleges || !Array.isArray(req.body.colleges)) {
                 return res.status(400).json({ error: 'Invalid colleges data - must be an array' });
             }
-            
+
             const userList = await this.adminService.updateUserList(req.params.userId, req.params.listId, req.body, req.admin);
             res.status(200).json(userList);
         } catch (error) {
@@ -400,11 +400,11 @@ class AdminController {
             console.log('Update user list request for user:', req.params.userId);
             console.log('List ID:', req.params.listId);
             console.log('Request body:', req.body);
-            
+
             if (!req.body.colleges || !Array.isArray(req.body.colleges)) {
                 return res.status(400).json({ error: 'Invalid colleges data - must be an array' });
             }
-            
+
             const userList = await this.adminService.updateCreatedUserList(req.params.userId, req.params.listId, req.body, req.admin);
             res.status(200).json(userList);
         } catch (error) {
@@ -434,7 +434,7 @@ class AdminController {
         try {
             const { userId } = req.params;
             const listAssignment = req.body;
-            
+
             const result = await this.adminService.assignListToUser(userId, listAssignment);
             res.status(200).json(result);
         } catch (error) {
@@ -446,8 +446,8 @@ class AdminController {
     async releaseListToUser(req, res) {
         try {
             const { userId } = req.params;
-            const {listId} = req.body;
-            
+            const { listId } = req.body;
+
             const result = await this.adminService.releaseListToUser(userId, listId);
             res.status(200).json(result);
         } catch (error) {
@@ -458,7 +458,7 @@ class AdminController {
     async releaseAllListToUser(req, res) {
         try {
             const { userId } = req.params;
-            
+
             const result = await this.adminService.releaseAllListToUser(userId);
             res.status(200).json(result);
         } catch (error) {
@@ -469,7 +469,7 @@ class AdminController {
     async releaseAllListBulk(req, res) {
         try {
             const { userIds } = req.body;
-            
+
             const result = await this.adminService.releaseAllListBulk(userIds);
             res.status(200).json(result);
         } catch (error) {
@@ -491,7 +491,7 @@ class AdminController {
     async saveFormConfig(req, res) {
         try {
             const { steps } = req.body;
-            
+
             const result = await this.adminService.saveFormConfig(steps);
             res.status(200).json(result);
         } catch (error) {
@@ -514,7 +514,7 @@ class AdminController {
     async getAllUsersOfForm(req, res) {
         try {
             const formId = req.params.formId;
-            const {userIds} = req.body
+            const { userIds } = req.body
             const users = await this.adminService.getAllUsersOfForm(formId, userIds);
             res.status(200).json(users);
         } catch (error) {
@@ -526,7 +526,7 @@ class AdminController {
     async getCutoff(req, res) {
         try {
             const query = req.body;
-            console.log("#########",query);
+            console.log("#########", query);
             const result = await this.adminService.getCutoff(query);
             res.status(201).json(result);
         } catch (error) {
@@ -536,11 +536,11 @@ class AdminController {
     }
     async addNote(req, res) {
         try {
-            const {note} = req.body;
-            const {userId} = req.params;
-            console.log("#########",note,userId);
+            const { note } = req.body;
+            const { userId } = req.params;
+            console.log("#########", note, userId);
             const admin = req.admin
-            const result = await this.adminService.addNote(note,userId,admin);
+            const result = await this.adminService.addNote(note, userId, admin);
             res.status(201).json(result);
         } catch (error) {
             console.error('Add note error:', error);
@@ -549,9 +549,9 @@ class AdminController {
     }
     async getNotes(req, res) {
         try {
-            const {userId} = req.params;
+            const { userId } = req.params;
             const admin = req.admin
-            const result = await this.adminService.getNotes(userId,admin);
+            const result = await this.adminService.getNotes(userId, admin);
             res.status(201).json(result);
         } catch (error) {
             console.error('get notes error:', error);
@@ -682,7 +682,7 @@ class AdminController {
 
     async updatePremiumPlans(req, res) {
         try {
-            const  data = req.body;
+            const data = req.body;
             const result = await this.adminService.updatePremiumPlans(data);
             res.status(200).json(result);
         } catch (error) {
@@ -703,7 +703,7 @@ class AdminController {
 
     async updateContactData(req, res) {
         try {
-            const  data = req.body;
+            const data = req.body;
             const result = await this.adminService.updateContactData(data);
             res.status(200).json(result);
         } catch (error) {
@@ -724,7 +724,7 @@ class AdminController {
 
     async updateDynamicPages(req, res) {
         try {
-            const  data = req.body;
+            const data = req.body;
             const result = await this.adminService.updateDynamicPages(data);
             res.status(200).json(result);
         } catch (error) {
@@ -745,7 +745,7 @@ class AdminController {
 
     async getPayments(req, res) {
         try {
-            const {lastdoc, limit, page} = req.query;
+            const { lastdoc, limit, page } = req.query;
             const payments = await this.adminService.getPayments(lastdoc, limit, page, req.query);
             res.status(200).json(payments);
         } catch (error) {
@@ -812,7 +812,7 @@ class AdminController {
         try {
             const filters = req.query;
             console.log('Get appointments filters:', filters);
-            
+
             const appointments = await this.adminService.getAppointments(filters);
             res.status(200).json(appointments);
         } catch (error) {
@@ -847,11 +847,11 @@ class AdminController {
         try {
             const { listId } = req.params;
             const { colleges } = req.body;
-            
+
             if (!colleges || !Array.isArray(colleges)) {
                 return res.status(400).json({ error: 'Colleges must be an array' });
             }
-            
+
             const result = await this.adminService.appendList(listId, colleges, req.admin);
             res.status(200).json(result);
         } catch (error) {
@@ -872,129 +872,129 @@ class AdminController {
     }
 
 
-// Add these methods to the AdminController class
+    // Add these methods to the AdminController class
 
-async getListFolders(req, res) {
-    try {
-        const folders = await this.adminService.getListFolders();
-        res.status(200).json(folders);
-    } catch (error) {
-        console.error('Get list folders error:', error);
-        res.status(400).json({ error: error.message });
+    async getListFolders(req, res) {
+        try {
+            const folders = await this.adminService.getListFolders();
+            res.status(200).json(folders);
+        } catch (error) {
+            console.error('Get list folders error:', error);
+            res.status(400).json({ error: error.message });
+        }
     }
-}
 
-async getListFolder(req, res) {
-    try {
-        const folder = await this.adminService.getListFolder(req.params.folderId);
-        res.status(200).json(folder);
-    } catch (error) {
-        console.error('Get list folder error:', error);
-        res.status(400).json({ error: error.message });
+    async getListFolder(req, res) {
+        try {
+            const folder = await this.adminService.getListFolder(req.params.folderId);
+            res.status(200).json(folder);
+        } catch (error) {
+            console.error('Get list folder error:', error);
+            res.status(400).json({ error: error.message });
+        }
     }
-}
 
-async createListFolder(req, res) {
-    try {
-        const folder = await this.adminService.createListFolder(req.body, req.admin);
-        res.status(201).json(folder);
-    } catch (error) {
-        console.error('Create list folder error:', error);
-        res.status(400).json({ error: error.message });
+    async createListFolder(req, res) {
+        try {
+            const folder = await this.adminService.createListFolder(req.body, req.admin);
+            res.status(201).json(folder);
+        } catch (error) {
+            console.error('Create list folder error:', error);
+            res.status(400).json({ error: error.message });
+        }
     }
-}
 
-async updateListFolder(req, res) {
-    try {
-        const folder = await this.adminService.updateListFolder(
-            req.params.folderId,
-            req.body,
-            req.admin
-        );
-        res.status(200).json(folder);
-    } catch (error) {
-        console.error('Update list folder error:', error);
-        res.status(400).json({ error: error.message });
+    async updateListFolder(req, res) {
+        try {
+            const folder = await this.adminService.updateListFolder(
+                req.params.folderId,
+                req.body,
+                req.admin
+            );
+            res.status(200).json(folder);
+        } catch (error) {
+            console.error('Update list folder error:', error);
+            res.status(400).json({ error: error.message });
+        }
     }
-}
 
-async deleteListFolder(req, res) {
-    try {
-        const result = await this.adminService.deleteListFolder(req.params.folderId);
-        res.status(200).json(result);
-    } catch (error) {
-        console.error('Delete list folder error:', error);
-        res.status(400).json({ error: error.message });
+    async deleteListFolder(req, res) {
+        try {
+            const result = await this.adminService.deleteListFolder(req.params.folderId);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Delete list folder error:', error);
+            res.status(400).json({ error: error.message });
+        }
     }
-}
 
-async archiveListFolder(req, res) {
-    try {
-        const { isArchive } = req.body;
-        const result = await this.adminService.archiveListFolder(
-            req.params.folderId,
-            isArchive,
-            req.admin
-        );
-        res.status(200).json(result);
-    } catch (error) {
-        console.error('Archive list folder error:', error);
-        res.status(400).json({ error: error.message });
+    async archiveListFolder(req, res) {
+        try {
+            const { isArchive } = req.body;
+            const result = await this.adminService.archiveListFolder(
+                req.params.folderId,
+                isArchive,
+                req.admin
+            );
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Archive list folder error:', error);
+            res.status(400).json({ error: error.message });
+        }
     }
-}
 
-// ...existing code...
+    // ...existing code...
 
-async restoreList(req, res) {
-    try {
-        const { listId } = req.params;
-        const result = await this.adminService.restoreList(listId);
-        res.status(200).json(result);
-    } catch (error) {
-        console.error('Restore list error:', error);
-        res.status(400).json({ error: error.message });
+    async restoreList(req, res) {
+        try {
+            const { listId } = req.params;
+            const result = await this.adminService.restoreList(listId);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Restore list error:', error);
+            res.status(400).json({ error: error.message });
+        }
     }
-}
 
-async copyListToFolder(req, res) {
-    try {
-        const { listId, folderId } = req.params;
-        const result = await this.adminService.copyListToFolder(listId, folderId, req.admin);
-        res.status(201).json(result);
-    } catch (error) {
-        console.error('Copy list error:', error);
-        res.status(400).json({ error: error.message });
+    async copyListToFolder(req, res) {
+        try {
+            const { listId, folderId } = req.params;
+            const result = await this.adminService.copyListToFolder(listId, folderId, req.admin);
+            res.status(201).json(result);
+        } catch (error) {
+            console.error('Copy list error:', error);
+            res.status(400).json({ error: error.message });
+        }
     }
-}
-async moveListToFolder(req, res) {
-    try {
-        const { listId, folderId } = req.params;
-        const result = await this.adminService.moveListToFolder(listId, folderId, req.admin);
-        res.status(201).json(result);
-    } catch (error) {
-        console.error('Copy list error:', error);
-        res.status(400).json({ error: error.message });
+    async moveListToFolder(req, res) {
+        try {
+            const { listId, folderId } = req.params;
+            const result = await this.adminService.moveListToFolder(listId, folderId, req.admin);
+            res.status(201).json(result);
+        } catch (error) {
+            console.error('Copy list error:', error);
+            res.status(400).json({ error: error.message });
+        }
     }
-}
 
-async toggleFormFilled(req, res) {
-    try {
-        const { userId } = req.params;
-        const admin = req.admin;
-        const result = await this.adminService.toggleFormFilled(userId, admin.email);
-        res.status(200).json(result);
-    } catch (error) {
-        console.error('Toggle form filled error:', error);
-        res.status(400).json({ error: error.message });
+    async toggleFormFilled(req, res) {
+        try {
+            const { userId } = req.params;
+            const admin = req.admin;
+            const result = await this.adminService.toggleFormFilled(userId, admin.email);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Toggle form filled error:', error);
+            res.status(400).json({ error: error.message });
+        }
     }
-}
 
-// ...existing code...
-
+    // ...existing code...
 
 
 
-    
+
+
 }
 
 // Create instance of controller
