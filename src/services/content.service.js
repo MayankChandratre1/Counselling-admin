@@ -19,6 +19,56 @@ class ContentService {
 
     // ── Landing Page: Contact ─────────────────────────────────────────────────
 
+    normalizeSectionPayload(payload) {
+        if (!payload || typeof payload !== 'object') return payload;
+        
+        // Handle section-based updates: { section: 'header', data: { title: ..., slogan: ... } }
+        if (payload.section && Object.prototype.hasOwnProperty.call(payload, 'data')) {
+            const sectionData = payload.data;
+            
+            // For section updates, only extract the specific fields to update
+            // This prevents overwriting the entire document with nested data
+            const updateFields = {};
+            
+            // Map section data to actual fields (flatten if needed)
+            for (const [key, value] of Object.entries(sectionData)) {
+                updateFields[key] = value;
+            }
+            
+            return updateFields;
+        }
+        
+        // Handle direct updates: { title: ..., slogan: ... }
+        return payload;
+    }
+
+    async getLandingPage() {
+        return this.getHomepage();
+    }
+
+    async editLandingPage(payload) {
+        const normalized = this.normalizeSectionPayload(payload);
+        return this.updateHomepage(normalized);
+    }
+
+    async getHomePage() {
+        return this.getHomepage();
+    }
+
+    async updateHomePage(payload) {
+        const normalized = this.normalizeSectionPayload(payload);
+        return this.updateHomepage(normalized);
+    }
+
+    async getContactData() {
+        return this.getContact();
+    }
+
+    async updateContactData(payload, adminEmail) {
+        const normalized = this.normalizeSectionPayload(payload);
+        return this.updateContact(normalized, adminEmail);
+    }
+
     async getContact() {
         try {
             let doc = await LandingPageContact.findOne({ id: 'contact' }).lean();
@@ -31,13 +81,30 @@ class ContentService {
 
     async updateContact(data, adminEmail) {
         try {
+            const allowedFields = ['address', 'phone', 'whatsapp', 'youtube', 'company'];
+            const filteredData = {};
+            
+            for (const key of Object.keys(data)) {
+                if (allowedFields.includes(key)) {
+                    filteredData[key] = data[key];
+                }
+            }
+            
+            filteredData.updatedAt = new Date();
+            
             const updated = await LandingPageContact.findOneAndUpdate(
                 { id: 'contact' },
-                { $set: { ...data, updatedAt: new Date() } },
-                { new: true, upsert: true }
+                { $set: filteredData },
+                { new: true, upsert: true, lean: true }
             );
+            
             this.invalidateCache('contact:*');
-            return { message: 'Contact updated', data: updated };
+            
+            return { 
+                message: 'Contact updated successfully',
+                updated: Object.keys(filteredData),
+                timestamp: filteredData.updatedAt
+            };
         } catch (error) {
             throw new Error('Failed to update contact: ' + error.message);
         }
@@ -60,13 +127,33 @@ class ContentService {
 
     async updateHomepage(data) {
         try {
+            // Filter out fields that shouldn't be updated
+            const allowedFields = ['title', 'slogan', 'ctaText', 'videoUrl', 'testimonials', 'features', 'banners', 'events', 'updates', 'recommended_colleges'];
+            const filteredData = {};
+            
+            for (const key of Object.keys(data)) {
+                if (allowedFields.includes(key)) {
+                    filteredData[key] = data[key];
+                }
+            }
+            
+            // Add updatedAt timestamp
+            filteredData.updatedAt = new Date();
+            
             const updated = await LandingPageHomepage.findOneAndUpdate(
                 { id: 'homepage' },
-                { $set: data },
-                { new: true, upsert: true }
+                { $set: filteredData },
+                { new: true, upsert: true, lean: true }
             );
+            
             this.invalidateCache('homepage');
-            return { message: 'Homepage updated', data: updated };
+            
+            // Return only the updated fields + confirmation, not the whole doc
+            return { 
+                message: 'Homepage updated successfully', 
+                updated: Object.keys(filteredData),
+                timestamp: filteredData.updatedAt
+            };
         } catch (error) {
             throw new Error('Failed to update homepage: ' + error.message);
         }
@@ -96,13 +183,31 @@ class ContentService {
 
     async updatePremiumPlans(plans) {
         try {
-            const updated = await LandingPagePremiumPlans.findOneAndUpdate(
+            // Normalize opensAt timestamps from Firestore format if needed
+            const normalizedPlans = plans.map(plan => {
+                const normalized = { ...plan };
+                
+                // Convert Firestore timestamp { _seconds, _nanoseconds } to Date
+                if (plan.opensAt && typeof plan.opensAt === 'object' && plan.opensAt._seconds) {
+                    normalized.opensAt = new Date(plan.opensAt._seconds * 1000);
+                }
+                
+                return normalized;
+            });
+            
+            await LandingPagePremiumPlans.findOneAndUpdate(
                 { id: 'premiumPlans' },
-                { $set: { plans } },
-                { new: true, upsert: true }
+                { $set: { plans: normalizedPlans, updatedAt: new Date() } },
+                { new: true, upsert: true, lean: true }
             );
+            
             this.invalidateCache('premiumPlans');
-            return { message: 'Premium plans updated', data: updated };
+            
+            return { 
+                message: 'Premium plans updated successfully',
+                count: normalizedPlans.length,
+                timestamp: new Date()
+            };
         } catch (error) {
             throw new Error('Failed to update premium plans: ' + error.message);
         }
@@ -173,17 +278,35 @@ class ContentService {
      */
     async updateDynamicPages(pages) {
         try {
-            const bulkOps = pages.map(page => ({
+            if (!pages || pages.length === 0) {
+                return { message: 'No pages to update' };
+            }
+            
+            // Generate unique ID if not present
+            const pagesWithIds = pages.map(page => {
+                if (!page.id) {
+                    page.id = `dynamic-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+                }
+                return page;
+            });
+            
+            const bulkOps = pagesWithIds.map(page => ({
                 updateOne: {
                     filter: { id: page.id },
                     update: { $set: { ...page, updatedAt: new Date() } },
                     upsert: true
                 }
             }));
-            if (bulkOps.length === 0) return { message: 'No pages to update' };
-            await DynamicScreen.bulkWrite(bulkOps);
+            
+            const result = await DynamicScreen.bulkWrite(bulkOps);
             this.invalidateCache('dynamicScreens:*');
-            return { message: 'Dynamic pages updated successfully' };
+            
+            return { 
+                message: 'Dynamic pages updated successfully',
+                count: pagesWithIds.length,
+                modified: result.modifiedCount,
+                upserted: result.upsertedCount
+            };
         } catch (error) {
             throw new Error('Failed to update dynamic pages: ' + error.message);
         }
@@ -195,6 +318,19 @@ class ContentService {
             return await ListFolder.find().lean();
         } catch (error) {
             throw new Error('Failed to get list folders: ' + error.message);
+        }
+    }
+
+    /**
+     * Create list folder - delegates to ListService for consistency
+     * Import is lazy to avoid circular dependency
+     */
+    async createListFolder(folderData, admin) {
+        try {
+            const ListService = (await import('./list.service.js')).default;
+            return await ListService.createListFolder(folderData, admin);
+        } catch (error) {
+            throw new Error('Failed to create list folder: ' + error.message);
         }
     }
 }

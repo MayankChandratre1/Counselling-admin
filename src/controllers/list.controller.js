@@ -40,7 +40,43 @@ const ListController = {
 
     async deleteList(req, res) {
         try {
-            const result = await ListService.deleteList(req.params.listId);
+            const result = await ListService.deleteList(req.params.listId, req.admin);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    },
+
+    async copyListToFolder(req, res) {
+        try {
+            const result = await ListService.copyListToFolder(req.params.listId, req.params.folderId, req.admin);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    },
+
+    async moveListToFolder(req, res) {
+        try {
+            const result = await ListService.moveListToFolder(req.params.listId, req.params.folderId, req.admin);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    },
+
+    async updateListFolder(req, res) {
+        try {
+            const result = await ListService.updateListFolder(req.params.folderId, req.body, req.admin);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    },
+
+    async deleteListFolder(req, res) {
+        try {
+            const result = await ListService.deleteListFolder(req.params.folderId);
             res.status(200).json(result);
         } catch (error) {
             res.status(400).json({ error: error.message });

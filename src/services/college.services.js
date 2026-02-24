@@ -339,6 +339,39 @@ class CollegeService {
         return keywords.map(keyword => keyword.toLowerCase()).includes(searchTermLower) 
     }
 
+    /**
+     * Get cutoff data (branches) for requested college IDs
+     * Mirrors admin.service.js getCutoff method
+     */
+    async getCutoff(collegeIds = []) {
+        try {
+            // Normalize college IDs (remove branch codes)
+            const normalizedIds = collegeIds.map(id => id.toString().split('_')[0]);
+
+            // Read college data from file
+            const fileData = await fs.readFile(this.COLLEGES_FILE_PATH, 'utf8');
+            const allColleges = JSON.parse(fileData);
+
+            // Filter colleges by requested IDs
+            const formattedData = normalizedIds.map(collegeId => {
+                // Find the college in the JSON data
+                const college = allColleges.find(c =>
+                    c.id === collegeId || c.id.toString() === collegeId
+                );
+
+                return {
+                    id: collegeId,
+                    branches: college ? college.branches : [] // Return empty array if college not found
+                };
+            });
+
+            return formattedData;
+        } catch (error) {
+            console.error('Get cutoff error:', error);
+            throw new Error('Failed to get cutoff data: ' + error.message);
+        }
+    }
+
     
 }
 

@@ -4,7 +4,7 @@ const authorize = (allowedRoles) => {
             // admin data is set by authMiddleware
             
             const userRole = req.admin?.role;
-            console.log("Role",req.admin);
+            console.log("Role",req.user);
 
             if (!userRole) {
                 return res.status(403).json({ 

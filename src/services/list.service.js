@@ -64,6 +64,13 @@ class ListService {
     }
 
     /**
+     * Wrapper for createList to match controller naming convention
+     */
+    async addList(listData, admin) {
+        return this.createList(listData, admin);
+    }
+
+    /**
      * Update a master list's metadata (not colleges array — use updateListColleges for that).
      * Mirrors admin.service.js updateList.
      */
@@ -81,6 +88,13 @@ class ListService {
         } catch (error) {
             throw new Error('Failed to update list: ' + error.message);
         }
+    }
+
+    /**
+     * Wrapper for updateList to match controller naming convention
+     */
+    async editList(listId, listData, admin) {
+        return this.updateList(listId, listData, admin);
     }
 
     /**
@@ -111,6 +125,7 @@ class ListService {
             if (!list) throw new Error('List not found');
 
             const originalFolderId = list.folderId;
+            const adminEmail = admin?.email || 'system';
 
             await MasterList.findOneAndUpdate(
                 { id: listId },
@@ -119,7 +134,7 @@ class ListService {
                         isDeleted: true,
                         deletedAt: new Date(),
                         deleteFolderId: 'archive_1',
-                        lastUpdatedBy: admin.email
+                        lastUpdatedBy: adminEmail
                     }
                 }
             );
@@ -131,7 +146,7 @@ class ListService {
             await ListFolder.findOneAndUpdate({ id: 'archive_1' }, { $inc: { list_count: 1 } });
 
             this.invalidateCache('lists:*');
-            return { message: 'List deleted (soft) successfully' };
+            return { message: 'List deleted (soft) successfully', deleteFolderId: 'archive_1' };
         } catch (error) {
             throw new Error('Failed to delete list: ' + error.message);
         }

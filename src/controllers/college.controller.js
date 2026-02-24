@@ -135,6 +135,23 @@ class CollegeController {
         }
     }
 
+    async getCutoff(req, res) {
+        try {
+            const { collegeIds } = req.body;
+            
+            if (!collegeIds || !Array.isArray(collegeIds)) {
+                return res.status(400).json({ success: false, message: 'collegeIds array is required' });
+            }
+            
+            const cutoffData = await this.collegeService.getCutoff(collegeIds);
+            
+            res.json({ success: true, data: cutoffData });
+        } catch (error) {
+            console.error('Controller error getting cutoff:', error);
+            res.status(500).json({ success: false, message: 'Error retrieving cutoff data', error: error.message });
+        }
+    }
+
 
 }
 
@@ -146,8 +163,9 @@ export default {
     getColleges: collegeController.getColleges.bind(collegeController),
     getCollegeById: collegeController.getCollegeById.bind(collegeController),
     searchColleges: collegeController.searchColleges.bind(collegeController),
+    searchFilteredColleges: collegeController.searchFilteredColleges.bind(collegeController),
     createCollege: collegeController.createCollege.bind(collegeController),
     updateCollege: collegeController.updateCollege.bind(collegeController),
     deleteCollege: collegeController.deleteCollege.bind(collegeController),
-    searchFilteredColleges: collegeController.searchFilteredColleges.bind(collegeController) // Reusing searchColleges for filtered search
+    getCutoff: collegeController.getCutoff.bind(collegeController)
 };

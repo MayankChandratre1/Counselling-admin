@@ -6,16 +6,15 @@ import {
     LandingPageReviewsSchema
 } from '../../scripts/SchemasV3.js';
 
-// The `landingPage` Firestore collection stored 4 different documents,
-// each distinguished by their `id` field. All map to the same MongoDB collection.
+// Post-migration, these are separate MongoDB collections.
 export const LandingPageContact = mongoose.models.LandingPageContact
-    || mongoose.model('LandingPageContact', LandingPageContactSchema, 'landingPage');
+    || mongoose.model('LandingPageContact', LandingPageContactSchema, 'landingpagecontacts');
 
 export const LandingPageHomepage = mongoose.models.LandingPageHomepage
-    || mongoose.model('LandingPageHomepage', LandingPageHomepageSchema, 'landingPage');
+    || mongoose.model('LandingPageHomepage', LandingPageHomepageSchema, 'landingpagehomepages');
 
-export const LandingPagePremiumPlans = mongoose.models.landingpagepremiumplans
-    || mongoose.model('landingpagepremiumplans', LandingPagePremiumPlansSchema, 'landingpagepremiumplans');
+export const LandingPagePremiumPlans = mongoose.models.LandingPagePremiumPlans
+    || mongoose.model('LandingPagePremiumPlans', LandingPagePremiumPlansSchema, 'landingpagepremiumplans');
 
 export const LandingPageReviews = mongoose.models.LandingPageReviews
-    || mongoose.model('LandingPageReviews', LandingPageReviewsSchema, 'landingPage');
+    || mongoose.model('LandingPageReviews', LandingPageReviewsSchema, 'landingpagereviews');

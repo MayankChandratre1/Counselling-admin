@@ -13,6 +13,7 @@ import listRoutes from './routes/list.routes.js';
 import formRoutes from './routes/form.routes.js';
 import appointmentRoutes from './routes/appointment.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 
 // Legacy Routes (Keep for backward compatibility during transition if needed)
 // import adminRouter from './routes/admin.route.js'; 
@@ -20,6 +21,7 @@ import collegeRouter from './routes/college.routes.js';
 import razRouter from './routes/raz.routes.js';
 
 import errorHandler from './middleware/errorHandler.js';
+import authMiddleware from './middleware/authMiddleware.js';
 
 // Connect to MongoDB
 connectDB();
@@ -38,14 +40,15 @@ app.use((req, res, next) => {
 
 // Mount Routes
 app.use('/api/admin', authRoutes);
-app.use('/api/admin', userRoutes);
+app.use('/api/admin',authMiddleware, userRoutes);
 app.use('/api/admin', analyticsRoutes);
-app.use('/api/admin', contentRoutes);
+app.use('/api/admin', authMiddleware,contentRoutes);
 app.use('/api/admin', paymentRoutes);
 app.use('/api/admin', listRoutes);
 app.use('/api/admin', formRoutes);
 app.use('/api/admin', appointmentRoutes);
 app.use('/api/admin', notificationRoutes);
+app.use('/api/admin', authMiddleware, adminRoutes);
 
 // Other Routes
 app.use('/api/colleges', collegeRouter);

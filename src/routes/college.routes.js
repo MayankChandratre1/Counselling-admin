@@ -53,4 +53,11 @@ router.put('/:id', collegeController.updateCollege);
  */
 router.delete('/:id', collegeController.deleteCollege);
 
+/**
+ * @route   POST /api/admin/getcutoff
+ * @desc    Get cutoff data (branches) for specified college IDs
+ * @access  Public
+ */
+router.post('/getcutoff', collegeController.getCutoff);
+
 export default router;

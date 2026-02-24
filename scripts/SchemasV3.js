@@ -526,6 +526,7 @@ export const DynamicScreenSchema = new Schema({
     html: String,
     url: String,
     isPremiumOnly: Boolean,
+    plan: String,   // plan title filter (empty = all plans)
     data: { type: [DynamicScreenItemSchema], default: [] },
     updatedAt: Date
 }, { timestamps: true });

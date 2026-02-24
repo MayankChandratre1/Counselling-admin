@@ -76,8 +76,33 @@ class UserService {
                 User.countDocuments(query)
             ]);
 
+            // Fetch lists for each user from UserList collection
+            const userIds = users.map(u => u.id);
+            const userLists = await UserList.find({ userId: { $in: userIds } })
+                .select('userId title type')
+                .lean();
+
+            // Group lists by userId
+            const listsByUser = {};
+            userLists.forEach(list => {
+                if (!listsByUser[list.userId]) {
+                    listsByUser[list.userId] = [];
+                }
+                listsByUser[list.userId].push({
+                    id: list.id,
+                    title: list.title,
+                    type: list.type
+                });
+            });
+
+            // Attach lists to each user
+            const usersWithLists = users.map(user => ({
+                ...user,
+                lists: listsByUser[user.id] || []
+            }));
+
             return {
-                users,
+                users: usersWithLists,
                 totalUsers: total,
                 page: parseInt(page),
                 pages: Math.ceil(total / parseInt(limit)),

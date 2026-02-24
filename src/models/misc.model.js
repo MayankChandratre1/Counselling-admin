@@ -22,7 +22,7 @@ export const DowntimePayment = mongoose.models.DowntimePayment
     || mongoose.model('DowntimePayment', DowntimePaymentSchema, 'downtimePayments');
 
 export const ListFolder = mongoose.models.ListFolder
-    || mongoose.model('ListFolder', ListFolderSchema, 'list_folders');
+    || mongoose.model('ListFolder', ListFolderSchema, 'listfolders');
 
 export const DynamicScreen = mongoose.models.DynamicScreen
     || mongoose.model('DynamicScreen', DynamicScreenSchema, 'dynamicScreens');
