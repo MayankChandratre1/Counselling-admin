@@ -44,7 +44,7 @@ app.use('/api/admin',authMiddleware, userRoutes);
 app.use('/api/admin', analyticsRoutes);
 app.use('/api/admin', authMiddleware,contentRoutes);
 app.use('/api/admin', paymentRoutes);
-app.use('/api/admin', listRoutes);
+app.use('/api/admin', authMiddleware, listRoutes);
 app.use('/api/admin', formRoutes);
 app.use('/api/admin', appointmentRoutes);
 app.use('/api/admin', notificationRoutes);

@@ -47,6 +47,15 @@ const ListController = {
         }
     },
 
+    async restoreList(req, res) {
+        try {
+            const result = await ListService.restoreList(req.params.listId, req.admin);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    },
+
     async copyListToFolder(req, res) {
         try {
             const result = await ListService.copyListToFolder(req.params.listId, req.params.folderId, req.admin);
@@ -94,7 +103,22 @@ const ListController = {
 
     async assignListToUser(req, res) {
         try {
-            const result = await UserListService.assignListToUser(req.params.userId, req.body);
+            const payload = req.body || {};
+            const listId = typeof payload === 'string'
+                ? payload
+                : (payload.originalListId || payload.listId || payload.id);
+
+            if (!listId) {
+                return res.status(400).json({ error: 'listId or originalListId is required' });
+            }
+
+            const result = await UserListService.assignListToUser(
+                req.params.userId,
+                listId,
+                req.admin,
+                payload.title,
+                payload
+            );
             res.status(200).json(result);
         } catch (error) {
             res.status(400).json({ error: error.message });
@@ -121,7 +145,7 @@ const ListController = {
 
     async createUserList(req, res) {
         try {
-            const result = await UserListService.createUserList(req.params.userId, req.body);
+            const result = await UserListService.createUserList(req.params.userId, req.body, req.admin);
             res.status(201).json(result);
         } catch (error) {
             res.status(400).json({ error: error.message });
@@ -130,8 +154,19 @@ const ListController = {
 
     async updateUserList(req, res) {
         try {
-            const result = await UserListService.updateUserList(req.params.userId, req.params.listId, req.body);
-            res.status(200).json(result);
+            const { userId, listId } = req.params;
+            const result = await UserListService.updateUserList(userId, listId, req.body, req.admin);
+            res.status(200).json(result.userList || result);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    },
+
+    async updateCreatedUserList(req, res) {
+        try {
+            const { userId, listId } = req.params;
+            const result = await UserListService.updateCreatedUserList(userId, listId, req.body, req.admin);
+            res.status(200).json(result.userList || result);
         } catch (error) {
             res.status(400).json({ error: error.message });
         }
@@ -139,7 +174,16 @@ const ListController = {
 
     async deleteUserList(req, res) {
         try {
-            const result = await UserListService.deleteUserList(req.params.userId, req.params.listId);
+            const result = await UserListService.deleteUserList(req.params.listId, req.admin);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    },
+
+    async deleteUserCreatedList(req, res) {
+        try {
+            const result = await UserListService.deleteUserCreatedList(req.params.listId, req.admin);
             res.status(200).json(result);
         } catch (error) {
             res.status(400).json({ error: error.message });

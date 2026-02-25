@@ -1,5 +1,6 @@
 import { User } from '../models/user.model.js';
 import { UserList } from '../models/userList.model.js';
+import { Note } from '../models/note.model.js';
 import cache from '../config/cache.js';
 import PaymentService from './payment.service.js';
 class UserService {
@@ -120,11 +121,30 @@ class UserService {
         try {
             const user = await User.findOne({ id: userId }).lean();
             if (!user) throw new Error('User not found');
+
+            const [userLists, note] = await Promise.all([
+                UserList.find({ userId: user.id }).lean(),
+                Note.findOne({ id: user.id }).lean()
+            ]);
+
+            // Ensure all lists have id and colleges fields
+            const normalizedLists = userLists.map(list => ({
+                ...list,
+                id: list.id || list._id?.toString(),
+                colleges: Array.isArray(list.colleges) ? list.colleges : []
+            }));
+
+            user.lists = normalizedLists.filter(list => list.type !== 'created');
+            user.createdList = normalizedLists.filter(list => list.type === 'created');
+            user.notes = note || null;
+
             if (user.phone) {
                 user.paymentHistory = await PaymentService.getUserPayment(user.phone);
             } else {
                 user.paymentHistory = [];
             }
+            
+            console.log(`Loaded user ${userId} with ${user.lists.length} assigned lists, ${user.createdList.length} created lists`);
             return user;
         } catch (error) {
             throw new Error('Failed to get user: ' + error.message);
@@ -153,13 +173,57 @@ class UserService {
     async searchUser(searchQuery) {
         try {
             if (!searchQuery) return [];
-            return await User.find({
+            const users = await User.find({
                 $or: [
                     { name: { $regex: searchQuery, $options: 'i' } },
                     { email: { $regex: searchQuery, $options: 'i' } },
                     { phone: { $regex: searchQuery, $options: 'i' } }
                 ]
             }).limit(20).lean();
+
+            if (!users.length) return users;
+
+            const userIds = users.map(user => user.id).filter(Boolean);
+
+            const [userLists, notes] = await Promise.all([
+                UserList.find({ userId: { $in: userIds } }).lean(),
+                Note.find({ id: { $in: userIds } }).lean()
+            ]);
+
+            const assignedByUser = {};
+            const createdByUser = {};
+
+            userLists.forEach((list) => {
+                if (!list?.userId) return;
+                
+                // Normalize list with fallback id and colleges
+                const normalizedList = {
+                    ...list,
+                    id: list.id || list._id?.toString(),
+                    colleges: Array.isArray(list.colleges) ? list.colleges : []
+                };
+
+                if (normalizedList.type === 'created') {
+                    if (!createdByUser[normalizedList.userId]) createdByUser[normalizedList.userId] = [];
+                    createdByUser[normalizedList.userId].push(normalizedList);
+                    return;
+                }
+
+                if (!assignedByUser[normalizedList.userId]) assignedByUser[normalizedList.userId] = [];
+                assignedByUser[normalizedList.userId].push(normalizedList);
+            });
+
+            const notesByUser = {};
+            notes.forEach((note) => {
+                if (note?.id) notesByUser[note.id] = note;
+            });
+
+            return users.map((user) => ({
+                ...user,
+                lists: assignedByUser[user.id]?.length ? assignedByUser[user.id] : (user.lists || []),
+                createdList: createdByUser[user.id]?.length ? createdByUser[user.id] : (user.createdList || []),
+                notes: notesByUser[user.id] || user.notes || null
+            }));
         } catch (error) {
             throw new Error('Failed to search users: ' + error.message);
         }

@@ -1,4 +1,5 @@
 import AdminService from '../services/admin.service.js';
+import UserListService from '../services/userList.service.js';
 import { Admin } from '../models/admin.model.js';
 import nodemailer from 'nodemailer';
 import bcrypt from 'bcryptjs';
@@ -388,8 +389,8 @@ class AdminController {
                 return res.status(400).json({ error: 'Invalid colleges data - must be an array' });
             }
 
-            const userList = await this.adminService.updateUserList(req.params.userId, req.params.listId, req.body, req.admin);
-            res.status(200).json(userList);
+            const userList = await UserListService.updateUserList(req.params.userId, req.params.listId, req.body, req.admin);
+            res.status(200).json(userList.userList || userList);
         } catch (error) {
             console.error('Controller error updating user list:', error);
             res.status(400).json({ error: error.message });
@@ -405,8 +406,8 @@ class AdminController {
                 return res.status(400).json({ error: 'Invalid colleges data - must be an array' });
             }
 
-            const userList = await this.adminService.updateCreatedUserList(req.params.userId, req.params.listId, req.body, req.admin);
-            res.status(200).json(userList);
+            const userList = await UserListService.updateCreatedUserList(req.params.userId, req.params.listId, req.body, req.admin);
+            res.status(200).json(userList.userList || userList);
         } catch (error) {
             console.error('Controller error updating user list:', error);
             res.status(400).json({ error: error.message });
@@ -415,7 +416,7 @@ class AdminController {
 
     async deleteUserList(req, res) {
         try {
-            const result = await this.adminService.deleteUserList(req.params.userId, req.params.listId);
+            const result = await UserListService.deleteUserList(req.params.listId, req.admin);
             res.status(200).json(result);
         } catch (error) {
             res.status(400).json({ error: error.message });
@@ -423,7 +424,7 @@ class AdminController {
     }
     async deleteUserCreatedList(req, res) {
         try {
-            const result = await this.adminService.deleteUserCreatedList(req.params.userId, req.params.listId);
+            const result = await UserListService.deleteUserCreatedList(req.params.listId, req.admin);
             res.status(200).json(result);
         } catch (error) {
             res.status(400).json({ error: error.message });

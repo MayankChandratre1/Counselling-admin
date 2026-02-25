@@ -1,6 +1,7 @@
 import express from 'express';
 import AdminController from '../controllers/admin.controller.js';
 import authorize from '../middleware/authorizeMiddleware.js';
+import cacheMiddleware from '../middleware/cacheMiddleware.js';
 
 const router = express.Router();
 
@@ -33,5 +34,10 @@ router.post('/permissions', authorize(['super-admin']), AdminController.addOrUpd
 
 // Get activity logs for specific admin
 router.get('/activity/:adminId', authorize(['super-admin', 'admin']), AdminController.getActivityLogs);
+
+// ─── Notes Routes ─────────────────────────────────────────────────────────────
+
+router.post('/add-note/:userId', AdminController.addNote);
+router.get('/get-notes/:userId', cacheMiddleware('notes', 300), AdminController.getNotes);
 
 export default router;

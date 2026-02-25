@@ -305,6 +305,11 @@ export const MasterListSchema = new Schema({
 
     colleges: { type: [ListCollegeSchema], default: [] },
 
+    // Soft-delete metadata
+    isDeleted: { type: Boolean, default: false, index: true },
+    deletedAt: { type: Date, default: null },
+    deleteFolderId: { type: String, default: null, index: true },
+
     createdBy: { type: String },  // Admin.email — logical ref
     lastUpdatedBy: { type: String },  // Admin.email — logical ref
 }, { timestamps: true });

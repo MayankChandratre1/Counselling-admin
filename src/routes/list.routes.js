@@ -10,6 +10,7 @@ router.get('/list/:listId', ListController.getList);
 router.post('/add-list', authorize(['admin', 'super-admin']), ListController.addList);
 router.post('/edit-list/:listId', authorize(['admin', 'super-admin']), ListController.editList);
 router.delete('/delete-list/:listId', authorize(['admin', 'super-admin']), ListController.deleteList);
+router.post('/list/restore-list/:listId', authorize(['admin', 'super-admin']), ListController.restoreList);
 router.post('/list/:listId/copy-to-folder/:folderId', authorize(['admin', 'super-admin']), ListController.copyListToFolder);
 router.post('/list/:listId/move-to-folder/:folderId', authorize(['admin', 'super-admin']), ListController.moveListToFolder);
 router.put('/list-folder/:folderId', authorize(['admin', 'super-admin']), ListController.updateListFolder);
@@ -23,6 +24,8 @@ router.post('/user/bulk-release-lists', ListController.bulkReleaseLists);
 
 router.post('/user/:userId/create-list', ListController.createUserList); // New route for custom lists?
 router.put('/user/:userId/list/:listId', ListController.updateUserList);
+router.put('/user/:userId/created-list/:listId', ListController.updateCreatedUserList);
 router.delete('/user/:userId/list/:listId', ListController.deleteUserList);
+router.delete('/user/:userId/created-list/:listId', ListController.deleteUserCreatedList);
 
 export default router;

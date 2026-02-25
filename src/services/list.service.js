@@ -1,6 +1,7 @@
 import { MasterList } from '../models/list.model.js';
 import { UserList } from '../models/userList.model.js';
 import { ListFolder } from '../models/misc.model.js';
+import mongoose from 'mongoose';
 import cache from '../config/cache.js';
 
 class ListService {
@@ -121,16 +122,21 @@ class ListService {
      */
     async deleteList(listId, admin) {
         try {
-            const list = await MasterList.findOne({ id: listId });
+            let list = await MasterList.findOne({ id: listId });
+            if (!list && mongoose.Types.ObjectId.isValid(listId)) {
+                list = await MasterList.findOne({ _id: listId });
+            }
             if (!list) throw new Error('List not found');
 
             const originalFolderId = list.folderId;
             const adminEmail = admin?.email || 'system';
 
+            const updateFilter = list.id ? { id: list.id } : { _id: list._id };
             await MasterList.findOneAndUpdate(
-                { id: listId },
+                updateFilter,
                 {
                     $set: {
+                        folderId: null,
                         isDeleted: true,
                         deletedAt: new Date(),
                         deleteFolderId: 'archive_1',
@@ -156,29 +162,35 @@ class ListService {
      * Restore a soft-deleted list back to its original folder.
      * Mirrors admin.service.js restoreList (lines 2997–3055).
      */
-    async restoreList(listId) {
+    async restoreList(listId, admin) {
         try {
-            const list = await MasterList.findOne({ id: listId });
+            let list = await MasterList.findOne({ id: listId });
+            if (!list && mongoose.Types.ObjectId.isValid(listId)) {
+                list = await MasterList.findOne({ _id: listId });
+            }
             if (!list) throw new Error('List not found');
             if (!list.isDeleted) throw new Error('List is not marked as deleted');
 
-            const originalFolderId = list.folderId || null;
+            const adminEmail = admin?.email || 'system';
+            const updateFilter = list.id ? { id: list.id } : { _id: list._id };
 
             await MasterList.findOneAndUpdate(
-                { id: listId },
-                { $set: { isDeleted: false, deletedAt: null, deleteFolderId: null } }
+                updateFilter,
+                {
+                    $set: {
+                        folderId: '',
+                        isDeleted: false,
+                        deletedAt: null,
+                        deleteFolderId: null,
+                        lastUpdatedBy: adminEmail
+                    }
+                }
             );
 
             await ListFolder.findOneAndUpdate({ id: 'archive_1' }, { $inc: { list_count: -1 } });
-            if (originalFolderId) {
-                const folderExists = await ListFolder.findOne({ id: originalFolderId });
-                if (folderExists) {
-                    await ListFolder.findOneAndUpdate({ id: originalFolderId }, { $inc: { list_count: 1 } });
-                }
-            }
 
             this.invalidateCache('lists:*');
-            return { message: 'List restored successfully', listId, folderId: originalFolderId };
+            return { message: 'List restored successfully', listId: list.id || listId, folderId: '' };
         } catch (error) {
             throw new Error('List restoration failed: ' + error.message);
         }
@@ -320,6 +332,7 @@ class ListService {
                 { folderId, isDeleted: { $ne: true } },
                 {
                     $set: {
+                        folderId: null,
                         isDeleted: true,
                         deletedAt: new Date(),
                         deleteFolderId: 'archive_1'
