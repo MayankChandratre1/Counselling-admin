@@ -1,7 +1,6 @@
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { Admin } from '../models/admin.model.js';
-import { Permission } from '../models/misc.model.js';
 
 class AuthService {
     /**
@@ -15,8 +14,9 @@ class AuthService {
         const isMatch = await bcrypt.compare(password, admin.password);
         if (!isMatch) throw new Error('Invalid credentials');
 
-        const permission = await Permission.findOne({ id: admin.role });
-        const pages = permission?.pages || [];
+        // Use individual admin permissions (pages and components from admin document)
+        const pages = admin.pages || [];
+        const components = admin.components || [];
 
         const token = jwt.sign(
             { id: admin._id, email: admin.email, role: admin.role },
@@ -31,8 +31,8 @@ class AuthService {
                 email: admin.email,
                 name: admin.name,
                 role: admin.role,
-            },
-            pages
+                permissions: { pages, components }
+            }
         };
     }
 

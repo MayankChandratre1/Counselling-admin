@@ -18,9 +18,11 @@ router.post('/add-admin', authorize(['super-admin']), AdminController.addAdmin);
 
 // Update admin
 router.put('/admin/:adminId', authorize(['super-admin']), AdminController.updateAdmin);
+router.put('/update-admin/:adminId', authorize(['super-admin']), AdminController.updateAdmin);
 
 // Delete admin
 router.delete('/admin/:adminId', authorize(['super-admin']), AdminController.deleteAdmin);
+router.delete('/delete-admin/:adminId', authorize(['super-admin']), AdminController.deleteAdmin);
 
 // ─── Permissions Routes ───────────────────────────────────────────────────────
 
@@ -29,6 +31,7 @@ router.get('/permissions', authorize(['super-admin']), AdminController.getPermis
 
 // Add or update permissions
 router.post('/permissions', authorize(['super-admin']), AdminController.addOrUpdatePermissions);
+router.post('/permissions/:role', authorize(['super-admin']), AdminController.addOrUpdatePermissions);
 
 // ─── Activity Logs Routes ─────────────────────────────────────────────────────
 

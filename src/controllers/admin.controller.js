@@ -1,4 +1,5 @@
 import AdminService from '../services/admin.service.js';
+import AdminMongoService from '../services/admin.mongo.service.js';
 import UserListService from '../services/userList.service.js';
 import { Admin } from '../models/admin.model.js';
 import nodemailer from 'nodemailer';
@@ -6,7 +7,8 @@ import bcrypt from 'bcryptjs';
 
 class AdminController {
     constructor() {
-        this.adminService = new AdminService();
+        this.adminService = new AdminService(); // Firestore service (for legacy operations still using it)
+        this.adminMongoService = AdminMongoService; // MongoDB service (for admin management)
         // Add OTP store
         this.otpStore = {};
 
@@ -174,7 +176,7 @@ class AdminController {
 
     async login(req, res) {
         try {
-            const result = await this.adminService.login(req.body);
+            const result = await this.adminMongoService.login(req.body);
             res.status(200).json(result);
         } catch (error) {
             res.status(400).json({ error: error.message });
@@ -504,7 +506,7 @@ class AdminController {
     async addAdmin(req, res) {
         try {
             const adminData = req.body;
-            const result = await this.adminService.addAdmin(adminData);
+            const result = await this.adminMongoService.addAdmin(adminData);
             res.status(201).json(result);
         } catch (error) {
             console.error('Add admin error:', error);
@@ -562,7 +564,7 @@ class AdminController {
 
     async getAllAdmins(req, res) {
         try {
-            const admins = await this.adminService.getAllAdmins();
+            const admins = await this.adminMongoService.getAllAdmins();
             res.status(200).json(admins);
         } catch (error) {
             console.error('Get all admins error:', error);
@@ -572,7 +574,7 @@ class AdminController {
 
     async getAdmin(req, res) {
         try {
-            const admin = await this.adminService.getAdmin(req.params.adminId);
+            const admin = await this.adminMongoService.getAdmin(req.params.adminId);
             res.status(200).json(admin);
         } catch (error) {
             console.error('Get admin error:', error);
@@ -582,7 +584,7 @@ class AdminController {
 
     async updateAdmin(req, res) {
         try {
-            const result = await this.adminService.updateAdmin(req.params.adminId, req.body);
+            const result = await this.adminMongoService.updateAdmin(req.params.adminId, req.body);
             res.status(200).json(result);
         } catch (error) {
             console.error('Update admin error:', error);
@@ -592,7 +594,7 @@ class AdminController {
 
     async deleteAdmin(req, res) {
         try {
-            const result = await this.adminService.deleteAdmin(req.params.adminId);
+            const result = await this.adminMongoService.deleteAdmin(req.params.adminId);
             res.status(200).json(result);
         } catch (error) {
             console.error('Delete admin error:', error);
@@ -602,7 +604,7 @@ class AdminController {
 
     async getPermissions(req, res) {
         try {
-            const permissions = await this.adminService.getPermissions();
+            const permissions = await this.adminMongoService.getPermissions();
             res.status(200).json(permissions);
         } catch (error) {
             console.error('Get permissions error:', error);
@@ -612,7 +614,7 @@ class AdminController {
 
     async addOrUpdatePermissions(req, res) {
         try {
-            const result = await this.adminService.addOrUpdatePermissions(req.params.role, req.body);
+            const result = await this.adminMongoService.addOrUpdatePermissions(req.params.role || req.body.role, req.body);
             res.status(200).json(result);
         } catch (error) {
             console.error('Update permissions error:', error);
@@ -622,7 +624,7 @@ class AdminController {
     async getActivityLogs(req, res) {
         try {
             const { adminId } = req.params;
-            const logs = await this.adminService.getActivityLogs(adminId);
+            const logs = await this.adminMongoService.getActivityLogs(adminId);
             res.status(200).json(logs);
         } catch (error) {
             console.error('Get activity logs error:', error);

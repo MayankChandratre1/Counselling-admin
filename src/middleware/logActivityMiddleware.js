@@ -1,4 +1,4 @@
-import { db } from '../../config/firebase.js';
+import AdminMongoService from '../services/admin.mongo.service.js';
 
 // Size limits in bytes (0.5MB = 524288 bytes)
 const MAX_SIZE = 524288;
@@ -52,15 +52,15 @@ const logActivity = async (req, res, next) => {
                     params: req.params,
                     query: req.query,
                     body: req.method !== 'GET' ? truncateData(req.body) : null,
-                    timestamp: new Date().toISOString(),
+                    timestamp: new Date(),
                     status: res.statusCode,
-                    response: req.method !== 'GET' ? truncateData(data) : null
+                    response: req.method !== 'GET' ? truncateData(data) : null,
+                    ip: req.ip || req.connection?.remoteAddress,
+                    userAgent: req.get('user-agent')
                 };
 
-                db.collection('admin_activities')
-                    .doc(adminId)
-                    .collection('logs')
-                    .add(activity)
+                // Log to MongoDB asynchronously (don't await, don't block response)
+                AdminMongoService.logActivity(activity)
                     .catch(err => console.error('Activity logging failed:', err));
             }
         } catch (error) {

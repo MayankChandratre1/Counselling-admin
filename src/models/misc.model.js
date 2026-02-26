@@ -16,7 +16,7 @@ export const Cancellation = mongoose.models.Cancellation
     || mongoose.model('Cancellation', CancellationSchema, 'cancellations');
 
 export const CollegeUpdate = mongoose.models.CollegeUpdate
-    || mongoose.model('CollegeUpdate', CollegeUpdateSchema, 'college_updates');
+    || mongoose.model('CollegeUpdate', CollegeUpdateSchema, 'collegeupdates');
 
 export const DowntimePayment = mongoose.models.DowntimePayment
     || mongoose.model('DowntimePayment', DowntimePaymentSchema, 'downtimePayments');

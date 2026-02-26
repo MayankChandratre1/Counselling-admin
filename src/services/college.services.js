@@ -1,13 +1,11 @@
-import { db } from "../../config/firebase.js";
 import fs from 'fs/promises';
 import path from 'path';
 import Fuse from 'fuse.js';
+import { CollegeUpdate } from '../models/misc.model.js';
+import { Metadata } from '../models/metadata.model.js';
 
 class CollegeService {
     constructor() {
-        this.db = db;
-        this.collegeUpdates = db.collection('college_updates');
-        this.metadata = db.collection('metadata');
         this.COLLEGES_FILE_PATH = path.join(process.cwd(), 'src/data/College_New_Data_2.json');
         
         // Fuse.js configuration for college search
@@ -213,8 +211,12 @@ class CollegeService {
             // 4. Write back to JSON file
             await fs.writeFile(this.COLLEGES_FILE_PATH, JSON.stringify(collegesData, null, 2));
             
-            // 5. Update database
-            await this.collegeUpdates.doc(collegeData.id).set(collegeData);
+            // 5. Update MongoDB college_updates collection
+            await CollegeUpdate.findOneAndUpdate(
+                { id: collegeData.id },
+                collegeData,
+                { upsert: true, new: true }
+            );
             
             // 6. Update version
             await this.incrementVersion();
@@ -245,20 +247,21 @@ class CollegeService {
             
             // 4. Write back to JSON file
             await fs.writeFile(this.COLLEGES_FILE_PATH, JSON.stringify(collegesData, null, 2));
-            console.log('Updated college in Firestore:');
+            console.log('Updated college in JSON file');
 
-            //check if doc exists in firestore
-            const collegeDoc = await this.collegeUpdates.doc(id).get();
-            if (!collegeDoc.exists) {
-                console.log('Document does not exist in Firestore, creating new document');
-                // If it doesn't exist, create a new document
-                await this.collegeUpdates.doc(id).set(updatedData);
+            // 5. Update MongoDB college_updates collection
+            const existingUpdate = await CollegeUpdate.findOne({ id });
+            if (!existingUpdate) {
+                console.log('Document does not exist in MongoDB, creating new document');
+                await CollegeUpdate.create({ id, ...updatedData });
             } else {
-                console.log('Document exists in Firestore, updating document');
-                // If it exists, update the document
-                await this.collegeUpdates.doc(id).update(updatedData);
+                console.log('Document exists in MongoDB, updating document');
+                await CollegeUpdate.findOneAndUpdate(
+                    { id },
+                    updatedData,
+                    { new: true }
+                );
             }
-            
             
             // 6. Update version
             await this.incrementVersion();
@@ -287,8 +290,12 @@ class CollegeService {
             // 4. Write back to JSON file
             await fs.writeFile(this.COLLEGES_FILE_PATH, JSON.stringify(collegesData, null, 2));
             
-            // 5. Update database - add a deleted field
-            await this.collegeUpdates.doc(id).set({ deleted: true });
+            // 5. Update MongoDB college_updates collection - mark as deleted
+            await CollegeUpdate.findOneAndUpdate(
+                { id },
+                { deleted: true },
+                { upsert: true, new: true }
+            );
             
             // 6. Update version
             await this.incrementVersion();
@@ -301,28 +308,28 @@ class CollegeService {
     }
 
     async incrementVersion() {
-        const metadataRef = this.metadata.doc('colleges');
-        
         try {
-            // Run transaction to safely update version
-            await this.db.runTransaction(async (transaction) => {
-                const metadataDoc = await transaction.get(metadataRef);
-                
-                if (!metadataDoc.exists) {
-                    // Initialize with version 1 if doesn't exist
-                    transaction.set(metadataRef, { version: 1 });
-                    return;
-                }
-                
-                const currentVersion = metadataDoc.data().version;
-                // Simply increment the integer version
-                const newVersion = (typeof currentVersion === 'number') ? 
-                    currentVersion + 1 : 
-                    // If current version is not a number (like from old format), start at 1
-                    1;
-                
-                transaction.update(metadataRef, { version: newVersion });
-            });
+            // Find the colleges metadata document
+            let metadataDoc = await Metadata.findOne({ id: 'colleges' });
+            
+            if (!metadataDoc) {
+                // Initialize with version 1 if doesn't exist
+                metadataDoc = await Metadata.create({ id: 'colleges', version: 1 });
+                return;
+            }
+            
+            const currentVersion = metadataDoc.version;
+            // Simply increment the integer version
+            const newVersion = (typeof currentVersion === 'number') ? 
+                currentVersion + 1 : 
+                // If current version is not a number (like from old format), start at 1
+                1;
+            
+            await Metadata.findOneAndUpdate(
+                { id: 'colleges' },
+                { version: newVersion },
+                { new: true }
+            );
         } catch (error) {
             console.error('Error incrementing version:', error);
             throw error;

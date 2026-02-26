@@ -131,7 +131,30 @@ export const AdminSchema = new Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     name: { type: String },
-    role: { type: String, enum: ['admin', 'super-admin', 'editor'], default: 'admin' }
+    role: { type: String, enum: ['admin', 'super-admin', 'editor'], default: 'admin' },
+    pages: { type: [String], default: [] }, // Individual page permissions
+    components: { type: [String], default: [] } // Individual component permissions
+}, { timestamps: true });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Admin Activity Schema
+// Logs admin actions (used to be stored as subcollection in Firestore)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const AdminActivitySchema = new Schema({
+    id: { type: String, unique: true, index: true },
+    adminId: { type: String, required: true, index: true, ref: 'Admin' }, // → Admin.id
+    adminEmail: { type: String, index: true }, // Admin email for quick reference
+    method: { type: String, required: true }, // GET, POST, PUT, DELETE, etc.
+    path: { type: String, required: true, index: true }, // API endpoint path
+    params: { type: Schema.Types.Mixed }, // Route params (e.g., :id)
+    query: { type: Schema.Types.Mixed }, // Query string params (e.g., ?page=1)
+    body: { type: Schema.Types.Mixed }, // Request body
+    status: { type: Number }, // HTTP status code
+    response: { type: Schema.Types.Mixed }, // Response data
+    timestamp: { type: Date, required: true, index: true },
+    ip: { type: String }, // Client IP
+    userAgent: { type: String } // Client user agent
 }, { timestamps: true });
 
 
@@ -546,7 +569,8 @@ export const DynamicScreenSchema = new Schema({
 export const PermissionSchema = new Schema({
     id: { type: String, unique: true, index: true },
     role: String,
-    pages: { type: [String], default: [] }
+    pages: { type: [String], default: [] },
+    components: { type: [String], default: [] } // Analytics dashboard components
 }, { timestamps: true });
 
 

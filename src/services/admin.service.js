@@ -1644,8 +1644,14 @@ class AdminService {
 
     async addAdmin(adminData) {
         try {
+            const normalizedEmail = (adminData.email || '').toString().trim().toLowerCase();
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!normalizedEmail || !emailRegex.test(normalizedEmail)) {
+                throw new Error('Valid email is required');
+            }
+
             // Check if admin with email already exists
-            const existingAdmin = await this.admins.where('email', '==', adminData.email).get();
+            const existingAdmin = await this.admins.where('email', '==', normalizedEmail).get();
             if (!existingAdmin.empty) {
                 throw new Error('Admin with this email already exists');
             }
@@ -1656,6 +1662,12 @@ class AdminService {
             if (!adminData.password) {
                 adminData.password = 'admin123'; // Default password
             }
+
+            if (adminData.password && adminData.password.length < 6) {
+                throw new Error('Password must be at least 6 characters long');
+            }
+
+            adminData.email = normalizedEmail;
 
             // Hash the password
             adminData.password = await bcrypt.hash(adminData.password, 12);
@@ -1822,18 +1834,43 @@ class AdminService {
             const adminDoc = await this.admins.doc(adminId).get();
             if (!adminDoc.exists) throw new Error('Admin not found');
 
-            if (adminData.role == 'super-admin' && adminData.password) {
+            const updatePayload = { ...adminData };
+
+            if (typeof updatePayload.email === 'string') {
+                const normalizedEmail = updatePayload.email.trim().toLowerCase();
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!normalizedEmail || !emailRegex.test(normalizedEmail)) {
+                    throw new Error('Valid email is required');
+                }
+
+                const existingAdmin = await this.admins.where('email', '==', normalizedEmail).get();
+                const conflicting = existingAdmin.docs.some(doc => doc.id !== adminId);
+                if (conflicting) {
+                    throw new Error('Admin with this email already exists');
+                }
+                updatePayload.email = normalizedEmail;
+            }
+
+            if (updatePayload.role == 'super-admin' && updatePayload.password) {
                 throw new Error('Super-admin password cannot be changed');
             }
 
             // If password is being updated, hash it
-            if (adminData.password) {
-                adminData.password = await bcrypt.hash(adminData.password, 12);
+            if (typeof updatePayload.password === 'string') {
+                const trimmedPassword = updatePayload.password.trim();
+                if (!trimmedPassword) {
+                    delete updatePayload.password;
+                } else {
+                    if (trimmedPassword.length < 6) {
+                        throw new Error('Password must be at least 6 characters long');
+                    }
+                    updatePayload.password = await bcrypt.hash(trimmedPassword, 12);
+                }
             }
 
             const timestamp = new Date().toISOString();
             await this.admins.doc(adminId).update({
-                ...adminData,
+                ...updatePayload,
                 updatedAt: timestamp
             });
 
@@ -1841,7 +1878,7 @@ class AdminService {
                 message: 'Admin updated successfully',
                 admin: {
                     id: adminId,
-                    ...adminData,
+                    ...updatePayload,
                     password: undefined
                 }
             };
