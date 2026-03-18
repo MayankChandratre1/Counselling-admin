@@ -54,24 +54,35 @@ class UserListService {
      */
     async assignListToUser(userId, listId, admin, overrideTitle = null, assignmentPayload = null) {
         try {
-            const masterList = await MasterList.findOne({ id: listId }).lean();
-            if (!masterList) throw new Error('List not found');
+            const payload = assignmentPayload && typeof assignmentPayload === 'object' ? assignmentPayload : null;
+            const payloadHasCopyData = !!(payload && (Array.isArray(payload.colleges) || payload.title));
+
+            const masterList = listId
+                ? await MasterList.findOne({ id: listId }).lean()
+                : null;
+
+            if (!masterList && !payloadHasCopyData) throw new Error('List not found');
 
             const user = await User.findOne({ id: userId });
             if (!user) throw new Error('User not found');
 
             // Check if already assigned
-            const existing = await UserList.findOne({ userId, originalListId: listId, type: 'assigned' });
-            if (existing) throw new Error('List already assigned to this user');
+            const sourceOriginalListId = payload?.originalListId || masterList?.id || null;
 
-            const payload = assignmentPayload && typeof assignmentPayload === 'object' ? assignmentPayload : null;
+            if (sourceOriginalListId) {
+                const existing = await UserList.findOne({ userId, originalListId: sourceOriginalListId, type: 'assigned' });
+                if (existing) throw new Error('List already assigned to this user');
+            }
+
             const userListId = payload?.id || ('ul_' + Date.now());
-            const colleges = Array.isArray(payload?.colleges) ? payload.colleges : (masterList.colleges || []);
-            const title = overrideTitle || payload?.title || masterList.title;
+            const colleges = Array.isArray(payload?.colleges)
+                ? payload.colleges
+                : (masterList?.colleges || []);
+            const title = overrideTitle || payload?.title || masterList?.title || 'Assigned List';
             const userList = new UserList({
                 id: userListId,
                 userId,
-                originalListId: listId,
+                originalListId: sourceOriginalListId,
                 type: 'assigned',
                 title,
                 colleges,
@@ -82,10 +93,12 @@ class UserListService {
             await userList.save();
 
             // Add userId to MasterList.userIds
-            await MasterList.findOneAndUpdate(
-                { id: listId },
-                { $addToSet: { userIds: userId } }
-            );
+            if (masterList?.id) {
+                await MasterList.findOneAndUpdate(
+                    { id: masterList.id },
+                    { $addToSet: { userIds: userId } }
+                );
+            }
 
             this.invalidateCache(`userlists:${userId}`);
             return { message: 'List assigned successfully', userList };
