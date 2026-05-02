@@ -8,9 +8,14 @@
 
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
 import mongoose from 'mongoose';
 import { Admin } from '../models/admin.model.js';
 import { AdminActivity } from '../models/adminActivity.model.js';
+import { DeviceApproval } from '../models/deviceApproval.model.js';
+import { SecurityAuditLog } from '../models/securityAuditLog.model.js';
+import { UserSessionLog } from '../models/userSessionLog.model.js';
+import { User } from '../models/user.model.js';
 import { Permission } from '../models/misc.model.js';
 import cache from '../config/cache.js';
 
@@ -27,6 +32,43 @@ class AdminMongoService {
 
     // ─── Admin Login ──────────────────────────────────────────────────────────
 
+    resolveDeviceId(metadata = {}) {
+        if (metadata.deviceId) return String(metadata.deviceId).trim();
+
+        const ua = metadata.userAgent || 'unknown-ua';
+        const ip = metadata.ip || 'unknown-ip';
+        const fallback = crypto.createHash('sha256').update(`${ua}|${ip}`).digest('hex').slice(0, 32);
+        return `admin_web_${fallback}`;
+    }
+
+    async logSessionAttempt({
+        adminId,
+        deviceId,
+        ip,
+        userAgent,
+        status,
+        approvalStatus,
+        failureReason,
+        sessionToken
+    }) {
+        try {
+            await UserSessionLog.create({
+                id: `sess_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
+                userId: adminId,
+                deviceId,
+                ip: ip || '',
+                userAgent: userAgent || '',
+                loginTime: new Date(),
+                status,
+                failureReason: failureReason || '',
+                approvalStatus,
+                sessionToken: sessionToken || ''
+            });
+        } catch (error) {
+            console.error('Failed to log admin session:', error.message);
+        }
+    }
+
     async login(credentials) {
         try {
             const admin = await Admin.findOne({ email: credentials.email }).lean();
@@ -35,15 +77,105 @@ class AdminMongoService {
             const isPasswordValid = await bcrypt.compare(credentials.password, admin.password);
             if (!isPasswordValid) throw new Error('Invalid password');
 
+            const adminId = admin.id || admin._id.toString();
+            const metadata = credentials.metadata || {};
+            const deviceId = this.resolveDeviceId({
+                deviceId: credentials.deviceId || metadata.deviceId,
+                userAgent: metadata.userAgent,
+                ip: metadata.ip
+            });
+            const isSecurityAdmin = admin.role === 'security-admin';
+
+            if (!isSecurityAdmin) {
+                let approval = await DeviceApproval.findOne({ userId: adminId, deviceId });
+                if (!approval) {
+                    approval = await DeviceApproval.create({
+                        id: `approval_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
+                        userId: adminId,
+                        deviceId,
+                        deviceName: metadata.deviceName || 'Admin Web',
+                        ip: metadata.ip || '',
+                        city: metadata.city || '',
+                        region: metadata.region || '',
+                        status: 'pending',
+                        requestedAt: new Date(),
+                        lastCheckedAt: new Date(),
+                        lastSeenAt: new Date(),
+                        deviceInfo: {
+                            userAgent: metadata.userAgent || '',
+                            source: 'admin-web'
+                        }
+                    });
+                } else {
+                    approval.lastCheckedAt = new Date();
+                    approval.lastSeenAt = new Date();
+                    approval.ip = metadata.ip || approval.ip;
+                    approval.deviceName = metadata.deviceName || approval.deviceName || 'Admin Web';
+                    if (approval.status === 'approved') {
+                        approval.deviceInfo = {
+                            ...(approval.deviceInfo || {}),
+                            userAgent: metadata.userAgent || approval.deviceInfo?.userAgent || '',
+                            source: 'admin-web'
+                        };
+                    }
+                    await approval.save();
+                }
+
+                if (approval.status !== 'approved') {
+                    const denialReason = approval.status === 'revoked'
+                        ? 'Access from this device has been revoked by security-admin'
+                        : approval.status === 'rejected'
+                            ? 'Access from this device was rejected by security-admin'
+                            : 'Device authorization pending security-admin approval';
+
+                    await this.logSessionAttempt({
+                        adminId,
+                        deviceId,
+                        ip: metadata.ip,
+                        userAgent: metadata.userAgent,
+                        status: 'failed',
+                        approvalStatus: approval.status,
+                        failureReason: denialReason
+                    });
+
+                    const pendingError = new Error(denialReason);
+                    pendingError.code = 'DEVICE_NOT_APPROVED';
+                    pendingError.status = 403;
+                    pendingError.details = {
+                        approvalStatus: approval.status,
+                        approvalId: approval.id,
+                        deviceId
+                    };
+                    throw pendingError;
+                }
+            }
+
             // Use individual admin permissions (pages and components from admin document)
             const pages = admin.pages || [];
             const components = admin.components || [];
 
             const token = jwt.sign(
-                { id: admin.id, email: admin.email, role: admin.role },
+                {
+                    id: adminId,
+                    email: admin.email,
+                    role: admin.role,
+                    isSecurityMod: Boolean(admin.isSecurityMod),
+                    deviceId,
+                    scope: 'full'
+                },
                 process.env.JWT_ADMIN_SECRET,
                 { expiresIn: '7d' }
             );
+
+            await this.logSessionAttempt({
+                adminId,
+                deviceId,
+                ip: metadata.ip,
+                userAgent: metadata.userAgent,
+                status: 'success',
+                approvalStatus: 'approved',
+                sessionToken: token
+            });
 
             return {
                 token,
@@ -52,11 +184,12 @@ class AdminMongoService {
                     email: admin.email,
                     name: admin.name,
                     role: admin.role,
+                    isSecurityMod: Boolean(admin.isSecurityMod),
                     permissions: { pages, components }
                 }
             };
         } catch (error) {
-            throw new Error('Login failed: ' + error.message);
+            throw error.code ? error : new Error('Login failed: ' + error.message);
         }
     }
 
@@ -122,6 +255,7 @@ class AdminMongoService {
                 password: hashedPassword,
                 name: adminData.name || '',
                 role: adminData.role,
+                isSecurityMod: Boolean(adminData.isSecurityMod),
                 pages: adminData.pages || [],
                 components: adminData.components || []
             });
@@ -135,6 +269,7 @@ class AdminMongoService {
                     email: newAdmin.email,
                     name: newAdmin.name,
                     role: newAdmin.role,
+                    isSecurityMod: Boolean(newAdmin.isSecurityMod),
                     pages: newAdmin.pages,
                     components: newAdmin.components
                 }
@@ -191,6 +326,9 @@ class AdminMongoService {
             if (adminData.role !== undefined) {
                 updatePayload.role = adminData.role;
             }
+            if (adminData.isSecurityMod !== undefined) {
+                updatePayload.isSecurityMod = Boolean(adminData.isSecurityMod);
+            }
             if (adminData.pages !== undefined) {
                 updatePayload.pages = adminData.pages;
             }
@@ -241,11 +379,20 @@ class AdminMongoService {
     async getPermissions() {
         try {
             const permissions = await Permission.find().lean();
-            return permissions.map(p => ({
+            const normalized = permissions.map(p => ({
                 role: p.id,
                 pages: p.pages || [],
                 components: p.components || []
             }));
+
+            const defaultRoles = ['admin', 'super-admin', 'editor', 'security-admin'];
+            for (const role of defaultRoles) {
+                if (!normalized.some(item => item.role === role)) {
+                    normalized.push({ role, pages: [], components: [] });
+                }
+            }
+
+            return normalized;
         } catch (error) {
             throw new Error('Failed to get permissions: ' + error.message);
         }
@@ -299,6 +446,242 @@ class AdminMongoService {
         }
     }
 
+    async getDeviceApprovals(filters = {}) {
+        try {
+            const query = {};
+            if (filters.userId) query.userId = filters.userId;
+            if (filters.deviceId) query.deviceId = filters.deviceId;
+            if (filters.status) query.status = filters.status;
+
+            const limit = Math.min(Number(filters.limit) || 100, 500);
+
+            const approvals = await DeviceApproval.find(query)
+                .sort({ updatedAt: -1, requestedAt: -1 })
+                .limit(limit)
+                .lean();
+
+            const userIds = [...new Set(approvals.map(item => item.userId).filter(Boolean))];
+            const objectIdUserIds = userIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+            const users = userIds.length
+                ? await User.find({
+                    $or: [
+                        { id: { $in: userIds } },
+                        ...(objectIdUserIds.length ? [{ _id: { $in: objectIdUserIds.map(id => new mongoose.Types.ObjectId(id)) } }] : [])
+                    ]
+                }).select('id name email phone counsellingData').lean()
+                : [];
+            const admins = userIds.length
+                ? await Admin.find({
+                    $or: [
+                        { id: { $in: userIds } },
+                        ...(objectIdUserIds.length ? [{ _id: { $in: objectIdUserIds.map(id => new mongoose.Types.ObjectId(id)) } }] : [])
+                    ]
+                }).select('id name email').lean()
+                : [];
+
+            const userMap = new Map(
+                users.map(user => {
+                    const displayName = user.name || user.counsellingData?.fullName || user.phone || user.id;
+                    const email = user.email || user.counsellingData?.email || '';
+                    const key = user.id || user._id?.toString();
+                    return [key, { displayName, email }];
+                }).filter(([key]) => Boolean(key))
+            );
+
+            const adminMap = new Map(
+                admins.map(admin => {
+                    const displayName = admin.name || admin.email || admin.id;
+                    const key = admin.id || admin._id?.toString();
+                    return [key, { displayName, email: admin.email || '' }];
+                }).filter(([key]) => Boolean(key))
+            );
+
+            const enrichedApprovals = approvals.map(item => {
+                const identity = userMap.get(item.userId) || adminMap.get(item.userId) || {};
+                return {
+                    ...item,
+                    userName: identity.displayName || item.userId,
+                    userEmail: identity.email || ''
+                };
+            });
+
+            return { approvals: enrichedApprovals };
+        } catch (error) {
+            throw new Error('Failed to get device approvals: ' + error.message);
+        }
+    }
+
+    async approveDevice(approvalId, admin, payload = {}) {
+        try {
+            const approval = await DeviceApproval.findOne({ id: approvalId });
+            if (!approval) {
+                throw new Error('Device approval request not found');
+            }
+
+            approval.status = 'approved';
+            approval.approvedAt = new Date();
+            approval.approvedBy = admin?.id || null;
+            approval.approvedByEmail = admin?.email || null;
+            approval.approvalReason = payload.reason || approval.approvalReason || '';
+            approval.lastCheckedAt = new Date();
+            await approval.save();
+
+            await SecurityAuditLog.create({
+                id: `audit_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
+                userId: approval.userId,
+                deviceId: approval.deviceId,
+                adminId: admin?.id || null,
+                adminEmail: admin?.email || null,
+                action: 'approval',
+                status: 'success',
+                reason: approval.approvalReason || 'Approved by security-admin',
+                ip: approval.ip,
+                city: approval.city,
+                region: approval.region,
+                timestamp: new Date()
+            });
+
+            return approval.toObject();
+        } catch (error) {
+            throw new Error('Failed to approve device: ' + error.message);
+        }
+    }
+
+    async revokeDevice(approvalId, admin, payload = {}) {
+        try {
+            const approval = await DeviceApproval.findOne({ id: approvalId });
+            if (!approval) {
+                throw new Error('Device approval request not found');
+            }
+
+            approval.status = 'revoked';
+            approval.revokedAt = new Date();
+            approval.revokedBy = admin?.id || null;
+            approval.revokedByEmail = admin?.email || null;
+            approval.approvalReason = payload.reason || approval.approvalReason || '';
+            approval.lastCheckedAt = new Date();
+            await approval.save();
+
+            await SecurityAuditLog.create({
+                id: `audit_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
+                userId: approval.userId,
+                deviceId: approval.deviceId,
+                adminId: admin?.id || null,
+                adminEmail: admin?.email || null,
+                action: 'revocation',
+                status: 'success',
+                reason: approval.approvalReason || 'Access revoked by security-admin',
+                ip: approval.ip,
+                city: approval.city,
+                region: approval.region,
+                timestamp: new Date()
+            });
+
+            return approval.toObject();
+        } catch (error) {
+            throw new Error('Failed to revoke device access: ' + error.message);
+        }
+    }
+
+    async rejectDevice(approvalId, admin, payload = {}) {
+        try {
+            const approval = await DeviceApproval.findOne({ id: approvalId });
+            if (!approval) {
+                throw new Error('Device approval request not found');
+            }
+
+            approval.status = 'rejected';
+            approval.rejectedAt = new Date();
+            approval.approvalReason = payload.reason || approval.approvalReason || '';
+            approval.lastCheckedAt = new Date();
+            await approval.save();
+
+            await SecurityAuditLog.create({
+                id: `audit_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
+                userId: approval.userId,
+                deviceId: approval.deviceId,
+                adminId: admin?.id || null,
+                adminEmail: admin?.email || null,
+                action: 'rejection',
+                status: 'success',
+                reason: approval.approvalReason || 'Rejected by security-admin',
+                ip: approval.ip,
+                city: approval.city,
+                region: approval.region,
+                timestamp: new Date()
+            });
+
+            return approval.toObject();
+        } catch (error) {
+            throw new Error('Failed to reject device: ' + error.message);
+        }
+    }
+
+    async getUserSessions(filters = {}) {
+        try {
+            const query = {};
+            if (filters.userId) query.userId = filters.userId;
+            if (filters.deviceId) query.deviceId = filters.deviceId;
+            if (filters.status) query.status = filters.status;
+
+            const limit = Math.min(Number(filters.limit) || 100, 500);
+
+            const sessions = await UserSessionLog.find(query)
+                .sort({ loginTime: -1, updatedAt: -1 })
+                .limit(limit)
+                .lean();
+
+            const userIds = [...new Set(sessions.map(item => item.userId).filter(Boolean))];
+            const objectIdUserIds = userIds.filter(id => mongoose.Types.ObjectId.isValid(id));
+            const users = userIds.length
+                ? await User.find({
+                    $or: [
+                        { id: { $in: userIds } },
+                        ...(objectIdUserIds.length ? [{ _id: { $in: objectIdUserIds.map(id => new mongoose.Types.ObjectId(id)) } }] : [])
+                    ]
+                }).select('id name email phone counsellingData').lean()
+                : [];
+            const admins = userIds.length
+                ? await Admin.find({
+                    $or: [
+                        { id: { $in: userIds } },
+                        ...(objectIdUserIds.length ? [{ _id: { $in: objectIdUserIds.map(id => new mongoose.Types.ObjectId(id)) } }] : [])
+                    ]
+                }).select('id name email').lean()
+                : [];
+
+            const userMap = new Map(
+                users.map(user => {
+                    const displayName = user.name || user.counsellingData?.fullName || user.phone || user.id;
+                    const email = user.email || user.counsellingData?.email || '';
+                    const key = user.id || user._id?.toString();
+                    return [key, { displayName, email }];
+                }).filter(([key]) => Boolean(key))
+            );
+
+            const adminMap = new Map(
+                admins.map(admin => {
+                    const displayName = admin.name || admin.email || admin.id;
+                    const key = admin.id || admin._id?.toString();
+                    return [key, { displayName, email: admin.email || '' }];
+                }).filter(([key]) => Boolean(key))
+            );
+
+            const enrichedSessions = sessions.map(item => {
+                const identity = userMap.get(item.userId) || adminMap.get(item.userId) || {};
+                return {
+                    ...item,
+                    userName: identity.displayName || item.userId,
+                    userEmail: identity.email || ''
+                };
+            });
+
+            return { sessions: enrichedSessions };
+        } catch (error) {
+            throw new Error('Failed to get user sessions: ' + error.message);
+        }
+    }
+
     /**
      * Log an admin activity (called by middleware or manually)
      */
@@ -326,6 +709,30 @@ class AdminMongoService {
         } catch (error) {
             console.error('Failed to log activity:', error.message);
             // Don't throw - logging failure shouldn't break the actual operation
+        }
+    }
+
+    async logSecurityAudit(auditData) {
+        try {
+            const audit = new SecurityAuditLog({
+                id: auditData.id || `audit_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
+                userId: auditData.userId,
+                deviceId: auditData.deviceId,
+                adminId: auditData.adminId,
+                adminEmail: auditData.adminEmail,
+                action: auditData.action,
+                status: auditData.status || 'success',
+                reason: auditData.reason,
+                ip: auditData.ip,
+                city: auditData.city,
+                region: auditData.region,
+                timestamp: auditData.timestamp || new Date()
+            });
+
+            await audit.save();
+            return audit;
+        } catch (error) {
+            console.error('Failed to log security audit:', error.message);
         }
     }
 }

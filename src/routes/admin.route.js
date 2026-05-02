@@ -27,15 +27,21 @@ router.use(authMiddleware);
 // Apply activity logging after authentication
 router.use(logActivity);
 
-// Super-admin only routes
-router.post('/add-admin', authorize(['super-admin']), AdminController.addAdmin);
-router.get('/all-admins', authorize(['super-admin']), AdminController.getAllAdmins);
+// Super-admin and security-admin routes
+router.post('/add-admin', authorize(['super-admin', 'security-admin']), AdminController.addAdmin);
+router.get('/all-admins', authorize(['super-admin', 'security-admin']), AdminController.getAllAdmins);
 
-router.get('/admin/:adminId', authorize(['super-admin']), AdminController.getAdmin);
-router.put('/update-admin/:adminId', authorize(['super-admin']), AdminController.updateAdmin);
-router.delete('/delete-admin/:adminId', authorize(['super-admin']), AdminController.deleteAdmin);
-router.get('/permissions', authorize(['super-admin']), AdminController.getPermissions);
-router.post('/permissions/:role', authorize(['super-admin']), AdminController.addOrUpdatePermissions);
+router.get('/admin/:adminId', authorize(['super-admin', 'security-admin']), AdminController.getAdmin);
+router.put('/update-admin/:adminId', authorize(['super-admin', 'security-admin']), AdminController.updateAdmin);
+router.delete('/delete-admin/:adminId', authorize(['super-admin', 'security-admin']), AdminController.deleteAdmin);
+router.get('/permissions', authorize(['super-admin', 'security-admin']), AdminController.getPermissions);
+router.post('/permissions/:role', authorize(['super-admin', 'security-admin']), AdminController.addOrUpdatePermissions);
+
+router.get('/security/device-approvals', authorize(['super-admin', 'security-admin']), AdminController.getDeviceApprovals);
+router.post('/security/device-approvals/:approvalId/approve', authorize(['super-admin', 'security-admin']), AdminController.approveDevice);
+router.post('/security/device-approvals/:approvalId/reject', authorize(['super-admin', 'security-admin']), AdminController.rejectDevice);
+router.post('/security/device-approvals/:approvalId/revoke', authorize(['super-admin', 'security-admin']), AdminController.revokeDevice);
+router.get('/security/sessions', authorize(['super-admin', 'security-admin']), AdminController.getUserSessions);
 
 // Routes accessible by both admin and super-admin
 // Protected routes with caching

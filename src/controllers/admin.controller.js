@@ -176,9 +176,24 @@ class AdminController {
 
     async login(req, res) {
         try {
-            const result = await this.adminMongoService.login(req.body);
+            const result = await this.adminMongoService.login({
+                ...req.body,
+                metadata: {
+                    deviceId: req.body?.deviceId || req.headers['x-device-id'] || req.headers['device-id'],
+                    deviceName: req.body?.deviceName || req.headers['x-device-name'] || 'Admin Web',
+                    ip: req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress,
+                    userAgent: req.get('user-agent') || ''
+                }
+            });
             res.status(200).json(result);
         } catch (error) {
+            if (error.code === 'DEVICE_NOT_APPROVED') {
+                return res.status(error.status || 403).json({
+                    error: error.message,
+                    code: error.code,
+                    ...error.details
+                });
+            }
             res.status(400).json({ error: error.message });
         }
     }
@@ -632,6 +647,56 @@ class AdminController {
         }
     }
 
+    async getDeviceApprovals(req, res) {
+        try {
+            const approvals = await this.adminMongoService.getDeviceApprovals(req.query);
+            res.status(200).json(approvals);
+        } catch (error) {
+            console.error('Get device approvals error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async approveDevice(req, res) {
+        try {
+            const result = await this.adminMongoService.approveDevice(req.params.approvalId, req.admin, req.body);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Approve device error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async revokeDevice(req, res) {
+        try {
+            const result = await this.adminMongoService.revokeDevice(req.params.approvalId, req.admin, req.body);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Revoke device error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async rejectDevice(req, res) {
+        try {
+            const result = await this.adminMongoService.rejectDevice(req.params.approvalId, req.admin, req.body);
+            res.status(200).json(result);
+        } catch (error) {
+            console.error('Reject device error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
+    async getUserSessions(req, res) {
+        try {
+            const sessions = await this.adminMongoService.getUserSessions(req.query);
+            res.status(200).json(sessions);
+        } catch (error) {
+            console.error('Get user sessions error:', error);
+            res.status(400).json({ error: error.message });
+        }
+    }
+
     async editLandingPage(req, res) {
         try {
             const { data } = req.body;
@@ -1051,6 +1116,11 @@ export default {
     deleteAdmin: adminController.deleteAdmin.bind(adminController),
     getPermissions: adminController.getPermissions.bind(adminController),
     addOrUpdatePermissions: adminController.addOrUpdatePermissions.bind(adminController),
+    getDeviceApprovals: adminController.getDeviceApprovals.bind(adminController),
+    approveDevice: adminController.approveDevice.bind(adminController),
+    rejectDevice: adminController.rejectDevice.bind(adminController),
+    revokeDevice: adminController.revokeDevice.bind(adminController),
+    getUserSessions: adminController.getUserSessions.bind(adminController),
     getActivityLogs: adminController.getActivityLogs.bind(adminController),
     editLandingPage: adminController.editLandingPage.bind(adminController),
     getLandingPage: adminController.getLandingPage.bind(adminController),

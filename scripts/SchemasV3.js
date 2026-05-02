@@ -131,7 +131,8 @@ export const AdminSchema = new Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     name: { type: String },
-    role: { type: String, enum: ['admin', 'super-admin', 'editor'], default: 'admin' },
+    role: { type: String, enum: ['admin', 'super-admin', 'editor', 'security-admin'], default: 'admin' },
+    isSecurityMod: { type: Boolean, default: false },
     pages: { type: [String], default: [] }, // Individual page permissions
     components: { type: [String], default: [] } // Individual component permissions
 }, { timestamps: true });
@@ -155,6 +156,66 @@ export const AdminActivitySchema = new Schema({
     timestamp: { type: Date, required: true, index: true },
     ip: { type: String }, // Client IP
     userAgent: { type: String } // Client user agent
+}, { timestamps: true });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Device Approval & Session Tracking
+// Used by security-admin to approve first logins, revoke access, and review sessions
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const DeviceApprovalSchema = new Schema({
+    id: { type: String, unique: true, index: true },
+    userId: { type: String, required: true, index: true },
+    deviceId: { type: String, required: true, index: true },
+    deviceName: { type: String },
+    ip: { type: String },
+    city: { type: String },
+    region: { type: String },
+    status: { type: String, enum: ['pending', 'approved', 'rejected', 'revoked'], default: 'pending', index: true },
+    requestedAt: { type: Date, default: Date.now, index: true },
+    approvedAt: { type: Date },
+    rejectedAt: { type: Date },
+    revokedAt: { type: Date },
+    approvedBy: { type: String, ref: 'Admin' },
+    approvedByEmail: { type: String },
+    revokedBy: { type: String, ref: 'Admin' },
+    revokedByEmail: { type: String },
+    approvalReason: { type: String },
+    lastCheckedAt: { type: Date },
+    lastSeenAt: { type: Date },
+    deviceInfo: { type: Schema.Types.Mixed }
+}, { timestamps: true });
+
+export const UserSessionLogSchema = new Schema({
+    id: { type: String, unique: true, index: true },
+    userId: { type: String, required: true, index: true },
+    deviceId: { type: String, required: true, index: true },
+    ip: { type: String },
+    city: { type: String },
+    region: { type: String },
+    userAgent: { type: String },
+    loginTime: { type: Date, required: true, index: true },
+    logoutTime: { type: Date },
+    sessionDuration: { type: Number },
+    status: { type: String, enum: ['success', 'failed'], default: 'success', index: true },
+    failureReason: { type: String },
+    approvalStatus: { type: String, enum: ['pending', 'approved', 'rejected', 'revoked'], default: 'pending', index: true },
+    sessionToken: { type: String }
+}, { timestamps: true });
+
+export const SecurityAuditLogSchema = new Schema({
+    id: { type: String, unique: true, index: true },
+    userId: { type: String, required: true, index: true },
+    deviceId: { type: String, required: true, index: true },
+    adminId: { type: String, index: true },
+    adminEmail: { type: String, index: true },
+    action: { type: String, enum: ['approval', 'rejection', 'revocation'], required: true, index: true },
+    status: { type: String, enum: ['success', 'failed'], default: 'success', index: true },
+    reason: { type: String },
+    ip: { type: String },
+    city: { type: String },
+    region: { type: String },
+    timestamp: { type: Date, default: Date.now, index: true }
 }, { timestamps: true });
 
 
