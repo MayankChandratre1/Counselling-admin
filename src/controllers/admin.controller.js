@@ -4,6 +4,7 @@ import UserListService from '../services/userList.service.js';
 import { Admin } from '../models/admin.model.js';
 import nodemailer from 'nodemailer';
 import bcrypt from 'bcryptjs';
+import { getClientIp } from '../utils/clientIp.js';
 
 class AdminController {
     constructor() {
@@ -181,7 +182,7 @@ class AdminController {
                 metadata: {
                     deviceId: req.body?.deviceId || req.headers['x-device-id'] || req.headers['device-id'],
                     deviceName: req.body?.deviceName || req.headers['x-device-name'] || 'Admin Web',
-                    ip: req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress,
+                    ip: getClientIp(req),
                     userAgent: req.get('user-agent') || ''
                 }
             });

@@ -27,6 +27,10 @@ import authMiddleware from './middleware/authMiddleware.js';
 connectDB();
 
 const app = express();
+const trustProxy = process.env.TRUST_PROXY;
+if (trustProxy === '1' || trustProxy === 'true' || trustProxy === 'yes') {
+    app.set('trust proxy', 1);
+}
 app.use(compression());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));

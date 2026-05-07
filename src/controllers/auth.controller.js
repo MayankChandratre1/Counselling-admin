@@ -1,4 +1,5 @@
 import AuthService from '../services/auth.service.js';
+import { getClientIp } from '../utils/clientIp.js';
 
 class AuthController {
     async login(req, res) {
@@ -7,7 +8,7 @@ class AuthController {
             const result = await AuthService.login(email, password, {
                 deviceId: req.body?.deviceId || req.headers['x-device-id'] || req.headers['device-id'],
                 deviceName: req.body?.deviceName || req.headers['x-device-name'] || 'Admin Web',
-                ip: req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress,
+                ip: getClientIp(req),
                 userAgent: req.get('user-agent') || ''
             });
             res.status(200).json(result);

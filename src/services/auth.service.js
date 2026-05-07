@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { Admin } from '../models/admin.model.js';
 import { DeviceApproval } from '../models/deviceApproval.model.js';
 import { UserSessionLog } from '../models/userSessionLog.model.js';
+import { enrichLoginLocation } from '../utils/ipLocation.js';
 
 class AuthService {
     resolveDeviceId(metadata = {}) {
@@ -23,7 +24,11 @@ class AuthService {
         status,
         approvalStatus,
         failureReason,
-        sessionToken
+        sessionToken,
+        city,
+        region,
+        country,
+        reverseDns
     }) {
         try {
             await UserSessionLog.create({
@@ -31,6 +36,10 @@ class AuthService {
                 userId: adminId,
                 deviceId,
                 ip: ip || '',
+                city: city || '',
+                region: region || '',
+                country: country || '',
+                reverseDns: reverseDns || '',
                 userAgent: userAgent || '',
                 loginTime: new Date(),
                 status,
@@ -55,8 +64,18 @@ class AuthService {
         const isMatch = await bcrypt.compare(password, admin.password);
         if (!isMatch) throw new Error('Invalid credentials');
 
+        const loc = await enrichLoginLocation(metadata.ip);
+        const meta = {
+            ...metadata,
+            ip: loc.ip || metadata.ip || '',
+            city: metadata.city || loc.city,
+            region: metadata.region || loc.region,
+            country: metadata.country || loc.country,
+            reverseDns: metadata.reverseDns || loc.reverseDns
+        };
+
         const adminId = admin.id || admin._id.toString();
-        const deviceId = this.resolveDeviceId(metadata);
+        const deviceId = this.resolveDeviceId(meta);
         const isSecurityAdmin = admin.role === 'security-admin';
 
         if (!isSecurityAdmin) {
@@ -66,28 +85,34 @@ class AuthService {
                     id: `approval_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`,
                     userId: adminId,
                     deviceId,
-                    deviceName: metadata.deviceName || 'Admin Web',
-                    ip: metadata.ip || '',
-                    city: metadata.city || '',
-                    region: metadata.region || '',
+                    deviceName: meta.deviceName || 'Admin Web',
+                    ip: meta.ip || '',
+                    city: meta.city || '',
+                    region: meta.region || '',
+                    country: meta.country || '',
+                    reverseDns: meta.reverseDns || '',
                     status: 'pending',
                     requestedAt: new Date(),
                     lastCheckedAt: new Date(),
                     lastSeenAt: new Date(),
                     deviceInfo: {
-                        userAgent: metadata.userAgent || '',
+                        userAgent: meta.userAgent || '',
                         source: 'admin-web'
                     }
                 });
             } else {
                 approval.lastCheckedAt = new Date();
                 approval.lastSeenAt = new Date();
-                approval.ip = metadata.ip || approval.ip;
-                approval.deviceName = metadata.deviceName || approval.deviceName || 'Admin Web';
+                approval.ip = meta.ip || approval.ip;
+                approval.deviceName = meta.deviceName || approval.deviceName || 'Admin Web';
+                if (meta.city) approval.city = meta.city;
+                if (meta.region) approval.region = meta.region;
+                if (meta.country) approval.country = meta.country;
+                if (meta.reverseDns) approval.reverseDns = meta.reverseDns;
                 if (approval.status === 'approved') {
                     approval.deviceInfo = {
                         ...(approval.deviceInfo || {}),
-                        userAgent: metadata.userAgent || approval.deviceInfo?.userAgent || '',
+                        userAgent: meta.userAgent || approval.deviceInfo?.userAgent || '',
                         source: 'admin-web'
                     };
                 }
@@ -104,11 +129,15 @@ class AuthService {
                 await this.logSessionAttempt({
                     adminId,
                     deviceId,
-                    ip: metadata.ip,
-                    userAgent: metadata.userAgent,
+                    ip: meta.ip,
+                    userAgent: meta.userAgent,
                     status: 'failed',
                     approvalStatus: approval.status,
-                    failureReason: denialReason
+                    failureReason: denialReason,
+                    city: meta.city,
+                    region: meta.region,
+                    country: meta.country,
+                    reverseDns: meta.reverseDns
                 });
 
                 const pendingError = new Error(denialReason);
@@ -143,11 +172,15 @@ class AuthService {
         await this.logSessionAttempt({
             adminId,
             deviceId,
-            ip: metadata.ip,
-            userAgent: metadata.userAgent,
+            ip: meta.ip,
+            userAgent: meta.userAgent,
             status: 'success',
             approvalStatus: 'approved',
-            sessionToken: token
+            sessionToken: token,
+            city: meta.city,
+            region: meta.region,
+            country: meta.country,
+            reverseDns: meta.reverseDns
         });
 
         return {

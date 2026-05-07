@@ -18,6 +18,7 @@ import { UserSessionLog } from '../models/userSessionLog.model.js';
 import { User } from '../models/user.model.js';
 import { Permission } from '../models/misc.model.js';
 import cache from '../config/cache.js';
+import { enrichLoginLocation } from '../utils/ipLocation.js';
 
 class AdminMongoService {
     invalidateCache(pattern) {
@@ -49,7 +50,11 @@ class AdminMongoService {
         status,
         approvalStatus,
         failureReason,
-        sessionToken
+        sessionToken,
+        city,
+        region,
+        country,
+        reverseDns
     }) {
         try {
             await UserSessionLog.create({
@@ -57,6 +62,10 @@ class AdminMongoService {
                 userId: adminId,
                 deviceId,
                 ip: ip || '',
+                city: city || '',
+                region: region || '',
+                country: country || '',
+                reverseDns: reverseDns || '',
                 userAgent: userAgent || '',
                 loginTime: new Date(),
                 status,
@@ -77,8 +86,18 @@ class AdminMongoService {
             const isPasswordValid = await bcrypt.compare(credentials.password, admin.password);
             if (!isPasswordValid) throw new Error('Invalid password');
 
+            const rawMeta = credentials.metadata || {};
+            const loc = await enrichLoginLocation(rawMeta.ip);
+            const metadata = {
+                ...rawMeta,
+                ip: loc.ip || rawMeta.ip || '',
+                city: rawMeta.city || loc.city,
+                region: rawMeta.region || loc.region,
+                country: rawMeta.country || loc.country,
+                reverseDns: rawMeta.reverseDns || loc.reverseDns
+            };
+
             const adminId = admin.id || admin._id.toString();
-            const metadata = credentials.metadata || {};
             const deviceId = this.resolveDeviceId({
                 deviceId: credentials.deviceId || metadata.deviceId,
                 userAgent: metadata.userAgent,
@@ -97,6 +116,8 @@ class AdminMongoService {
                         ip: metadata.ip || '',
                         city: metadata.city || '',
                         region: metadata.region || '',
+                        country: metadata.country || '',
+                        reverseDns: metadata.reverseDns || '',
                         status: 'pending',
                         requestedAt: new Date(),
                         lastCheckedAt: new Date(),
@@ -111,6 +132,10 @@ class AdminMongoService {
                     approval.lastSeenAt = new Date();
                     approval.ip = metadata.ip || approval.ip;
                     approval.deviceName = metadata.deviceName || approval.deviceName || 'Admin Web';
+                    if (metadata.city) approval.city = metadata.city;
+                    if (metadata.region) approval.region = metadata.region;
+                    if (metadata.country) approval.country = metadata.country;
+                    if (metadata.reverseDns) approval.reverseDns = metadata.reverseDns;
                     if (approval.status === 'approved') {
                         approval.deviceInfo = {
                             ...(approval.deviceInfo || {}),
@@ -135,7 +160,11 @@ class AdminMongoService {
                         userAgent: metadata.userAgent,
                         status: 'failed',
                         approvalStatus: approval.status,
-                        failureReason: denialReason
+                        failureReason: denialReason,
+                        city: metadata.city,
+                        region: metadata.region,
+                        country: metadata.country,
+                        reverseDns: metadata.reverseDns
                     });
 
                     const pendingError = new Error(denialReason);
@@ -174,7 +203,11 @@ class AdminMongoService {
                 userAgent: metadata.userAgent,
                 status: 'success',
                 approvalStatus: 'approved',
-                sessionToken: token
+                sessionToken: token,
+                city: metadata.city,
+                region: metadata.region,
+                country: metadata.country,
+                reverseDns: metadata.reverseDns
             });
 
             return {
