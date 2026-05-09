@@ -2,6 +2,7 @@ import AdminService from '../services/admin.service.js';
 import AdminMongoService from '../services/admin.mongo.service.js';
 import UserListService from '../services/userList.service.js';
 import { Admin } from '../models/admin.model.js';
+import { FeatureFlag, SUPPORTED_FLAGS } from '../models/featureFlag.model.js';
 import nodemailer from 'nodemailer';
 import bcrypt from 'bcryptjs';
 import { getClientIp } from '../utils/clientIp.js';
@@ -1058,12 +1059,66 @@ class AdminController {
         }
     }
 
-    // ...existing code...
+    // ─── Feature Flags ────────────────────────────────────────────────────────
+    /**
+     * Returns every supported feature flag merged with its current DB state.
+     * Flags missing from the DB are reported as `enabled: false`.
+     */
+    async getFeatureFlags(req, res) {
+        try {
+            const docs = await FeatureFlag.find({
+                key: { $in: SUPPORTED_FLAGS.map((f) => f.key) }
+            }).lean();
+            const byKey = docs.reduce((acc, d) => ({ ...acc, [d.key]: d }), {});
+            const flags = SUPPORTED_FLAGS.map((meta) => ({
+                key: meta.key,
+                label: meta.label,
+                description: meta.description,
+                enabled: !!byKey[meta.key]?.enabled,
+                updatedAt: byKey[meta.key]?.updatedAt || null,
+                updatedBy: byKey[meta.key]?.updatedBy || null
+            }));
+            res.status(200).json({ flags });
+        } catch (error) {
+            console.error('Get feature flags error:', error);
+            res.status(500).json({ error: 'Failed to load feature flags' });
+        }
+    }
 
-
-
-
-
+    /** Toggles a single supported flag. Body: `{ enabled: boolean }`. */
+    async updateFeatureFlag(req, res) {
+        try {
+            const { key } = req.params;
+            const { enabled } = req.body;
+            const meta = SUPPORTED_FLAGS.find((f) => f.key === key);
+            if (!meta) {
+                return res.status(404).json({ error: 'Unknown feature flag' });
+            }
+            const updatedBy = req.admin?.email || 'system';
+            const doc = await FeatureFlag.findOneAndUpdate(
+                { key },
+                {
+                    $set: {
+                        enabled: !!enabled,
+                        description: meta.description,
+                        updatedBy
+                    }
+                },
+                { new: true, upsert: true }
+            );
+            res.status(200).json({
+                key: doc.key,
+                label: meta.label,
+                description: meta.description,
+                enabled: doc.enabled,
+                updatedAt: doc.updatedAt,
+                updatedBy: doc.updatedBy
+            });
+        } catch (error) {
+            console.error('Update feature flag error:', error);
+            res.status(500).json({ error: 'Failed to update feature flag' });
+        }
+    }
 }
 
 // Create instance of controller
@@ -1155,5 +1210,7 @@ export default {
     copyListToFolder: adminController.copyListToFolder.bind(adminController),
     moveListToFolder: adminController.moveListToFolder.bind(adminController),
     toggleFormFilled: adminController.toggleFormFilled.bind(adminController),
+    getFeatureFlags: adminController.getFeatureFlags.bind(adminController),
+    updateFeatureFlag: adminController.updateFeatureFlag.bind(adminController),
 };
 

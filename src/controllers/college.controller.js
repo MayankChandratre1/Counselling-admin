@@ -1,4 +1,6 @@
 import CollegeService from '../services/college.services.js';
+import { FeatureFlag, SUPPORTED_FLAGS } from '../models/featureFlag.model.js';
+import { BRANCH_BUCKETS } from '../data/branchBuckets.js';
 
 class CollegeController {
     constructor() {
@@ -152,7 +154,83 @@ class CollegeController {
         }
     }
 
+    /**
+     * Public read of feature flags so the mobile app can decide whether to
+     * surface gated screens (e.g. College Range). Always returns every supported
+     * flag, defaulting to `enabled: false` if not yet set in the DB.
+     */
+    async getFeatureFlagsPublic(req, res) {
+        try {
+            const docs = await FeatureFlag.find({
+                key: { $in: SUPPORTED_FLAGS.map((f) => f.key) }
+            }).lean();
+            const byKey = docs.reduce((acc, d) => ({ ...acc, [d.key]: d }), {});
+            const flags = SUPPORTED_FLAGS.reduce((acc, meta) => {
+                acc[meta.key] = !!byKey[meta.key]?.enabled;
+                return acc;
+            }, {});
+            res.json({ success: true, flags });
+        } catch (error) {
+            console.error('Public feature flags error:', error);
+            res.status(500).json({ success: false, flags: {} });
+        }
+    }
 
+    /**
+     * College Range — list buckets the dropdown should render. Mobile keeps a
+     * mirror copy too, but exposing this lets us evolve the bucket list without
+     * forcing a client-side update.
+     */
+    async getBranchBuckets(req, res) {
+        try {
+            res.json({
+                success: true,
+                buckets: BRANCH_BUCKETS.map(({ key, label }) => ({ key, label }))
+            });
+        } catch (error) {
+            console.error('Branch buckets error:', error);
+            res.status(500).json({ success: false, message: error.message });
+        }
+    }
+
+    /**
+     * College Range — body: { category, gender, branchKey, year? }
+     * Returns rows of { collegeName, branchName, percentile, rank, ... } for
+     * the selected filters, sorted by percentile desc.
+     */
+    async getCollegeRange(req, res) {
+        try {
+            const { category, gender, branchKey, year } = req.body || {};
+
+            if (!category || !branchKey) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'category and branchKey are required'
+                });
+            }
+
+            const rows = await this.collegeService.getCollegeRange({
+                category,
+                gender,
+                branchKey,
+                year: year ? Number(year) : 2025
+            });
+
+            res.json({
+                success: true,
+                count: rows.length,
+                year: year ? Number(year) : 2025,
+                rows
+            });
+        } catch (error) {
+            console.error('Controller error getting college range:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Error fetching college range',
+                error: error.message
+            });
+        }
+    }
 }
 
 // Create instance of controller
@@ -167,5 +245,8 @@ export default {
     createCollege: collegeController.createCollege.bind(collegeController),
     updateCollege: collegeController.updateCollege.bind(collegeController),
     deleteCollege: collegeController.deleteCollege.bind(collegeController),
-    getCutoff: collegeController.getCutoff.bind(collegeController)
+    getCutoff: collegeController.getCutoff.bind(collegeController),
+    getFeatureFlagsPublic: collegeController.getFeatureFlagsPublic.bind(collegeController),
+    getBranchBuckets: collegeController.getBranchBuckets.bind(collegeController),
+    getCollegeRange: collegeController.getCollegeRange.bind(collegeController)
 };

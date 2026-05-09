@@ -52,4 +52,9 @@ router.get('/activity/:adminId', authorize(['super-admin', 'admin']), AdminContr
 router.post('/add-note/:userId', AdminController.addNote);
 router.get('/get-notes/:userId', cacheMiddleware('notes', 300), AdminController.getNotes);
 
+// ─── Feature Flags Routes ─────────────────────────────────────────────────────
+
+router.get('/feature-flags', requireSecurityPrivileges, AdminController.getFeatureFlags);
+router.put('/feature-flags/:key', requireSecurityPrivileges, AdminController.updateFeatureFlag);
+
 export default router;

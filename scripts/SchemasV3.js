@@ -774,3 +774,17 @@ export const MetadataSchema = new Schema({
     enabled: { type: [String], default: [] },
     total: { type: [String], default: [] }
 }, { strict: false, timestamps: true });
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 19. FeatureFlag Schema
+//   Simple key-value flag store (e.g. `college_range_enabled`). Read by both
+//   admin (toggle UI) and the mobile app (gate premium features).
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const FeatureFlagSchema = new Schema({
+    key: { type: String, unique: true, index: true, required: true },
+    enabled: { type: Boolean, default: false },
+    description: { type: String, default: '' },
+    updatedBy: { type: String }
+}, { timestamps: true });

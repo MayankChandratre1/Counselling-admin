@@ -60,4 +60,26 @@ router.delete('/:id', collegeController.deleteCollege);
  */
 router.post('/getcutoff', collegeController.getCutoff);
 
+/**
+ * @route   GET /api/colleges/feature-flags
+ * @desc    Public feature flag map (so the mobile app can gate screens)
+ * @access  Public
+ */
+router.get('/feature-flags', collegeController.getFeatureFlagsPublic);
+
+/**
+ * @route   GET /api/colleges/branch-buckets
+ * @desc    Canonical 12 branch buckets for the College Range dropdown
+ * @access  Public
+ */
+router.get('/branch-buckets', collegeController.getBranchBuckets);
+
+/**
+ * @route   POST /api/colleges/college-range
+ * @desc    Premium College Range filter — returns colleges matching category,
+ *          gender prefix and a canonical branch bucket for the latest year.
+ * @access  Public (the mobile app gates via premium flag client-side; no PII here)
+ */
+router.post('/college-range', collegeController.getCollegeRange);
+
 export default router;

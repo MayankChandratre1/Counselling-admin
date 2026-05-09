@@ -3,6 +3,10 @@ import path from 'path';
 import Fuse from 'fuse.js';
 import { CollegeUpdate } from '../models/misc.model.js';
 import { Metadata } from '../models/metadata.model.js';
+import {
+    BRANCH_BUCKETS_BY_KEY,
+    matchBranchToBucket
+} from '../data/branchBuckets.js';
 
 class CollegeService {
     constructor() {
@@ -344,6 +348,84 @@ class CollegeService {
         
         // Check if any keyword contains the search term
         return keywords.map(keyword => keyword.toLowerCase()).includes(searchTermLower) 
+    }
+
+    /**
+     * College Range — premium-only filtered cutoff lookup.
+     *
+     * @param {Object}  params
+     * @param {string}  params.category   Bare category code (e.g. "OPEN", "OBC", "SC").
+     * @param {string}  params.gender     "M" → match `G*` cutoffs; "F" → match `L*` cutoffs.
+     *                                    Anything else → both.
+     * @param {string}  params.branchKey  One of the canonical branch bucket keys.
+     * @param {number}  [params.year]     Defaults to 2025. We always restrict to cap1.
+     * @returns {Promise<Array>} sorted by percentile desc.
+     */
+    async getCollegeRange({ category, gender, branchKey, year = 2025 } = {}) {
+        if (!category || !branchKey) {
+            throw new Error('category and branchKey are required');
+        }
+        const bucket = BRANCH_BUCKETS_BY_KEY[branchKey];
+        if (!bucket) {
+            throw new Error(`Unknown branch bucket: ${branchKey}`);
+        }
+
+        const fileData = await fs.readFile(this.COLLEGES_FILE_PATH, 'utf8');
+        const allColleges = JSON.parse(fileData);
+
+        const catCode = String(category).toUpperCase().trim();
+        const wantsMale = gender === 'M' || gender === 'Male' || gender === 'male';
+        const wantsFemale = gender === 'F' || gender === 'Female' || gender === 'female';
+
+        // Cutoff category strings look like `GOPENS`, `LSCS`, `LOPENS`. We match
+        // when (a) the prefix matches the gender filter (G/L/either) and
+        // (b) the middle slice contains the chosen category code.
+        const matchCategory = (raw) => {
+            const c = String(raw || '').toUpperCase().trim();
+            if (c.length < 2) return false;
+            const prefix = c.charAt(0);
+            if (prefix !== 'G' && prefix !== 'L') return false;
+            if (wantsMale && prefix !== 'G') return false;
+            if (wantsFemale && prefix !== 'L') return false;
+            return c.includes(catCode);
+        };
+
+        const targetYear = Number(year) || 2025;
+        const rows = [];
+
+        for (const college of allColleges) {
+            const branches = Array.isArray(college?.branches) ? college.branches : [];
+            for (const branch of branches) {
+                const bucketKey = matchBranchToBucket(branch?.branchName);
+                if (bucketKey !== branchKey) continue;
+
+                const cutoffs = Array.isArray(branch?.cutoffs) ? branch.cutoffs : [];
+                for (const cutoff of cutoffs) {
+                    if (Number(cutoff?.year) !== targetYear) continue;
+                    if (String(cutoff?.capRound || '').toLowerCase() !== 'cap1') continue;
+                    if (!matchCategory(cutoff?.category)) continue;
+
+                    const percentile = Number(cutoff?.percentile);
+                    const rank = Number(cutoff?.rank);
+                    if (!Number.isFinite(percentile)) continue;
+
+                    rows.push({
+                        collegeId: String(college?.id || college?.instituteCode || ''),
+                        collegeName: String(college?.instituteName || ''),
+                        city: String(college?.city || ''),
+                        branchCode: String(branch?.branchCode || ''),
+                        branchName: String(branch?.branchName || ''),
+                        branchShort: String(branch?.branchShort || ''),
+                        category: String(cutoff?.category || ''),
+                        percentile,
+                        rank: Number.isFinite(rank) ? rank : null
+                    });
+                }
+            }
+        }
+
+        rows.sort((a, b) => b.percentile - a.percentile);
+        return rows;
     }
 
     /**
