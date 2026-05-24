@@ -22,6 +22,7 @@ import razRouter from './routes/raz.routes.js';
 
 import errorHandler from './middleware/errorHandler.js';
 import authMiddleware from './middleware/authMiddleware.js';
+import logActivity from './middleware/logActivityMiddleware.js';
 
 // Connect to MongoDB
 connectDB();
@@ -44,15 +45,15 @@ app.use((req, res, next) => {
 
 // Mount Routes
 app.use('/api/admin', authRoutes);
-app.use('/api/admin',authMiddleware, userRoutes);
-app.use('/api/admin', analyticsRoutes);
-app.use('/api/admin', authMiddleware,contentRoutes);
-app.use('/api/admin', paymentRoutes);
-app.use('/api/admin', authMiddleware, listRoutes);
-app.use('/api/admin', formRoutes);
-app.use('/api/admin', appointmentRoutes);
-app.use('/api/admin', notificationRoutes);
-app.use('/api/admin', authMiddleware, adminRoutes);
+app.use('/api/admin', authMiddleware, logActivity, userRoutes);
+app.use('/api/admin', authMiddleware, logActivity, analyticsRoutes);
+app.use('/api/admin', authMiddleware, logActivity, contentRoutes);
+app.use('/api/admin', authMiddleware, logActivity, paymentRoutes);
+app.use('/api/admin', authMiddleware, logActivity, listRoutes);
+app.use('/api/admin', authMiddleware, logActivity, formRoutes);
+app.use('/api/admin', authMiddleware, logActivity, appointmentRoutes);
+app.use('/api/admin', authMiddleware, logActivity, notificationRoutes);
+app.use('/api/admin', authMiddleware, logActivity, adminRoutes);
 
 // Other Routes
 app.use('/api/colleges', collegeRouter);

@@ -45,7 +45,7 @@ router.get('/security/sessions', requireSecurityPrivileges, AdminController.getU
 // ─── Activity Logs Routes ─────────────────────────────────────────────────────
 
 // Get activity logs for specific admin
-router.get('/activity/:adminId', authorize(['super-admin', 'admin']), AdminController.getActivityLogs);
+router.get('/activity/:adminId',requireSecurityPrivileges , AdminController.getActivityLogs);
 
 // ─── Notes Routes ─────────────────────────────────────────────────────────────
 

@@ -721,20 +721,14 @@ class AdminMongoService {
     async logActivity(activityData) {
         try {
             const activityId = 'act_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
             const activity = new AdminActivity({
                 id: activityId,
                 adminId: activityData.adminId,
                 adminEmail: activityData.adminEmail,
                 method: activityData.method,
                 path: activityData.path,
-                params: activityData.params,
-                query: activityData.query,
-                body: activityData.body,
-                status: activityData.status,
-                response: activityData.response,
                 timestamp: activityData.timestamp || new Date(),
-                ip: activityData.ip,
-                userAgent: activityData.userAgent
             });
 
             await activity.save();

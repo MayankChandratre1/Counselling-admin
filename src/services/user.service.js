@@ -49,10 +49,20 @@ class UserService {
                 if (filters.isPremium === 'false' || filters.isPremium === false) query.isPremium = false;
 
                 // Date range
-                if (filters.startDate || filters.endDate) {
+                const fromDate = filters.fromDate || filters.startDate;
+                const toDate = filters.toDate || filters.endDate;
+                if (fromDate || toDate) {
                     query.createdAt = {};
-                    if (filters.startDate) query.createdAt.$gte = new Date(filters.startDate);
-                    if (filters.endDate) query.createdAt.$lte = new Date(filters.endDate);
+                    if (fromDate) {
+                        const start = new Date(fromDate);
+                        start.setHours(0, 0, 0, 0);
+                        query.createdAt.$gte = start;
+                    }
+                    if (toDate) {
+                        const end = new Date(toDate);
+                        end.setHours(23, 59, 59, 999);
+                        query.createdAt.$lte = end;
+                    }
                 }
 
                 // Plan filter

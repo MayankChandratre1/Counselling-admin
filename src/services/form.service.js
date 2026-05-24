@@ -29,6 +29,46 @@ class FormService {
     }
 
     /**
+     * Upsert a counselling form from admin UI payload `{ id, steps, ... }`.
+     */
+    async editFormSteps(formData, admin) {
+        try {
+            if (!formData?.id) {
+                throw new Error('Form id is required');
+            }
+
+            const updated = await CounsellingForm.findOneAndUpdate(
+                { id: formData.id },
+                {
+                    $set: {
+                        id: formData.id,
+                        steps: formData.steps ?? [],
+                        lastUpdatedBy: admin?.email,
+                        updatedAt: new Date(),
+                    },
+                },
+                { new: true, upsert: true }
+            );
+
+            return { message: 'Form steps updated successfully', form: updated };
+        } catch (error) {
+            throw new Error('Failed to edit form steps: ' + error.message);
+        }
+    }
+
+    async deleteForm(formId) {
+        try {
+            const result = await CounsellingForm.deleteOne({ id: formId });
+            if (result.deletedCount === 0) {
+                throw new Error('Form not found');
+            }
+            return { message: 'Form deleted successfully', id: formId };
+        } catch (error) {
+            throw new Error('Failed to delete form: ' + error.message);
+        }
+    }
+
+    /**
      * Update (or create) a counselling form's steps.
      * Mirrors admin.service.js editFormSteps (lines ~1437–1530).
      * `formId` is the document's string `id` field.

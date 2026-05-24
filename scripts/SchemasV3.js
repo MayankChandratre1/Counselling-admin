@@ -148,14 +148,7 @@ export const AdminActivitySchema = new Schema({
     adminEmail: { type: String, index: true }, // Admin email for quick reference
     method: { type: String, required: true }, // GET, POST, PUT, DELETE, etc.
     path: { type: String, required: true, index: true }, // API endpoint path
-    params: { type: Schema.Types.Mixed }, // Route params (e.g., :id)
-    query: { type: Schema.Types.Mixed }, // Query string params (e.g., ?page=1)
-    body: { type: Schema.Types.Mixed }, // Request body
-    status: { type: Number }, // HTTP status code
-    response: { type: Schema.Types.Mixed }, // Response data
     timestamp: { type: Date, required: true, index: true },
-    ip: { type: String }, // Client IP
-    userAgent: { type: String } // Client user agent
 }, { timestamps: true });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -788,3 +781,38 @@ export const FeatureFlagSchema = new Schema({
     description: { type: String, default: '' },
     updatedBy: { type: String }
 }, { timestamps: true });
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 20. Notification Schema (admin-sent push notifications)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const NotificationSchema = new Schema({
+    id: { type: String, unique: true, index: true },
+    title: { type: String, required: true },
+    message: { type: String, required: true },
+    targetAudience: { type: String, enum: ['all', 'filtered', 'specific'], default: 'all' },
+    sentBy: { type: String, ref: 'Admin' },
+    isPlanSpecific: { type: Boolean, default: false },
+    plan: { type: String, default: null },
+    url: { type: String, default: null },
+    filters: { type: Schema.Types.Mixed, default: null },
+    recipientCount: { type: Number, default: 0 },
+    sentCount: { type: Number, default: 0 },
+}, { timestamps: true });
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 21. UserNotification Schema (per-user inbox row)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const UserNotificationSchema = new Schema({
+    id: { type: String, unique: true, index: true },
+    notificationId: { type: String, required: true, index: true, ref: 'Notification' },
+    userId: { type: String, required: true, index: true, ref: 'User' },
+    isRead: { type: Boolean, default: false, index: true },
+    readAt: { type: Date, default: null },
+}, { timestamps: true });
+
+UserNotificationSchema.index({ userId: 1, isRead: 1 });
+UserNotificationSchema.index({ userId: 1, createdAt: -1 });

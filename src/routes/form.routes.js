@@ -6,6 +6,7 @@ const router = express.Router();
 
 router.get('/formsteps', FormController.getFormSteps);
 router.post('/edit-formsteps', authorize(['admin', 'super-admin']), FormController.editFormSteps);
+router.delete('/delete-form/:formId', authorize(['admin', 'super-admin']), FormController.deleteForm);
 router.get('/form-config', FormController.getFormConfig);
 router.post('/form-config', FormController.saveFormConfig); // authorize?
 

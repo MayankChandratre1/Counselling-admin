@@ -1,20 +1,36 @@
 import axios from 'axios';
 
+const getOneSignalConfig = () => {
+  const appId = process.env.ONESIGNAL_APP_ID?.trim();
+  const apiKey = (process.env.ONESIGNAL_REST_API_KEY || process.env.ONESIGNAL_API_KEY)?.trim();
+
+  if (!appId) {
+    throw new Error('ONESIGNAL_APP_ID is not configured');
+  }
+
+  if (!apiKey) {
+    throw new Error('ONESIGNAL_API_KEY is not configured');
+  }
+
+  return { appId, apiKey };
+};
+
 export async function sendOneSignalNotification(playerId, title, message, additionalData = {}) {
   try {
+    const { appId, apiKey } = getOneSignalConfig();
     const response = await axios.post(
       'https://onesignal.com/api/v1/notifications',
       {
-        app_id: process.env.ONESIGNAL_APP_ID, // Store this in your .env file
+        app_id: appId,
         include_player_ids: [playerId],
         headings: { en: title },
         contents: { en: message },
-        data: {}
+        data: additionalData
       },
       {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Basic ${process.env.ONESIGNAL_REST_API_KEY}` // Store this in your .env file
+          'Authorization': `Basic ${apiKey}`
         }
       }
     );
@@ -41,10 +57,11 @@ function chunkArray(array, size) {
 
 export async function sendOneSignalBatch(playerIds, title, message, additionalData = {}) {
   try {
+    const { appId, apiKey } = getOneSignalConfig();
     const response = await axios.post(
       'https://onesignal.com/api/v1/notifications',
       {
-        app_id: process.env.ONESIGNAL_APP_ID,
+        app_id: appId,
         include_player_ids: playerIds,
         headings: { en: title },
         contents: { en: message },
@@ -53,7 +70,7 @@ export async function sendOneSignalBatch(playerIds, title, message, additionalDa
       {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Basic ${process.env.ONESIGNAL_REST_API_KEY}`,
+          'Authorization': `Basic ${apiKey}`,
         }
       }
     );
@@ -66,9 +83,8 @@ export async function sendOneSignalBatch(playerIds, title, message, additionalDa
   }
 }
 
-// Main function
-export async function sendToAllSubscribers(userOneSignalIds, title, message, userIds) {
-  const additionalData = { userId: userIds };
+// Main function — additionalData should include notificationId and optional url
+export async function sendToAllSubscribers(userOneSignalIds, title, message, additionalData = {}) {
   const BATCH_SIZE = 2000; // OneSignal max limit
   const batches = chunkArray(userOneSignalIds, BATCH_SIZE);
 
