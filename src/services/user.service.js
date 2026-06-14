@@ -48,20 +48,22 @@ class UserService {
                 if (filters.isPremium === 'true' || filters.isPremium === true) query.isPremium = true;
                 if (filters.isPremium === 'false' || filters.isPremium === false) query.isPremium = false;
 
-                // Date range
+                // Date range — premium page uses purchase date; all-users uses createdAt
                 const fromDate = filters.fromDate || filters.startDate;
                 const toDate = filters.toDate || filters.endDate;
+                const usePurchaseDate = filters.dateFilterBy === 'purchasedDate';
+                const dateField = usePurchaseDate ? 'premiumPlan.purchasedDate' : 'createdAt';
                 if (fromDate || toDate) {
-                    query.createdAt = {};
+                    query[dateField] = {};
                     if (fromDate) {
                         const start = new Date(fromDate);
                         start.setHours(0, 0, 0, 0);
-                        query.createdAt.$gte = start;
+                        query[dateField].$gte = start;
                     }
                     if (toDate) {
                         const end = new Date(toDate);
                         end.setHours(23, 59, 59, 999);
-                        query.createdAt.$lte = end;
+                        query[dateField].$lte = end;
                     }
                 }
 
@@ -82,8 +84,12 @@ class UserService {
 
             const skip = (parseInt(page) - 1) * parseInt(limit);
 
+            const sortField = filters?.dateFilterBy === 'purchasedDate'
+                ? { 'premiumPlan.purchasedDate': -1, _id: 1 }
+                : { createdAt: -1, _id: 1 };
+
             const [users, total] = await Promise.all([
-                User.find(query).sort({ createdAt: -1, _id: 1 }).skip(skip).limit(parseInt(limit)).lean(),
+                User.find(query).sort(sortField).skip(skip).limit(parseInt(limit)).lean(),
                 User.countDocuments(query)
             ]);
 
