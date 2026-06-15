@@ -2,7 +2,7 @@ import AdminService from '../services/admin.service.js';
 import AdminMongoService from '../services/admin.mongo.service.js';
 import UserListService from '../services/userList.service.js';
 import { Admin } from '../models/admin.model.js';
-import { FeatureFlag, SUPPORTED_FLAGS } from '../models/featureFlag.model.js';
+import { FeatureFlag, SUPPORTED_FLAGS, SUPPORTED_FLAG_DEFAULTS } from '../models/featureFlag.model.js';
 import nodemailer from 'nodemailer';
 import bcrypt from 'bcryptjs';
 import { getClientIp } from '../utils/clientIp.js';
@@ -1062,7 +1062,7 @@ class AdminController {
     // ─── Feature Flags ────────────────────────────────────────────────────────
     /**
      * Returns every supported feature flag merged with its current DB state.
-     * Flags missing from the DB are reported as `enabled: false`.
+     * Flags missing from the DB use SUPPORTED_FLAG_DEFAULTS.
      */
     async getFeatureFlags(req, res) {
         try {
@@ -1074,7 +1074,9 @@ class AdminController {
                 key: meta.key,
                 label: meta.label,
                 description: meta.description,
-                enabled: !!byKey[meta.key]?.enabled,
+                enabled: byKey[meta.key]
+                    ? !!byKey[meta.key].enabled
+                    : (SUPPORTED_FLAG_DEFAULTS[meta.key] ?? false),
                 updatedAt: byKey[meta.key]?.updatedAt || null,
                 updatedBy: byKey[meta.key]?.updatedBy || null
             }));

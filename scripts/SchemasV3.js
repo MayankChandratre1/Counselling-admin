@@ -521,7 +521,9 @@ export const PremiumPlanItemSchema = new Schema({
 
 export const LandingPagePremiumPlansSchema = new Schema({
     id: { type: String, unique: true, index: true, default: 'premiumPlans' },
-    plans: { type: [PremiumPlanItemSchema], default: [] }
+    plans: { type: [PremiumPlanItemSchema], default: [] },
+    /** When false, hides home countdown offer cards for non-premium users. */
+    homeCountdownCardsEnabled: { type: Boolean, default: true }
 }, { timestamps: true });
 
 // 6d. LandingPage: Reviews  (id: "reviews")

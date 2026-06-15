@@ -181,8 +181,9 @@ class ContentService {
         }
     }
 
-    async updatePremiumPlans(plans) {
+    async updatePremiumPlans(plans, options = {}) {
         try {
+            const { homeCountdownCardsEnabled } = options;
             // Normalize opensAt timestamps from Firestore format if needed
             const normalizedPlans = plans.map(plan => {
                 const normalized = { ...plan };
@@ -202,10 +203,15 @@ class ContentService {
 
                 return normalized;
             });
+
+            const update = { plans: normalizedPlans, updatedAt: new Date() };
+            if (homeCountdownCardsEnabled !== undefined) {
+                update.homeCountdownCardsEnabled = !!homeCountdownCardsEnabled;
+            }
             
             await LandingPagePremiumPlans.findOneAndUpdate(
                 { id: 'premiumPlans' },
-                { $set: { plans: normalizedPlans, updatedAt: new Date() } },
+                { $set: update },
                 { new: true, upsert: true, lean: true }
             );
             

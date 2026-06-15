@@ -21,4 +21,10 @@ export const SUPPORTED_FLAGS = [
     }
 ];
 
+/** Default when no DB record exists yet (opt-out vs opt-in per flag). */
+export const SUPPORTED_FLAG_DEFAULTS = {
+    college_range_enabled: false,
+    home_countdown_cards_enabled: true
+};
+
 export default FeatureFlag;

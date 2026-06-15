@@ -54,7 +54,7 @@ router.get('/get-notes/:userId', cacheMiddleware('notes', 300), AdminController.
 
 // ─── Feature Flags Routes ─────────────────────────────────────────────────────
 
-router.get('/feature-flags', authorize(['super-admin']), AdminController.getFeatureFlags);
-router.put('/feature-flags/:key', authorize(['super-admin']), AdminController.updateFeatureFlag);
+router.get('/feature-flags', authorize(['admin', 'super-admin']), AdminController.getFeatureFlags);
+router.put('/feature-flags/:key', authorize(['admin', 'super-admin']), AdminController.updateFeatureFlag);
 
 export default router;

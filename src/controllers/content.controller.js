@@ -90,11 +90,11 @@ const ContentController = {
 
     async updatePremiumPlans(req, res) {
         try {
-            const { plans } = req.body;
+            const { plans, homeCountdownCardsEnabled } = req.body;
             if (!plans || !Array.isArray(plans)) {
                 return res.status(400).json({ error: 'Invalid payload: plans array required' });
             }
-            const result = await ContentService.updatePremiumPlans(plans);
+            const result = await ContentService.updatePremiumPlans(plans, { homeCountdownCardsEnabled });
             res.status(200).json(result);
         } catch (error) {
             res.status(500).json({ error: error.message });
