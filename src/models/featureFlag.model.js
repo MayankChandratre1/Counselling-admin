@@ -12,6 +12,12 @@ export const SUPPORTED_FLAGS = [
         label: 'College Range (Premium)',
         description:
             'Premium-only screen that lets students filter cutoffs by category, gender and branch and highlights colleges around their percentile.'
+    },
+    {
+        key: 'home_countdown_cards_enabled',
+        label: 'Home Countdown Cards',
+        description:
+            'Premium offer countdown banners on the app home screen for non-premium users. Turn off to hide the entire section.'
     }
 ];
 

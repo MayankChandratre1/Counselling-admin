@@ -506,6 +506,9 @@ export const PremiumPlanItemSchema = new Schema({
     title: String,
     price: Number,
     opensAt: Date,
+    countdownEndsAt: Date,
+    countdownMessage: String,
+    cardColor: String,
     form: {
         type: String,
         ref: 'CounsellingForm'    // → CounsellingForm.id

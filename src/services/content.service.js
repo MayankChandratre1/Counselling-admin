@@ -191,7 +191,15 @@ class ContentService {
                 if (plan.opensAt && typeof plan.opensAt === 'object' && plan.opensAt._seconds) {
                     normalized.opensAt = new Date(plan.opensAt._seconds * 1000);
                 }
-                
+                if (plan.countdownEndsAt && typeof plan.countdownEndsAt === 'object' && plan.countdownEndsAt._seconds) {
+                    normalized.countdownEndsAt = new Date(plan.countdownEndsAt._seconds * 1000);
+                } else if (plan.countdownEndsAt === '' || plan.countdownEndsAt === null) {
+                    delete normalized.countdownEndsAt;
+                }
+                if (!plan.countdownMessage?.trim()) {
+                    delete normalized.countdownMessage;
+                }
+
                 return normalized;
             });
             
