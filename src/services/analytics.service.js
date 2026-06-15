@@ -1,5 +1,6 @@
 import User from '../models/user.model.js';
 import UserList from '../models/userList.model.js';
+import { getPaymentSourceDisplay } from '../constants/paymentSource.js';
 
 /**
  * Analytics Service
@@ -55,7 +56,12 @@ class AnalyticsService {
             planTitle: u.premiumPlan?.planTitle || '',
             purchasedDate: u.premiumPlan?.purchasedDate || null,
             expiryDate: u.premiumPlan?.expiryDate || null,
+            amountPaid: u.premiumPlan?.amountPaid || 0,
             amountRemaining: u.premiumPlan?.amountRemaining || 0,
+            isPaymentPending: !!u.premiumPlan?.isPaymentPending,
+            paymentSource: u.premiumPlan?.paymentSource || 'App',
+            paymentSourceLabel: u.premiumPlan?.paymentSourceLabel || '',
+            paymentSourceDisplay: getPaymentSourceDisplay(u.premiumPlan),
             formFilled: u.formFilled || false,
             formFilledBy: u.formFilledBy || null,
             formFilledAt: u.formFilledAt || null,

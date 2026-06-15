@@ -3,6 +3,8 @@ import { UserList } from '../models/userList.model.js';
 import { Note } from '../models/note.model.js';
 import cache from '../config/cache.js';
 import PaymentService from './payment.service.js';
+import { DEFAULT_PAYMENT_SOURCE } from '../constants/paymentSource.js';
+import { encodeNoteKey, normalizeNotesObject, legacyBrokenNoteKey } from '../utils/noteKeys.js';
 class UserService {
     invalidateCache(pattern) {
         const cleanPattern = pattern.replace(/\*/g, '');
@@ -152,7 +154,7 @@ class UserService {
 
             user.lists = normalizedLists.filter(list => list.type !== 'created');
             user.createdList = normalizedLists.filter(list => list.type === 'created');
-            user.notes = note || null;
+            user.notes = this.formatNotesForClient(note, user.id);
 
             if (user.phone) {
                 user.paymentHistory = await PaymentService.getUserPayment(user.phone);
@@ -382,7 +384,8 @@ class UserService {
                 update.premiumPlan = {
                     ...planData,
                     purchasedDate: new Date(),
-                    isPaymentPending: false
+                    isPaymentPending: false,
+                    paymentSource: DEFAULT_PAYMENT_SOURCE,
                 };
                 update.currentOrderId = orderId;
             }
@@ -397,6 +400,77 @@ class UserService {
             };
         } catch (error) {
             throw new Error('Failed to update user with order ID: ' + error.message);
+        }
+    }
+
+    formatNotesForClient(noteDoc, userId = null) {
+        if (!noteDoc) {
+            return { id: userId, notes: {} };
+        }
+        const { _id, id, createdAt, updatedAt, __v, ...noteFields } = noteDoc;
+        return { id: id || userId, notes: normalizeNotesObject(noteFields) };
+    }
+
+    async getNotes(userId) {
+        try {
+            const noteDoc = await Note.findOne({ id: userId }).lean();
+            return this.formatNotesForClient(noteDoc, userId);
+        } catch (error) {
+            throw new Error('Failed to get notes: ' + error.message);
+        }
+    }
+
+    async addNote(note, userId, admin) {
+        try {
+            if (!admin?.email) {
+                throw new Error('Admin email is required');
+            }
+
+            const noteKey = encodeNoteKey(admin.email);
+            const brokenKey = legacyBrokenNoteKey(admin.email);
+            const unsetFields = { [noteKey]: 1 };
+            if (brokenKey) unsetFields[brokenKey] = 1;
+
+            if (note === '') {
+                await Note.updateOne(
+                    { id: userId },
+                    { $unset: unsetFields }
+                );
+                this.invalidateCache('notes');
+                this.invalidateCache(`user:${userId}`);
+                return {
+                    message: 'Note deleted successfully',
+                    adminEmail: admin.email
+                };
+            }
+
+            const setFields = {
+                id: userId,
+                [noteKey]: {
+                    note,
+                    createdAt: new Date().toISOString()
+                }
+            };
+            const update = { $set: setFields };
+            if (brokenKey) {
+                update.$unset = { [brokenKey]: 1 };
+            }
+
+            await Note.findOneAndUpdate(
+                { id: userId },
+                update,
+                { upsert: true, new: true }
+            );
+
+            this.invalidateCache('notes');
+            this.invalidateCache(`user:${userId}`);
+
+            return {
+                message: 'Note added successfully',
+                adminEmail: admin.email
+            };
+        } catch (error) {
+            throw new Error('Failed to save note: ' + error.message);
         }
     }
 }

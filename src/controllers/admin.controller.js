@@ -1,6 +1,7 @@
 import AdminService from '../services/admin.service.js';
 import AdminMongoService from '../services/admin.mongo.service.js';
 import UserListService from '../services/userList.service.js';
+import UserService from '../services/user.service.js';
 import { Admin } from '../models/admin.model.js';
 import { FeatureFlag, SUPPORTED_FLAGS, SUPPORTED_FLAG_DEFAULTS } from '../models/featureFlag.model.js';
 import nodemailer from 'nodemailer';
@@ -558,9 +559,8 @@ class AdminController {
         try {
             const { note } = req.body;
             const { userId } = req.params;
-            console.log("#########", note, userId);
-            const admin = req.admin
-            const result = await this.adminService.addNote(note, userId, admin);
+            const admin = req.admin;
+            const result = await UserService.addNote(note, userId, admin);
             res.status(201).json(result);
         } catch (error) {
             console.error('Add note error:', error);
@@ -570,9 +570,8 @@ class AdminController {
     async getNotes(req, res) {
         try {
             const { userId } = req.params;
-            const admin = req.admin
-            const result = await this.adminService.getNotes(userId, admin);
-            res.status(201).json(result);
+            const result = await UserService.getNotes(userId);
+            res.status(200).json(result);
         } catch (error) {
             console.error('get notes error:', error);
             res.status(400).json({ error: error.message });

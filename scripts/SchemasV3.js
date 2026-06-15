@@ -304,7 +304,10 @@ export const UserSchema = new Schema({
         expiryDate: Date,
         planTitle: String,
         isPaymentPending: Boolean,
+        amountPaid: Number,
         amountRemaining: Number,
+        paymentSource: { type: String, default: 'App' },
+        paymentSourceLabel: String,
         price: Number,
         validity: Date,
         plan: String
