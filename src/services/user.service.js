@@ -397,6 +397,7 @@ class UserService {
 
             return {
                 message: 'User updated with order ID successfully',
+                success: true,
                 userId: user.id,
                 planData,
                 orderData

@@ -117,7 +117,16 @@ class RazorpayService {
             const updateResult = await UserService.updateUserWithOrderId(order.id, planData, orderData);
             console.log('User update result for order:', order.id, updateResult);
 
-            return { success: true, orderId: order.id, userPhone, planData, orderData, updateResult };
+            const granted = updateResult?.success !== false && !!updateResult?.userId;
+            return {
+                success: granted,
+                orderId: order.id,
+                userPhone,
+                planData,
+                orderData,
+                updateResult,
+                error: granted ? undefined : (updateResult?.message || 'Premium grant failed'),
+            };
         } catch (error) {
             console.error('Error handling paid order:', order.id, error);
             return { success: false, error: error.message, orderId: order.id };
