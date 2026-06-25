@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\"",
     "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "db:storage": "node scripts/db_storage_stats.js"
   },
   "keywords": [],
   "author": "",

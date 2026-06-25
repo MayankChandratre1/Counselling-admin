@@ -24,8 +24,8 @@ import errorHandler from './middleware/errorHandler.js';
 import authMiddleware from './middleware/authMiddleware.js';
 import logActivity from './middleware/logActivityMiddleware.js';
 
-// Connect to MongoDB
-connectDB();
+// Connect to MongoDB (await so pool is ready before accepting traffic)
+await connectDB();
 
 const app = express();
 const trustProxy = process.env.TRUST_PROXY;

@@ -353,13 +353,12 @@ class UserService {
      */
     async updateUserWithOrderId(orderId, planData, orderData) {
         try {
-            // Find user by orderIds array or currentOrderId
-            let user = await User.findOne({ orderIds: orderId });
+            const asPlainOrder = (order) => (order?.toObject ? order.toObject() : { ...order });
+
+            // Find user by embedded order first (currentOrderId may be a newer unpaid attempt)
+            let user = await User.findOne({ 'orders.orderId': orderId });
+            if (!user) user = await User.findOne({ orderIds: orderId });
             if (!user) user = await User.findOne({ currentOrderId: orderId });
-            if (!user) {
-                // Last resort: search inside embedded orders array
-                user = await User.findOne({ 'orders.orderId': orderId });
-            }
 
             if (!user) {
                 console.log('No user found with orderId:', orderId);
@@ -367,22 +366,26 @@ class UserService {
             }
 
             // Update the matching order inside the orders array
-            const updatedOrders = (user.orders || []).map(order =>
+            const updatedOrders = (user.orders || []).map((order) =>
                 order.orderId === orderId
                     ? {
-                        ...order.toObject(),
+                        ...asPlainOrder(order),
                         ...orderData,
                         paymentStatus: orderData.status === 'paid' ? 'completed' : orderData.status
                     }
-                    : order.toObject()
+                    : asPlainOrder(order)
             );
 
             const update = { orders: updatedOrders };
 
-            if (orderData.status === 'paid') {
+            if (orderData.status === 'paid' && planData) {
                 update.isPremium = true;
                 update.premiumPlan = {
-                    ...planData,
+                    planTitle: planData.planTitle || planData.plan || 'Premium',
+                    form: planData.form,
+                    price: planData.price,
+                    validity: planData.expiry,
+                    expiryDate: planData.expiryDate,
                     purchasedDate: new Date(),
                     isPaymentPending: false,
                     paymentSource: DEFAULT_PAYMENT_SOURCE,
