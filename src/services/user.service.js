@@ -5,6 +5,7 @@ import cache from '../config/cache.js';
 import PaymentService from './payment.service.js';
 import { DEFAULT_PAYMENT_SOURCE } from '../constants/paymentSource.js';
 import { encodeNoteKey, normalizeNotesObject, legacyBrokenNoteKey } from '../utils/noteKeys.js';
+import { parsePlanPrice, resolvePlanExpiryDate } from '../utils/planNormalize.js';
 class UserService {
     invalidateCache(pattern) {
         const cleanPattern = pattern.replace(/\*/g, '');
@@ -379,14 +380,14 @@ class UserService {
             const update = { orders: updatedOrders };
 
             if (orderData.status === 'paid' && planData) {
+                const purchasedDate = new Date();
                 update.isPremium = true;
                 update.premiumPlan = {
                     planTitle: planData.planTitle || planData.plan || 'Premium',
                     form: planData.form,
-                    price: planData.price,
-                    validity: planData.expiry,
-                    expiryDate: planData.expiryDate,
-                    purchasedDate: new Date(),
+                    price: parsePlanPrice(planData.price, orderData.amount),
+                    expiryDate: resolvePlanExpiryDate(planData, purchasedDate),
+                    purchasedDate,
                     isPaymentPending: false,
                     paymentSource: DEFAULT_PAYMENT_SOURCE,
                 };

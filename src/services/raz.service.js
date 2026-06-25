@@ -1,6 +1,7 @@
 import Razorpay from 'razorpay';
 import { User } from '../models/user.model.js';
 import UserService from './user.service.js';
+import { parsePlanPrice, resolvePlanExpiryDate } from '../utils/planNormalize.js';
 
 /**
  * RazorpayService — fixed version.
@@ -93,9 +94,9 @@ class RazorpayService {
             const planData = {
                 plan: planDetails.plan || notes.customerPlan || 'Unknown',
                 isPremium: true,
-                price: planDetails.price || '0',
+                price: parsePlanPrice(planDetails.price, order.amount),
                 expiry: planDetails.expiry || 60,
-                expiryDate: planDetails.expiryDate || new Date(Date.now() + 6 * 30 * 24 * 60 * 60 * 1000),
+                expiryDate: resolvePlanExpiryDate(planDetails),
                 form: planDetails.form || 'Unknown',
                 planTitle: notes.planTitle || notes.customerPlan
             };
