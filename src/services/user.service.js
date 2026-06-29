@@ -29,97 +29,142 @@ class UserService {
 
     // ── List / Search ──────────────────────────────────────────────────────────
 
+    getUserSortField(filters = {}) {
+        return filters?.dateFilterBy === 'purchasedDate'
+            ? { 'premiumPlan.purchasedDate': -1, _id: 1 }
+            : { createdAt: -1, _id: 1 };
+    }
+
+    async buildUserQuery(filters = {}) {
+        const query = {};
+
+        if (filters.name?.trim() && filters.phone?.trim()) {
+            query.$and = [
+                { name: { $regex: filters.name.trim(), $options: 'i' } },
+                { phone: { $regex: filters.phone.trim(), $options: 'i' } }
+            ];
+        } else if (filters.name?.trim()) {
+            query.name = { $regex: filters.name.trim(), $options: 'i' };
+        } else if (filters.phone?.trim()) {
+            query.phone = { $regex: filters.phone.trim(), $options: 'i' };
+        }
+        if (filters.search) {
+            query.$or = [
+                { name: { $regex: filters.search, $options: 'i' } },
+                { email: { $regex: filters.search, $options: 'i' } },
+                { phone: { $regex: filters.search, $options: 'i' } }
+            ];
+        }
+
+        if (filters.isPremium === 'true' || filters.isPremium === true) query.isPremium = true;
+        if (filters.isPremium === 'false' || filters.isPremium === false) query.isPremium = false;
+
+        const fromDate = filters.fromDate || filters.startDate;
+        const toDate = filters.toDate || filters.endDate;
+        const usePurchaseDate = filters.dateFilterBy === 'purchasedDate';
+        const dateField = usePurchaseDate ? 'premiumPlan.purchasedDate' : 'createdAt';
+        if (fromDate || toDate) {
+            query[dateField] = {};
+            if (fromDate) {
+                const start = new Date(fromDate);
+                start.setHours(0, 0, 0, 0);
+                query[dateField].$gte = start;
+            }
+            if (toDate) {
+                const end = new Date(toDate);
+                end.setHours(23, 59, 59, 999);
+                query[dateField].$lte = end;
+            }
+        }
+
+        if (filters.plan && filters.plan !== 'all') {
+            if (filters.plan === 'premium') {
+                query.isPremium = true;
+            } else if (filters.plan === 'standard') {
+                query.isPremium = { $ne: true };
+            } else {
+                query['premiumPlan.planTitle'] = { $regex: filters.plan, $options: 'i' };
+            }
+        }
+
+        if (filters.batch && filters.batch !== 'all') {
+            if (filters.batch === 'Unassigned') {
+                query.$or = [
+                    { batch: { $exists: false } },
+                    { batch: null },
+                    { batch: '' }
+                ];
+            } else {
+                query.batch = filters.batch;
+            }
+        }
+
+        if (filters.formFilled === 'true') query.formFilled = true;
+        if (filters.formFilled === 'false') query.formFilled = { $ne: true };
+
+        if (filters.isPaymentPending === 'true') {
+            query['premiumPlan.isPaymentPending'] = true;
+        }
+
+        if (filters.listAssigned && filters.listAssigned !== 'all') {
+            const usersWithLists = await UserList.distinct('userId');
+            if (filters.listAssigned === 'true') {
+                query.id = { $in: usersWithLists };
+            } else {
+                query.id = { $nin: usersWithLists };
+            }
+        }
+
+        return query;
+    }
+
+    async enrichUsersWithListsAndNotes(users) {
+        if (!users.length) return users;
+
+        const userIds = users.map((u) => u.id).filter(Boolean);
+        const [userLists, notes] = await Promise.all([
+            UserList.find({ userId: { $in: userIds } }).select('userId id title type').lean(),
+            Note.find({ id: { $in: userIds } }).lean()
+        ]);
+
+        const listsByUser = {};
+        userLists.forEach((list) => {
+            if (!listsByUser[list.userId]) listsByUser[list.userId] = [];
+            listsByUser[list.userId].push({
+                id: list.id,
+                title: list.title,
+                type: list.type
+            });
+        });
+
+        const notesByUser = {};
+        notes.forEach((note) => {
+            if (note?.id) notesByUser[note.id] = this.formatNotesForClient(note, note.id);
+        });
+
+        return users.map((user) => ({
+            ...user,
+            lists: listsByUser[user.id] || [],
+            notes: notesByUser[user.id] || null
+        }));
+    }
+
     /**
      * Paginated user list with rich filters.
      * Mirrors admin.service.js getAll / getUsers (lines 47–600)
      */
     async getAllUsers(page = 1, limit = 10, filters = null) {
         try {
-            const query = {};
-
-            if (filters) {
-                // Text search
-                if (filters.search) {
-                    query.$or = [
-                        { name: { $regex: filters.search, $options: 'i' } },
-                        { email: { $regex: filters.search, $options: 'i' } },
-                        { phone: { $regex: filters.search, $options: 'i' } }
-                    ];
-                }
-
-                // Premium filter
-                if (filters.isPremium === 'true' || filters.isPremium === true) query.isPremium = true;
-                if (filters.isPremium === 'false' || filters.isPremium === false) query.isPremium = false;
-
-                // Date range — premium page uses purchase date; all-users uses createdAt
-                const fromDate = filters.fromDate || filters.startDate;
-                const toDate = filters.toDate || filters.endDate;
-                const usePurchaseDate = filters.dateFilterBy === 'purchasedDate';
-                const dateField = usePurchaseDate ? 'premiumPlan.purchasedDate' : 'createdAt';
-                if (fromDate || toDate) {
-                    query[dateField] = {};
-                    if (fromDate) {
-                        const start = new Date(fromDate);
-                        start.setHours(0, 0, 0, 0);
-                        query[dateField].$gte = start;
-                    }
-                    if (toDate) {
-                        const end = new Date(toDate);
-                        end.setHours(23, 59, 59, 999);
-                        query[dateField].$lte = end;
-                    }
-                }
-
-                // Plan filter
-                if (filters.plan && filters.plan !== 'all') {
-                    query['premiumPlan.planTitle'] = { $regex: filters.plan, $options: 'i' };
-                }
-
-                // Form filled
-                if (filters.formFilled === 'true') query.formFilled = true;
-                if (filters.formFilled === 'false') query.formFilled = { $ne: true };
-
-                // Payment pending
-                if (filters.isPaymentPending === 'true') {
-                    query['premiumPlan.isPaymentPending'] = true;
-                }
-            }
-
+            const query = await this.buildUserQuery(filters || {});
             const skip = (parseInt(page) - 1) * parseInt(limit);
-
-            const sortField = filters?.dateFilterBy === 'purchasedDate'
-                ? { 'premiumPlan.purchasedDate': -1, _id: 1 }
-                : { createdAt: -1, _id: 1 };
+            const sortField = this.getUserSortField(filters);
 
             const [users, total] = await Promise.all([
                 User.find(query).sort(sortField).skip(skip).limit(parseInt(limit)).lean(),
                 User.countDocuments(query)
             ]);
 
-            // Fetch lists for each user from UserList collection
-            const userIds = users.map(u => u.id);
-            const userLists = await UserList.find({ userId: { $in: userIds } })
-                .select('userId title type')
-                .lean();
-
-            // Group lists by userId
-            const listsByUser = {};
-            userLists.forEach(list => {
-                if (!listsByUser[list.userId]) {
-                    listsByUser[list.userId] = [];
-                }
-                listsByUser[list.userId].push({
-                    id: list.id,
-                    title: list.title,
-                    type: list.type
-                });
-            });
-
-            // Attach lists to each user
-            const usersWithLists = users.map(user => ({
-                ...user,
-                lists: listsByUser[user.id] || []
-            }));
+            const usersWithLists = await this.enrichUsersWithListsAndNotes(users);
 
             return {
                 users: usersWithLists,
@@ -130,6 +175,29 @@ class UserService {
             };
         } catch (error) {
             throw new Error('Failed to get users: ' + error.message);
+        }
+    }
+
+    async exportUsers(filters = {}) {
+        const EXPORT_LIMIT = 20000;
+        try {
+            const query = await this.buildUserQuery(filters);
+            const sortField = this.getUserSortField(filters);
+            const [users, total] = await Promise.all([
+                User.find(query).sort(sortField).limit(EXPORT_LIMIT).lean(),
+                User.countDocuments(query)
+            ]);
+
+            const enriched = await this.enrichUsersWithListsAndNotes(users);
+
+            return {
+                users: enriched,
+                totalUsers: total,
+                exportedCount: enriched.length,
+                truncated: total > EXPORT_LIMIT
+            };
+        } catch (error) {
+            throw new Error('Failed to export users: ' + error.message);
         }
     }
 

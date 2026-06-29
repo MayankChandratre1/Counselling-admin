@@ -11,6 +11,16 @@ const UserController = {
         }
     },
 
+    async exportUsers(req, res) {
+        try {
+            const { page, limit, lastDoc, ...filters } = req.query;
+            const result = await UserService.exportUsers(filters);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(500).json({ error: error.message });
+        }
+    },
+
     async getAllUsersOfForm(req, res) {
         try {
             const formId = req.params.formId;

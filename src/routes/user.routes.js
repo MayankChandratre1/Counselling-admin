@@ -6,6 +6,7 @@ const router = express.Router();
 
 // Protected routes should have auth middleware applied in the main index.js or here
 router.get('/all-users', UserController.getAllUsers);
+router.get('/all-users/export', UserController.exportUsers);
 router.post('/users/form/:formId', UserController.getAllUsersOfForm);
 router.get('/user/:userId', cacheMiddleware('user', 60), UserController.getUser);
 router.post('/user/search', UserController.searchUser);
