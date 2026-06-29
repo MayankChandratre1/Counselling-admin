@@ -56,9 +56,6 @@ class UserService {
             ];
         }
 
-        if (filters.isPremium === 'true' || filters.isPremium === true) query.isPremium = true;
-        if (filters.isPremium === 'false' || filters.isPremium === false) query.isPremium = false;
-
         const fromDate = filters.fromDate || filters.startDate;
         const toDate = filters.toDate || filters.endDate;
         const usePurchaseDate = filters.dateFilterBy === 'purchasedDate';
@@ -78,13 +75,13 @@ class UserService {
         }
 
         if (filters.plan && filters.plan !== 'all') {
-            if (filters.plan === 'premium') {
-                query.isPremium = true;
-            } else if (filters.plan === 'standard') {
-                query.isPremium = { $ne: true };
-            } else {
-                query['premiumPlan.planTitle'] = { $regex: filters.plan, $options: 'i' };
-            }
+            query['premiumPlan.planTitle'] = { $regex: filters.plan, $options: 'i' };
+        }
+
+        if (filters.isPremium === 'true' || filters.isPremium === true) {
+            query.isPremium = true;
+        } else if (filters.isPremium === 'false' || filters.isPremium === false) {
+            query.isPremium = { $ne: true };
         }
 
         if (filters.batch && filters.batch !== 'all') {
@@ -107,7 +104,9 @@ class UserService {
         }
 
         if (filters.listAssigned && filters.listAssigned !== 'all') {
-            const usersWithLists = await UserList.distinct('userId');
+            const usersWithLists = await UserList.distinct('userId', {
+                $or: [{ type: { $exists: false } }, { type: { $ne: 'created' } }]
+            });
             if (filters.listAssigned === 'true') {
                 query.id = { $in: usersWithLists };
             } else {
