@@ -243,23 +243,34 @@ class ListService {
             const list = await MasterList.findOne({ id: listId });
             if (!list) throw new Error('List not found');
 
-            const originalFolderId = list.folderId;
-            if (originalFolderId === targetFolderId) {
+            // "No Folder" is represented by sentinel values from the client; normalize to null.
+            const isNoFolder = !targetFolderId ||
+                targetFolderId === 'null' ||
+                targetFolderId === 'no-folder' ||
+                targetFolderId === 'none';
+            const normalizedTarget = isNoFolder ? null : targetFolderId;
+
+            const originalFolderId = list.folderId || null;
+            if (originalFolderId === normalizedTarget) {
                 return { message: 'List is already in the target folder' };
             }
 
-            const targetFolder = await ListFolder.findOne({ id: targetFolderId });
-            if (!targetFolder) throw new Error('Target folder not found');
+            if (!isNoFolder) {
+                const targetFolder = await ListFolder.findOne({ id: normalizedTarget });
+                if (!targetFolder) throw new Error('Target folder not found');
+            }
 
             await MasterList.findOneAndUpdate(
                 { id: listId },
-                { $set: { folderId: targetFolderId, lastUpdatedBy: admin.email } }
+                { $set: { folderId: normalizedTarget, lastUpdatedBy: admin.email } }
             );
 
             if (originalFolderId) {
                 await ListFolder.findOneAndUpdate({ id: originalFolderId }, { $inc: { list_count: -1 } });
             }
-            await ListFolder.findOneAndUpdate({ id: targetFolderId }, { $inc: { list_count: 1 } });
+            if (!isNoFolder) {
+                await ListFolder.findOneAndUpdate({ id: normalizedTarget }, { $inc: { list_count: 1 } });
+            }
 
             this.invalidateCache('lists:*');
             this.invalidateCache(`list:${listId}`);

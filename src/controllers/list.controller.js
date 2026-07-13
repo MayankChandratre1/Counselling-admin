@@ -125,6 +125,20 @@ const ListController = {
         }
     },
 
+    async releaseListToUser(req, res) {
+        try {
+            const { userId } = req.params;
+            const listId = req.body?.listId || req.body?.id;
+            if (!listId) {
+                return res.status(400).json({ error: 'listId is required' });
+            }
+            const result = await UserListService.releaseCreatedListToUser(userId, listId, req.admin);
+            res.status(200).json(result);
+        } catch (error) {
+            res.status(400).json({ error: error.message });
+        }
+    },
+
     async releaseAllListToUser(req, res) {
         try {
             const result = await UserListService.releaseAllListToUser(req.params.userId);

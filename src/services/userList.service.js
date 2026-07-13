@@ -66,11 +66,11 @@ class UserListService {
             const user = await User.findOne({ id: userId });
             if (!user) throw new Error('User not found');
 
-            // Check if already assigned
+            // Check if already assigned/created
             const sourceOriginalListId = payload?.originalListId || masterList?.id || null;
 
             if (sourceOriginalListId) {
-                const existing = await UserList.findOne({ userId, originalListId: sourceOriginalListId, type: 'assigned' });
+                const existing = await UserList.findOne({ userId, originalListId: sourceOriginalListId });
                 if (existing) throw new Error('List already assigned to this user');
             }
 
@@ -79,11 +79,13 @@ class UserListService {
                 ? payload.colleges
                 : (masterList?.colleges || []);
             const title = overrideTitle || payload?.title || masterList?.title || 'Assigned List';
+            // Policy: newly assigned lists start life as a "created" (draft) list.
+            // They only become released ('assigned') via an explicit release action.
             const userList = new UserList({
                 id: userListId,
                 userId,
                 originalListId: sourceOriginalListId,
-                type: 'assigned',
+                type: 'created',
                 title,
                 colleges,
                 isCustomized: !!(payload?.isCustomized ?? payload?.customized ?? false),
@@ -91,14 +93,6 @@ class UserListService {
                 lastUpdatedBy: admin?.email || 'system'
             });
             await userList.save();
-
-            // Add userId to MasterList.userIds
-            if (masterList?.id) {
-                await MasterList.findOneAndUpdate(
-                    { id: masterList.id },
-                    { $addToSet: { userIds: userId } }
-                );
-            }
 
             this.invalidateCache(`userlists:${userId}`);
             return { message: 'List assigned successfully', userList };
@@ -289,6 +283,52 @@ class UserListService {
             return { message: `Released ${userLists.length} lists from user`, count: userLists.length };
         } catch (error) {
             throw new Error('Failed to release all lists: ' + error.message);
+        }
+    }
+
+    /**
+     * Release a single created (draft) list for a user (converts created -> assigned).
+     * After release the list becomes visible to the end user.
+     */
+    async releaseCreatedListToUser(userId, userListId, admin) {
+        try {
+            let updated = await UserList.findOneAndUpdate(
+                { id: userListId, userId, type: 'created' },
+                { $set: { type: 'assigned', lastUpdatedBy: admin?.email || 'system' } },
+                { new: true }
+            );
+
+            if (!updated && mongoose.Types.ObjectId.isValid(userListId)) {
+                updated = await UserList.findOneAndUpdate(
+                    { _id: userListId, userId, type: 'created' },
+                    { $set: { type: 'assigned', lastUpdatedBy: admin?.email || 'system' } },
+                    { new: true }
+                );
+            }
+
+            // Legacy fallback: match by id without strict userId
+            if (!updated) {
+                updated = await UserList.findOneAndUpdate(
+                    { id: userListId, type: 'created' },
+                    { $set: { type: 'assigned', lastUpdatedBy: admin?.email || 'system' } },
+                    { new: true }
+                );
+            }
+
+            if (!updated) throw new Error('Created list not found for this user');
+
+            // Link the user to the master list now that it is released
+            if (updated.originalListId) {
+                await MasterList.findOneAndUpdate(
+                    { id: updated.originalListId },
+                    { $addToSet: { userIds: updated.userId } }
+                );
+            }
+
+            this.invalidateCache(`userlists:${updated.userId}`);
+            return { message: 'List released to user successfully', userList: updated };
+        } catch (error) {
+            throw new Error('Failed to release list: ' + error.message);
         }
     }
 

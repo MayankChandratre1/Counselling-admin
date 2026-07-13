@@ -141,11 +141,15 @@ class UserService {
             if (note?.id) notesByUser[note.id] = this.formatNotesForClient(note, note.id);
         });
 
-        return users.map((user) => ({
-            ...user,
-            lists: listsByUser[user.id] || [],
-            notes: notesByUser[user.id] || null
-        }));
+        return users.map((user) => {
+            const all = listsByUser[user.id] || [];
+            return {
+                ...user,
+                lists: all.filter((l) => l.type !== 'created'),
+                createdList: all.filter((l) => l.type === 'created'),
+                notes: notesByUser[user.id] || null
+            };
+        });
     }
 
     /**

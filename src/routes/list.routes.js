@@ -19,6 +19,7 @@ router.delete('/list-folder/:folderId', authorize(['admin', 'super-admin']), Lis
 // User Lists
 router.get('/user/:userId/lists', ListController.getUserLists);
 router.post('/user/:userId/assign-list', ListController.assignListToUser);
+router.post('/user/:userId/release-list', ListController.releaseListToUser);
 router.post('/user/:userId/release-all-lists', ListController.releaseAllListToUser);
 router.post('/user/bulk-release-lists', ListController.bulkReleaseLists);
 
