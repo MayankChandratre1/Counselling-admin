@@ -720,18 +720,14 @@ class AdminMongoService {
      */
     async logActivity(activityData) {
         try {
-            const activityId = 'act_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-
-            const activity = new AdminActivity({
-                id: activityId,
+            // Lean insert — no custom id / createdAt / updatedAt / __v
+            const [activity] = await AdminActivity.create([{
                 adminId: activityData.adminId,
                 adminEmail: activityData.adminEmail,
                 method: activityData.method,
                 path: activityData.path,
                 timestamp: activityData.timestamp || new Date(),
-            });
-
-            await activity.save();
+            }]);
             return activity;
         } catch (error) {
             console.error('Failed to log activity:', error.message);

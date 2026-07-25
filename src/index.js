@@ -43,17 +43,22 @@ app.use((req, res, next) => {
   next();
 });
 
-// Mount Routes
+// Mount Routes — auth + activity log once (was mounted per-router → N duplicate logs per request)
 app.use('/api/admin', authRoutes);
-app.use('/api/admin', authMiddleware, logActivity, userRoutes);
-app.use('/api/admin', authMiddleware, logActivity, analyticsRoutes);
-app.use('/api/admin', authMiddleware, logActivity, contentRoutes);
-app.use('/api/admin', authMiddleware, logActivity, paymentRoutes);
-app.use('/api/admin', authMiddleware, logActivity, listRoutes);
-app.use('/api/admin', authMiddleware, logActivity, formRoutes);
-app.use('/api/admin', authMiddleware, logActivity, appointmentRoutes);
-app.use('/api/admin', authMiddleware, logActivity, notificationRoutes);
-app.use('/api/admin', authMiddleware, logActivity, adminRoutes);
+
+const protectedAdmin = express.Router();
+protectedAdmin.use(authMiddleware);
+protectedAdmin.use(logActivity);
+protectedAdmin.use(userRoutes);
+protectedAdmin.use(analyticsRoutes);
+protectedAdmin.use(contentRoutes);
+protectedAdmin.use(paymentRoutes);
+protectedAdmin.use(listRoutes);
+protectedAdmin.use(formRoutes);
+protectedAdmin.use(appointmentRoutes);
+protectedAdmin.use(notificationRoutes);
+protectedAdmin.use(adminRoutes);
+app.use('/api/admin', protectedAdmin);
 
 // Other Routes
 app.use('/api/colleges', collegeRouter);

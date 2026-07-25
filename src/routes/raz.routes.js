@@ -1,9 +1,5 @@
 import express from 'express';
 import RazorpayController from '../controllers/raz.controller.js';
-import authMiddleware from '../middleware/authMiddleware.js';
-import authorize from '../middleware/authorizeMiddleware.js';
-import logActivity from '../middleware/logActivityMiddleware.js';
-
 const router = express.Router();
 
 // Initialize controller
@@ -19,9 +15,6 @@ const validateRazorpayConfig = (req, res, next) => {
   }
   next();
 };
-
-// Apply activity logging after authentication
-router.use(logActivity);
 
 // Routes
 router.post('/refresh', razorpayController.refresh);
