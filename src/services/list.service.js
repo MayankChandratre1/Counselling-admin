@@ -14,11 +14,35 @@ class ListService {
 
     // ── Master Lists ──────────────────────────────────────────────────────────
 
+    /**
+     * List index without colleges[] — those are huge and only needed on open/edit.
+     * Returns collegeCount so the UI can still show sizes.
+     */
     async getLists(folderId = null) {
         try {
-            const query = {};
-            if (folderId) query.folderId = folderId;
-            return await MasterList.find(query).sort({ createdAt: -1 }).lean();
+            const match = {};
+            if (folderId) match.folderId = folderId;
+
+            return await MasterList.aggregate([
+                { $match: match },
+                { $sort: { createdAt: -1 } },
+                {
+                    $project: {
+                        _id: 0,
+                        id: 1,
+                        title: 1,
+                        category: 1,
+                        folderId: 1,
+                        userIds: 1,
+                        isDeleted: 1,
+                        createdAt: 1,
+                        updatedAt: 1,
+                        createdBy: 1,
+                        lastUpdatedBy: 1,
+                        collegeCount: { $size: { $ifNull: ['$colleges', []] } },
+                    },
+                },
+            ]);
         } catch (error) {
             throw new Error('Failed to get lists: ' + error.message);
         }

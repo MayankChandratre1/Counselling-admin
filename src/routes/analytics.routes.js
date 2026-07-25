@@ -5,5 +5,6 @@ import AnalyticsController from '../controllers/analytics.controller.js';
 const router = express.Router();
 
 router.get('/get-analytics', AnalyticsController.getAnalytics);
+router.get('/get-analytics-details', AnalyticsController.getEnrolledDetails);
 
 export default router;

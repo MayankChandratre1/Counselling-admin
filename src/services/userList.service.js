@@ -75,7 +75,7 @@ class UserListService {
             }
 
             const userListId = payload?.id || ('ul_' + Date.now());
-            const colleges = Array.isArray(payload?.colleges)
+            const colleges = Array.isArray(payload?.colleges) && payload.colleges.length > 0
                 ? payload.colleges
                 : (masterList?.colleges || []);
             const title = overrideTitle || payload?.title || masterList?.title || 'Assigned List';
